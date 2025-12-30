@@ -94,7 +94,7 @@ img, iframe, embed, object {
 .social.popover.show{display:flex}
 .social.popover::before{content:"";position:absolute;top:-6px;right:12px;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid var(--card)}
 
-.nav{display:flex;flex-direction:column;width:100%;margin-top:18px}
+.nav{display:flex;flex-direction:column;width:100%;margin-top:18px;align-items:center}
 .nav a{color:var(--sidebar-fg);text-decoration:none;padding:8px 10px;border-radius:6px;margin:2px 0;font-weight:600}
 .nav a:hover{background:var(--sidebar-fg)}
 
@@ -176,7 +176,7 @@ img, iframe, embed, object {
   .profile{display:flex;align-items:center;gap:12px}
   /* 名前が省略されないよう折返しを許可 */
   .name{white-space:normal;overflow:visible;text-overflow:unset}
-  .nav{display:flex;flex-direction:row;gap:8px;justify-content:flex-start;margin-left:0}
+  .nav{display:flex;flex-direction:row;gap:8px;justify-content:center;margin-left:0}
   .nav a{padding:6px 8px;font-size:0.9rem}
   /* Social visibility is controlled by the Follow button; when shown keep icons on one line */
   .social.show{overflow-x:auto}
