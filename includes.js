@@ -158,17 +158,7 @@
       select.addEventListener('change', applyFilter);
     }
 
-    // add expand buttons for abstracts (create .pub-abstract if absent using .pub-excerpt)
-    pubs.forEach(function(p){
-      var actions = p.querySelector('.pub-actions');
-      if(!actions){ actions = document.createElement('div'); actions.className='pub-actions'; p.appendChild(actions); }
-      // create expand button
-      var btn = document.createElement('button'); btn.className='expand'; btn.textContent='Abstract';
-      actions.insertBefore(btn, actions.firstChild);
-      var abstract = p.querySelector('.pub-abstract');
-      if(!abstract){ abstract = document.createElement('div'); abstract.className='pub-abstract'; var excerpt = p.querySelector('.pub-excerpt'); if(excerpt) abstract.innerHTML = '<strong>Abstract</strong><p>'+excerpt.textContent+'</p>'; else abstract.innerHTML = '<p>No abstract provided.</p>'; p.appendChild(abstract); }
-      btn.addEventListener('click', function(){ abstract.classList.toggle('show'); btn.textContent = abstract.classList.contains('show') ? 'Close' : 'Abstract'; });
-    });
+    // NOTE: Abstract toggles removed — keep publication items simple (no auto-added buttons/panels)
   }
 
   function setupCVInteractions(){
