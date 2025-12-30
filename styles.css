@@ -257,7 +257,8 @@ a[x-apple-data-detectors] {
 .pub-abstract.show{display:block}
 
 @media(min-width:900px){
-  .pub-grid{grid-template-columns: repeat(2, 1fr);}
+  /* Keep publications single-column even on wide screens */
+  .pub-grid{grid-template-columns: 1fr;}
 }
 
 /* CV collapse */
