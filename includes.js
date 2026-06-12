@@ -58,7 +58,7 @@
     if (!ctx) return;
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
     var TAU = Math.PI * 2;
-    var TINTS = ['255,255,255', '255,255,255', '255,255,255', '190,227,255', '214,196,255', '255,214,236'];
+    var TINTS = ['255,255,255', '255,255,255', '255,255,255', '226,235,248', '206,220,238', '236,242,250'];
     var w = 0, h = 0, stars = [], meteors = [], nextMeteor = 2600;
 
     function resize() {

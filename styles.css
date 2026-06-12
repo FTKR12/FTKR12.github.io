@@ -1,13 +1,8 @@
 /* ==========================================================================
    Takuro Fujii — personal site
    Theme: "Cosmic Ink" — 深宇宙 × 流れるインク × ターミナル
+   Palette: 黒系背景 + グレー/白 + アクセント1色（シアン）のみ
    ========================================================================== */
-
-@property --ring-angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
 
 :root{
   --bg-deep:#04050e;
@@ -16,13 +11,11 @@
   --muted:#8d99b5;
   --faint:#5b6781;
 
-  --accent:#6ee7f7;      /* cyan */
-  --accent-2:#b69cff;    /* violet */
-  --accent-3:#f27ec1;    /* magenta */
-  --link:#7ce3f5;
+  --accent:#6ee7f7;      /* 唯一のアクセントカラー */
+  --link:#6ee7f7;
 
   --card:rgba(13,17,36,.58);
-  --card-border:rgba(148,163,255,.14);
+  --card-border:rgba(255,255,255,.1);
   --card-border-hover:rgba(110,231,247,.38);
 
   --radius:14px;
@@ -38,7 +31,7 @@
 html{
   background:var(--bg-deep);
   scroll-behavior:smooth;
-  scrollbar-color:rgba(148,163,255,.3) transparent;
+  scrollbar-color:rgba(255,255,255,.2) transparent;
   scrollbar-width:thin;
 }
 html,body{height:100%;max-width:100%;overflow-x:hidden}
@@ -46,20 +39,19 @@ body{
   margin:0;
   font-family:var(--mono);
   background:
-    radial-gradient(1100px 700px at 85% -10%, rgba(124,58,237,.16), transparent 60%),
-    radial-gradient(900px 600px at -10% 100%, rgba(34,211,238,.10), transparent 55%),
+    radial-gradient(1000px 600px at 75% -10%, rgba(255,255,255,.045), transparent 60%),
     linear-gradient(180deg,#05060f,#070918 45%,#05060f);
   color:var(--fg);
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
 }
 
-::selection{background:rgba(124,58,237,.45);color:#fff}
+::selection{background:rgba(110,231,247,.28);color:#fff}
 
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{
-  background:rgba(148,163,255,.22);
+  background:rgba(255,255,255,.16);
   border-radius:8px;
   border:2px solid var(--bg-deep);
 }
@@ -92,7 +84,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
 
 .nebula{position:absolute;inset:-8%;will-change:transform}
 
-/* 流動するインク：ブラーをかけた色塊が screen 合成で混ざり合う */
+/* 流動するインク：単色の霧が screen 合成でゆっくり混ざり合う */
 .ink-blob{
   position:absolute;
   border-radius:50%;
@@ -100,30 +92,26 @@ img,iframe,embed,object{max-width:100%;height:auto}
   mix-blend-mode:screen;
   will-change:transform;
   transform:translateZ(0);
+  background:radial-gradient(circle at 40% 40%, rgba(136,164,196,.45), rgba(136,164,196,0) 70%);
 }
 .ink-1{
-  width:56vmax;height:56vmax;left:-16vmax;top:-22vmax;opacity:.55;
-  background:radial-gradient(circle at 35% 35%, rgba(124,58,237,.55), rgba(124,58,237,0) 70%);
+  width:56vmax;height:56vmax;left:-16vmax;top:-22vmax;opacity:.5;
   animation:ink-drift-1 44s ease-in-out infinite alternate;
 }
 .ink-2{
-  width:48vmax;height:48vmax;right:-14vmax;top:8vmax;opacity:.45;
-  background:radial-gradient(circle at 60% 40%, rgba(34,211,238,.5), rgba(34,211,238,0) 70%);
+  width:48vmax;height:48vmax;right:-14vmax;top:8vmax;opacity:.38;
   animation:ink-drift-2 36s ease-in-out infinite alternate;
 }
 .ink-3{
-  width:46vmax;height:46vmax;left:-10vmax;bottom:-18vmax;opacity:.4;
-  background:radial-gradient(circle at 40% 60%, rgba(236,72,153,.42), rgba(236,72,153,0) 70%);
+  width:46vmax;height:46vmax;left:-10vmax;bottom:-18vmax;opacity:.32;
   animation:ink-drift-3 52s ease-in-out infinite alternate;
 }
 .ink-4{
-  width:40vmax;height:40vmax;right:4vmax;bottom:-12vmax;opacity:.42;
-  background:radial-gradient(circle at 50% 50%, rgba(37,99,235,.5), rgba(37,99,235,0) 70%);
+  width:40vmax;height:40vmax;right:4vmax;bottom:-12vmax;opacity:.35;
   animation:ink-drift-4 30s ease-in-out infinite alternate;
 }
 .ink-5{
-  width:34vmax;height:34vmax;left:32vw;top:24vh;opacity:.3;
-  background:radial-gradient(circle at 50% 50%, rgba(45,212,191,.4), rgba(45,212,191,0) 70%);
+  width:34vmax;height:34vmax;left:32vw;top:24vh;opacity:.25;
   animation:ink-drift-5 40s ease-in-out infinite alternate;
 }
 
@@ -198,17 +186,11 @@ img,iframe,embed,object{max-width:100%;height:auto}
 .profile{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}
 .profile-meta{min-width:0;width:100%;text-align:center}
 
-/* 回転するオーロラリング付きアバター */
 .avatar-ring{
-  --ring-angle:0deg;
   padding:3px;
   border-radius:50%;
-  background:conic-gradient(from var(--ring-angle),
-    rgba(110,231,247,.9), rgba(124,58,237,.9), rgba(236,72,153,.85), rgba(110,231,247,.9));
-  animation:ring-spin 7s linear infinite;
-  box-shadow:0 0 26px rgba(124,58,237,.35);
+  background:rgba(255,255,255,.14);
 }
-@keyframes ring-spin{to{--ring-angle:360deg}}
 .avatar{
   display:block;
   width:108px;height:108px;
@@ -221,9 +203,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
   margin:0;
   font-size:1.3rem;font-weight:700;letter-spacing:.01em;
   white-space:normal;
-  background:linear-gradient(100deg,#9ef0ff,#c9b8ff 55%,#f7b8de);
-  -webkit-background-clip:text;background-clip:text;
-  color:transparent;
+  color:#eef2ff;
 }
 
 .social-row{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}
@@ -232,7 +212,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
   width:38px;height:38px;border-radius:10px;
   color:var(--muted);
   background:rgba(255,255,255,.04);
-  border:1px solid rgba(148,163,255,.12);
+  border:1px solid rgba(255,255,255,.1);
   transition:color .25s ease,border-color .25s ease,box-shadow .25s ease,transform .25s ease;
 }
 .social-row a svg{width:18px;height:18px;display:block;fill:currentColor}
@@ -246,7 +226,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
 .nav{
   display:flex;flex-direction:column;width:100%;gap:4px;
   margin-top:14px;padding-top:16px;
-  border-top:1px solid rgba(148,163,255,.12);
+  border-top:1px solid rgba(255,255,255,.1);
 }
 .nav a{
   font-size:.92rem;font-weight:500;
@@ -256,7 +236,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
   transition:color .22s ease,background .22s ease,border-color .22s ease;
 }
 .nav a::before{content:'❯ ';color:var(--accent);opacity:.45;transition:opacity .22s ease}
-.nav a:hover{color:#fff;background:rgba(255,255,255,.05);border-color:rgba(148,163,255,.18)}
+.nav a:hover{color:#fff;background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.16)}
 .nav a:hover::before{opacity:1}
 .nav a[aria-current="page"]{
   color:var(--accent);
@@ -285,7 +265,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
 .content h4::after{
   content:'';
   flex:1;height:1px;
-  background:linear-gradient(90deg,rgba(148,163,255,.35),transparent);
+  background:linear-gradient(90deg,rgba(255,255,255,.16),transparent);
 }
 .content section > h4:first-child{margin-top:0}
 
@@ -307,7 +287,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
   overflow:hidden;
   backdrop-filter:blur(14px) saturate(140%);
   -webkit-backdrop-filter:blur(14px) saturate(140%);
-  box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 40px rgba(124,58,237,.08);
+  box-shadow:0 20px 60px rgba(0,0,0,.45);
 }
 .terminal.is-typing{cursor:pointer}
 
@@ -317,10 +297,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
   background:rgba(255,255,255,.04);
   border-bottom:1px solid rgba(255,255,255,.06);
 }
-.t-dot{width:12px;height:12px;border-radius:50%;flex:none}
-.t-red{background:#ff5f57}
-.t-yellow{background:#febc2e}
-.t-green{background:#28c840}
+.t-dot{width:12px;height:12px;border-radius:50%;flex:none;background:rgba(255,255,255,.18)}
 .terminal-title{
   margin-left:10px;
   color:var(--faint);
@@ -346,12 +323,12 @@ img,iframe,embed,object{max-width:100%;height:auto}
   margin:0 0 10px;
   font-size:1.12rem;font-weight:700;
   letter-spacing:.02em;
-  color:var(--accent-2);
+  color:#eef2ff;
 }
 .terminal-body h4::before{
   content:'# ';
-  color:var(--accent-3);
-  text-shadow:0 0 12px rgba(242,126,193,.5);
+  color:var(--accent);
+  text-shadow:0 0 12px rgba(110,231,247,.4);
 }
 .terminal-body h4::after{content:none}
 .terminal-body p{margin:0 0 10px;color:var(--fg)}
@@ -386,7 +363,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
 .news ul::before{
   content:'';
   position:absolute;left:5px;top:10px;bottom:10px;width:1px;
-  background:linear-gradient(180deg,rgba(110,231,247,.55),rgba(124,58,237,.4) 60%,transparent);
+  background:linear-gradient(180deg,rgba(110,231,247,.45),rgba(110,231,247,.12) 60%,transparent);
 }
 .news li{
   position:relative;
@@ -402,7 +379,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
   border:2px solid var(--accent);
   box-shadow:0 0 10px rgba(110,231,247,.55);
 }
-.news-date{color:var(--accent-2);font-weight:600}
+.news-date{color:var(--accent);font-weight:600}
 
 /* --------------------------------------------------------------------------
    Publications
@@ -424,7 +401,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
 .publication-item::before{
   content:'';
   position:absolute;left:0;top:0;bottom:0;width:2px;
-  background:linear-gradient(180deg,var(--accent),rgba(124,58,237,.8),transparent);
+  background:linear-gradient(180deg,rgba(110,231,247,.8),rgba(110,231,247,.25),transparent);
   opacity:.45;
   transition:opacity .3s ease;
 }
@@ -437,7 +414,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
 
 .pub-title{margin:0 0 8px;font-size:.98rem;font-weight:600;line-height:1.6;color:#eef2ff}
 .pub-meta{margin:0 0 6px;color:var(--muted);font-size:.8rem;line-height:1.65}
-.pub-meta em{color:var(--accent-2)}
+.pub-meta em{color:#b7c3d9}
 .publication-item > p{margin:8px 0 0}
 
 .pub-links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 0;padding:0}
@@ -487,7 +464,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
   backdrop-filter:blur(12px) saturate(140%);
   -webkit-backdrop-filter:blur(12px) saturate(140%);
 }
-.cv-item{padding:14px 0;border-top:1px dashed rgba(148,163,255,.16)}
+.cv-item{padding:14px 0;border-top:1px dashed rgba(255,255,255,.12)}
 .cv-item:first-child{border-top:0}
 .cv-period{margin:0 0 4px;color:#e6ecff;font-weight:600;font-size:.9rem;line-height:1.7}
 .cv-role{margin:0;color:var(--muted);font-size:.84rem;line-height:1.75}
@@ -530,7 +507,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
-  .ink-blob,.avatar-ring{animation:none !important}
+  .ink-blob{animation:none !important}
   .t-cursor{animation:none;opacity:1}
   .reveal,.reveal.is-visible{transition:none !important;transform:none !important;opacity:1 !important}
   .publication-item,.social-row a,.nav a{transition:none}
