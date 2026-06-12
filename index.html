@@ -1,55 +1,62 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>Takuro Fujii</title>
+	<meta name="description" content="Takuro Fujii — AI researcher / system engineer. NLP and LLM dataset synthesis.">
+	<meta name="theme-color" content="#04050e">
+	<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%AA%90%3C/text%3E%3C/svg%3E">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="styles.css">
-	<meta name="description" content="A simple academic-style static page (HTML + CSS only)">
-	<!-- Google Fonts（任意） -->
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+	<script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
 	<div class="site">
 		<aside class="sidebar" aria-label="サイトナビゲーション">
-        <div id="shared-sidebar"></div>
-      </aside>
+			<div id="shared-sidebar"></div>
+		</aside>
 
 		<main class="content">
 
-			<aside class="about">
-				<h4>About Me</h4>
-				<p>
-				I am currently serving as a system engineer in <a href="https://www.nri.com/jp/" target="_blank" rel="noopener">Nomura Research Institute</a>.
-				I am also an independent AI researcher.
-				My current research topics lie in deep learning about Neural Language Processing, in particular, LLM dataset synthesis.
-				I obtained my Master's degrees from Yokohama National University in 2024, under the supervision of <a href="https://researchmap.jp/hamagami" target="_blank" rel="noopener">Prof. Tomoki Hamagami</a>.
-				</p>
-			</aside>
+			<section class="terminal about" id="about" aria-label="About Me">
+				<div class="terminal-bar">
+					<span class="t-dot t-red"></span>
+					<span class="t-dot t-yellow"></span>
+					<span class="t-dot t-green"></span>
+					<span class="terminal-title">takuro@cosmos: ~</span>
+				</div>
+				<div class="terminal-body">
+					<p class="term-line" hidden><span class="t-prompt">$&nbsp;</span><span class="t-cmd" data-cmd="cat about_me.md"></span></p>
+					<div class="type-target">
+						<h4>About Me</h4>
+						<p>
+						I am currently serving as a system engineer in <a href="https://www.nri.com/jp/" target="_blank" rel="noopener">Nomura Research Institute</a>.
+						I am also an independent AI researcher.
+						My current research topics lie in deep learning about Neural Language Processing, in particular, LLM dataset synthesis.
+						I obtained my Master's degrees from Yokohama National University in 2024, under the supervision of <a href="https://researchmap.jp/hamagami" target="_blank" rel="noopener">Prof. Tomoki Hamagami</a>.
+						</p>
+					</div>
+				</div>
+			</section>
 
-			<aside class="news">
+			<section class="news" aria-label="News">
 				<h4>News</h4>
 				<ul>
-				<li>2025.10.26: Our paper about Pharmaceutical LLM and Benchmarks was accepted at IJCNLP-AACL2025!!</li>
-				<li>2024.10.18: Our paper about LLM Dataset Synthesis for Encoder Model was accepted at PACLIC2024!!</li>
-				<li>2023.12.16: Our paper about Unsupervised Domain Adaptation was accepted at IPSJ Journal!!</li>
-				<li>2023.11.29: Our paper about Video Transformer Model for Sperm Assessment was accepted at WACV2024!!</li>
-				<li>2023.08.11: Our paper about Text-based Person ReID was accepted at ICCV Workshop!!</li>
-				<li>2023.06.09: Our paper about BERT Tokenizer Analysis was accepted at ACL Student Research Workshop!!</li>
+				<li><span class="news-date">2025.10.26</span>: Our paper about Pharmaceutical LLM and Benchmarks was accepted at IJCNLP-AACL2025!!</li>
+				<li><span class="news-date">2024.10.18</span>: Our paper about LLM Dataset Synthesis for Encoder Model was accepted at PACLIC2024!!</li>
+				<li><span class="news-date">2023.12.16</span>: Our paper about Unsupervised Domain Adaptation was accepted at IPSJ Journal!!</li>
+				<li><span class="news-date">2023.11.29</span>: Our paper about Video Transformer Model for Sperm Assessment was accepted at WACV2024!!</li>
+				<li><span class="news-date">2023.08.11</span>: Our paper about Text-based Person ReID was accepted at ICCV Workshop!!</li>
+				<li><span class="news-date">2023.06.09</span>: Our paper about BERT Tokenizer Analysis was accepted at ACL Student Research Workshop!!</li>
 				</ul>
-			</aside>
+			</section>
 
 		</main>
 	</div>
 
 	<script src="./includes.js"></script>
-	<script>
-		// 年表示を安全に更新：#year 要素がある場合のみ更新
-		(function(){
-			var el = document.getElementById('year');
-			if(el) el.textContent = new Date().getFullYear();
-		})();
-	</script>
 </body>
 </html>
-
