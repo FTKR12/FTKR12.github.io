@@ -50,7 +50,180 @@
       '<div class="grain"></div>';
     document.body.prepend(cosmos);
     startStarfield(cosmos.querySelector('.starfield'));
-    if (!reducedMotion) startParallax(cosmos.querySelector('.nebula'));
+    if (!reducedMotion) {
+      // インクはコンテンツの上に重ねる（pointer-events:none / screen 合成）
+      var ink = document.createElement('canvas');
+      ink.className = 'inkfield';
+      ink.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(ink);
+      startInk(ink);
+      startParallax(cosmos.querySelector('.nebula'));
+    }
+  }
+
+  /* 水に垂れるインク：タップで一滴、スライドで筋状に滲む。
+     ときどき自然にも一滴落ちる。色はドロップごとにランダム。 */
+  function startInk(canvas) {
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    var TAU = Math.PI * 2;
+    var MAX_PARTS = 360;
+    var w = 0, h = 0;
+    var parts = [];
+
+    function resize() {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      // ぼかしレイヤーの上に乗るので等倍解像度で十分
+      canvas.width = w;
+      canvas.height = h;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function rnd(a, b) { return a + Math.random() * (b - a); }
+
+    function addPart(p) {
+      if (parts.length >= MAX_PARTS) parts.shift();
+      parts.push(p);
+    }
+
+    // マットな色のラインナップ（H, S%, L%）。この中からランダムに選ぶ
+    var PALETTE = [
+      [210, 36, 58],  // スレートブルー
+      [190, 42, 52],  // ダスティシアン
+      [150, 24, 55],  // セージグリーン
+      [260, 26, 60],  // ラベンダーグレー
+      [345, 28, 58],  // ダスティローズ
+      [40, 32, 58]    // サンドゴールド
+    ];
+
+    function spawnDrop(x, y, big) {
+      var c = PALETTE[(Math.random() * PALETTE.length) | 0];
+      var hue = c[0] + rnd(-5, 5);
+      var sat = c[1] + rnd(-4, 4);
+      var light = c[2] + rnd(-3, 3);
+      // 中心のにじみ（ゆっくり大きく広がる）
+      addPart({
+        x: x, y: y,
+        vx: rnd(-4, 4), vy: rnd(2, 10),
+        r: big ? rnd(10, 18) : rnd(6, 10),
+        maxR: big ? rnd(110, 190) : rnd(50, 90),
+        grow: rnd(.5, .9),
+        peak: big ? rnd(.28, .38) : rnd(.18, .26),
+        decay: big ? rnd(.09, .14) : rnd(.12, .18),
+        hue: hue, sat: sat, light: light,
+        age: 0, depth: 0, branchAt: rnd(.5, 1.4), branched: false
+      });
+      // 触手（外へ伸びるインクの筋）
+      var n = big ? 8 : 5;
+      for (var i = 0; i < n; i++) {
+        var ang = Math.random() * TAU;
+        var off = rnd(4, 16);
+        var sp = big ? rnd(26, 90) : rnd(18, 50);
+        addPart({
+          x: x + Math.cos(ang) * off, y: y + Math.sin(ang) * off,
+          vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp + rnd(0, 8),
+          r: rnd(3, 7), maxR: big ? rnd(28, 64) : rnd(16, 36),
+          grow: rnd(.5, 1.1),
+          peak: rnd(.12, .2),
+          decay: rnd(.14, .24),
+          hue: (hue + rnd(-8, 8) + 360) % 360, sat: sat, light: light + rnd(-3, 3),
+          age: 0, depth: 1, branchAt: rnd(.4, 1.0), branched: false
+        });
+      }
+    }
+
+    // 筋の先からさらに枝分かれして広がる（マーブリング感）
+    function branch(p) {
+      var kids = 1 + (Math.random() * 2 | 0);
+      for (var i = 0; i < kids; i++) {
+        var ang = Math.random() * TAU;
+        var sp = rnd(10, 34);
+        addPart({
+          x: p.x, y: p.y,
+          vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp + rnd(0, 6),
+          r: Math.max(2, p.r * .5), maxR: p.maxR * rnd(.4, .7),
+          grow: rnd(.5, 1.0),
+          peak: p.peak * rnd(.6, .9),
+          decay: p.decay * rnd(1.0, 1.4),
+          hue: (p.hue + rnd(-6, 6) + 360) % 360, sat: p.sat, light: p.light,
+          age: 0, depth: p.depth + 1, branchAt: rnd(.4, 1.0), branched: false
+        });
+      }
+    }
+
+    // 最初の一滴と環境ドリップ
+    setTimeout(function () {
+      spawnDrop(rnd(w * .15, w * .85), rnd(h * .1, h * .5), true);
+    }, 600);
+    var nextDrip = rnd(3000, 6000);
+
+    var last = performance.now();
+    function frame(now) {
+      var dt = Math.min(.05, (now - last) / 1000);
+      last = now;
+
+      nextDrip -= dt * 1000;
+      if (nextDrip <= 0) {
+        spawnDrop(rnd(w * .05, w * .95), rnd(h * .05, h * .8), Math.random() < .35);
+        nextDrip = rnd(4500, 10000);
+      }
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'lighter';
+
+      for (var i = parts.length - 1; i >= 0; i--) {
+        var p = parts[i];
+        p.age += dt;
+
+        // フェードイン → 減衰
+        var k = Math.min(p.age / .4, 1);
+        var alpha = p.peak * k * Math.exp(-p.decay * Math.max(0, p.age - .4));
+        if (alpha < .004) { parts.splice(i, 1); continue; }
+
+        // 減速しながら漂い、わずかに沈む
+        var damp = Math.exp(-1.1 * dt);
+        p.vx = p.vx * damp + rnd(-26, 26) * dt;
+        p.vy = p.vy * damp + rnd(-26, 26) * dt + 2.5 * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.r += (p.maxR - p.r) * p.grow * dt;
+
+        if (!p.branched && p.depth < 2 && p.age > p.branchAt) {
+          p.branched = true;
+          branch(p);
+        }
+
+        var g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+        var c = p.hue + ',' + p.sat.toFixed(0) + '%,' + p.light.toFixed(0) + '%';
+        g.addColorStop(0, 'hsla(' + c + ',' + alpha.toFixed(3) + ')');
+        g.addColorStop(.7, 'hsla(' + c + ',' + (alpha * .45).toFixed(3) + ')');
+        g.addColorStop(1, 'hsla(' + c + ',0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, TAU);
+        ctx.fill();
+      }
+
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    // タップ＝大きな一滴 / スライド＝小さな滴の筋
+    var lastX = -1e4, lastY = -1e4;
+    window.addEventListener('pointerdown', function (e) {
+      spawnDrop(e.clientX, e.clientY, true);
+      lastX = e.clientX;
+      lastY = e.clientY;
+    }, { passive: true });
+    window.addEventListener('pointermove', function (e) {
+      var dx = e.clientX - lastX, dy = e.clientY - lastY;
+      if (dx * dx + dy * dy < 4900) return; // 70px ごと
+      lastX = e.clientX;
+      lastY = e.clientY;
+      spawnDrop(e.clientX, e.clientY, false);
+    }, { passive: true });
   }
 
   function startStarfield(canvas) {
@@ -320,6 +493,38 @@
     });
   }
 
+  /* ---------- news: 上位5件のみ表示、残りは折りたたみ ---------- */
+  function initNewsCollapse() {
+    var list = document.querySelector('.news ul');
+    if (!list) return;
+    var LIMIT = 5;
+    var items = Array.prototype.slice.call(list.querySelectorAll('li'));
+    if (items.length <= LIMIT) return;
+
+    var extra = items.slice(LIMIT);
+    var labelMore = '… show ' + extra.length + ' more';
+    var labelLess = 'show less';
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'news-toggle';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.textContent = labelMore;
+
+    function setOpen(open) {
+      extra.forEach(function (li) { li.hidden = !open; });
+      btn.setAttribute('aria-expanded', String(open));
+      btn.textContent = open ? labelLess : labelMore;
+    }
+    setOpen(false);
+
+    btn.addEventListener('click', function () {
+      setOpen(btn.getAttribute('aria-expanded') !== 'true');
+    });
+
+    list.parentNode.appendChild(btn);
+  }
+
   /* ---------- publications: year filter ---------- */
   function initPublicationFilter() {
     var container = document.querySelector('.publications');
@@ -368,6 +573,7 @@
   function init() {
     initCosmos();
     initTypewriter();
+    initNewsCollapse();
     initReveal();
     initPublicationFilter();
     includeSidebar();
