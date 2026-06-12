@@ -570,7 +570,9 @@ html.lang-ja .news li[lang="ja"]:nth-child(2){border-top:0}
 }
 .pub-meta{margin:0 0 6px;color:var(--muted);font-size:.79rem;line-height:1.65}
 .pub-meta em{font-style:normal;color:var(--meta-em)}
-.publication-item .pub-meta:first-of-type{
+/* 掲載先（venue）行のアクセントバー。言語切替で重複するため em を含む行にも適用 */
+.publication-item .pub-meta:first-of-type,
+.publication-item .pub-meta:has(em){
   border-left:2px solid rgba(var(--accent-rgb),.4);
   padding-left:10px;
   margin-bottom:8px;
