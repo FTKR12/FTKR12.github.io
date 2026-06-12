@@ -10,9 +10,22 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%AA%90%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=M+PLUS+1+Code:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <script>document.documentElement.classList.add('js');</script>
+  <script>
+  /* テーマ（dark/light）と言語（en/ja）を描画前に適用。URL の ?theme= / ?lang= でも指定可能 */
+  (function(){
+    var d=document.documentElement;d.classList.add('js');
+    var q=new URLSearchParams(location.search);
+    var theme=q.get('theme'),lang=q.get('lang');
+    try{
+      theme=theme||localStorage.getItem('site-theme');
+      lang=lang||localStorage.getItem('site-lang');
+    }catch(e){}
+    if(theme==='light')d.classList.add('light');
+    if(lang==='ja'){d.classList.add('lang-ja');d.lang='ja';}
+  })();
+  </script>
 </head>
 <body>
   <div class="site">
@@ -24,124 +37,157 @@
 
       <section class="cv">
 
-        <h4>Work Experience</h4>
+        <h4><span lang="en">Work Experience</span><span lang="ja">職歴</span></h4>
         <div class="cv-box">
 
           <div class="cv-item">
-            <p class="cv-period">NTT, Inc.</p>
-            <p class="cv-role">Researcher, <span class="no-detect">2026/4 - present</span></p>
+            <p class="cv-period" lang="en">NTT, Inc.</p>
+            <p class="cv-period" lang="ja">NTT株式会社</p>
+            <p class="cv-role" lang="en">Researcher, <span class="no-detect">2026/4 - present</span></p>
+            <p class="cv-role" lang="ja">研究員、<span class="no-detect">2026/4 - 現在</span></p>
           </div>
 
           <div class="cv-item">
-            <p class="cv-period">Nomura Research Institute, Ltd.</p>
-            <p class="cv-role">Application System Engineer, <span class="no-detect">2024/4 - 2026/3</span></p>
+            <p class="cv-period" lang="en">Nomura Research Institute, Ltd.</p>
+            <p class="cv-period" lang="ja">株式会社野村総合研究所</p>
+            <p class="cv-role" lang="en">Application System Engineer, <span class="no-detect">2024/4 - 2026/3</span></p>
+            <p class="cv-role" lang="ja">アプリケーションシステムエンジニア、<span class="no-detect">2024/4 - 2026/3</span></p>
           </div>
 
           <div class="cv-item">
             <p class="cv-period">Callisto, Inc.</p>
-            <p class="cv-role">Research Part-time, <span class="no-detect">2023/10 - 2024/3</span>, 6 months</p>
+            <p class="cv-role" lang="en">Research Part-time, <span class="no-detect">2023/10 - 2024/3</span>, 6 months</p>
+            <p class="cv-role" lang="ja">研究アルバイト、<span class="no-detect">2023/10 - 2024/3</span>、6ヶ月</p>
           </div>
 
           <div class="cv-item">
-            <p class="cv-period">Retrieva, Inc</p>
-            <p class="cv-role">Research Intern/Part-time Worker, <span class="no-detect">2023/9 - 2024/3</span>, 7 months</p>
+            <p class="cv-period" lang="en">Retrieva, Inc</p>
+            <p class="cv-period" lang="ja">株式会社レトリバ</p>
+            <p class="cv-role" lang="en">Research Intern/Part-time Worker, <span class="no-detect">2023/9 - 2024/3</span>, 7 months</p>
+            <p class="cv-role" lang="ja">研究インターン・アルバイト、<span class="no-detect">2023/9 - 2024/3</span>、7ヶ月</p>
           </div>
 
           <div class="cv-item">
-            <p class="cv-period">NTT Communications, Inc.</p>
-            <p class="cv-role">Research Intern, <span class="no-detect">2023/2 - 2023/12</span>, 11 months</p>
+            <p class="cv-period" lang="en">NTT Communications, Inc.</p>
+            <p class="cv-period" lang="ja">NTTコミュニケーションズ株式会社</p>
+            <p class="cv-role" lang="en">Research Intern, <span class="no-detect">2023/2 - 2023/12</span>, 11 months</p>
+            <p class="cv-role" lang="ja">研究インターン、<span class="no-detect">2023/2 - 2023/12</span>、11ヶ月</p>
           </div>
 
           <div class="cv-item">
-            <p class="cv-period">Hitachi, Inc.</p>
-            <p class="cv-role">Research Intern, <span class="no-detect">2022/8 - 2023/5</span>, 10 months</p>
+            <p class="cv-period" lang="en">Hitachi, Inc.</p>
+            <p class="cv-period" lang="ja">株式会社日立製作所</p>
+            <p class="cv-role" lang="en">Research Intern, <span class="no-detect">2022/8 - 2023/5</span>, 10 months</p>
+            <p class="cv-role" lang="ja">研究インターン、<span class="no-detect">2022/8 - 2023/5</span>、10ヶ月</p>
           </div>
 
         </div>
 
-        <h4>Education</h4>
+        <h4><span lang="en">Education</span><span lang="ja">学歴</span></h4>
         <div class="cv-box">
 
           <div class="cv-item">
-            <p class="cv-period"><span class="no-detect">Apr. 2022</span> (grade skipping) — <span class="no-detect">Mar. 2024</span></p>
-            <p class="cv-role">M.S., School of Electrical and Computer Engineering, Yokohama National University, Japan</p>
+            <p class="cv-period" lang="en"><span class="no-detect">Apr. 2022</span> (grade skipping) — <span class="no-detect">Mar. 2024</span></p>
+            <p class="cv-period" lang="ja"><span class="no-detect">2022年4月</span>（飛び入学）— <span class="no-detect">2024年3月</span></p>
+            <p class="cv-role" lang="en">M.S., School of Electrical and Computer Engineering, Yokohama National University, Japan</p>
+            <p class="cv-role" lang="ja">修士号、電気・コンピュータ工学、横浜国立大学（日本）</p>
           </div>
 
           <div class="cv-item">
-            <p class="cv-period"><span class="no-detect">Apr. 2019</span> — <span class="no-detect">Mar. 2022</span></p>
-            <p class="cv-role">B.S., School of Electrical and Computer Engineering, Yokohama National University, Japan</p>
+            <p class="cv-period" lang="en"><span class="no-detect">Apr. 2019</span> — <span class="no-detect">Mar. 2022</span></p>
+            <p class="cv-period" lang="ja"><span class="no-detect">2019年4月</span> — <span class="no-detect">2022年3月</span></p>
+            <p class="cv-role" lang="en">B.S., School of Electrical and Computer Engineering, Yokohama National University, Japan</p>
+            <p class="cv-role" lang="ja">学士号、電気・コンピュータ工学、横浜国立大学（日本）</p>
           </div>
         </div>
 
-        <h4>Certifications</h4>
+        <h4><span lang="en">Certifications</span><span lang="ja">資格</span></h4>
         <div class="cv-box">
 
           <div class="cv-item">
-            <p class="cv-period">Applied Information Technology Engineer Examination</p>
-            <p class="cv-role">passed in <span class="no-detect">2024/12</span>.</p>
+            <p class="cv-period" lang="en">Applied Information Technology Engineer Examination</p>
+            <p class="cv-period" lang="ja">応用情報技術者試験</p>
+            <p class="cv-role" lang="en">passed in <span class="no-detect">2024/12</span>.</p>
+            <p class="cv-role" lang="ja"><span class="no-detect">2024/12</span> 合格。</p>
           </div>
 
           <div class="cv-item">
-            <p class="cv-period">The 2nd Grade Official Bookkeeping Examination (JCCI)</p>
-            <p class="cv-role">passed in <span class="no-detect">2024/08</span>.</p>
+            <p class="cv-period" lang="en">The 2nd Grade Official Bookkeeping Examination (JCCI)</p>
+            <p class="cv-period" lang="ja">日商簿記検定2級</p>
+            <p class="cv-role" lang="en">passed in <span class="no-detect">2024/08</span>.</p>
+            <p class="cv-role" lang="ja"><span class="no-detect">2024/08</span> 合格。</p>
           </div>
         </div>
 
-        <h4>Skills</h4>
+        <h4><span lang="en">Skills</span><span lang="ja">スキル</span></h4>
         <div class="cv-box">
 
           <div class="cv-item">
-            <p class="cv-period">Programming Languages</p>
+            <p class="cv-period" lang="en">Programming Languages</p>
+            <p class="cv-period" lang="ja">プログラミング言語</p>
             <p class="cv-role">Shell, Python, HTML/CSS, Java Script, JSP, Java（Spring Boot）, Node.js</p>
           </div>
 
           <div class="cv-item">
-            <p class="cv-period">Frameworks/Libraries</p>
+            <p class="cv-period" lang="en">Frameworks/Libraries</p>
+            <p class="cv-period" lang="ja">フレームワーク・ライブラリ</p>
             <p class="cv-role">Deep Learning with PyTorch, transformers, TensorFlow, scikit-learn, NumPy, OpenCV, ...</p>
           </div>
 
         </div>
 
-        <h4>Activities</h4>
+        <h4><span lang="en">Activities</span><span lang="ja">活動</span></h4>
         <div class="cv-box">
 
           <div class="cv-item">
-            <p class="cv-period">2nd GENIAC Project</p>
-            <p class="cv-role">The phase 2 of GENIAC (Generative AI Accelerator Challenge), The Project of Ministry of Economy, Trade and Industry</p>
+            <p class="cv-period" lang="en">2nd GENIAC Project</p>
+            <p class="cv-period" lang="ja">第2期 GENIACプロジェクト</p>
+            <p class="cv-role" lang="en">The phase 2 of GENIAC (Generative AI Accelerator Challenge), The Project of Ministry of Economy, Trade and Industry</p>
+            <p class="cv-role" lang="ja">GENIAC（Generative AI Accelerator Challenge）第2期、経済産業省のプロジェクト</p>
           </div>
 
           <div class="cv-item">
-            <p class="cv-period">MIRU Young Researcher's Program</p>
-            <p class="cv-role">The 26th Meeting on Image Recognition and Understanding (MIRU2023)</p>
+            <p class="cv-period" lang="en">MIRU Young Researcher's Program</p>
+            <p class="cv-period" lang="ja">MIRU若手プログラム</p>
+            <p class="cv-role" lang="en">The 26th Meeting on Image Recognition and Understanding (MIRU2023)</p>
+            <p class="cv-role" lang="ja">第26回 画像の認識・理解シンポジウム（MIRU2023）</p>
           </div>
         </div>
 
-        <h4>Articles</h4>
+        <h4><span lang="en">Articles</span><span lang="ja">記事</span></h4>
         <div class="cv-box">
 
           <div class="cv-item">
-            <p class="cv-period"><a href="https://zenn.dev/eques/articles/e415fe4d28e9d1">Japanese Pharmaceutical LLM and Benchmarks</a></p>
-            <p class="cv-role">GENIAC Project Report</p>
+            <p class="cv-period" lang="en"><a href="https://zenn.dev/eques/articles/e415fe4d28e9d1">Japanese Pharmaceutical LLM and Benchmarks</a></p>
+            <p class="cv-period" lang="ja"><a href="https://zenn.dev/eques/articles/e415fe4d28e9d1">日本語薬学LLMとベンチマーク</a></p>
+            <p class="cv-role" lang="en">GENIAC Project Report</p>
+            <p class="cv-role" lang="ja">GENIACプロジェクト報告</p>
           </div>
 
           <div class="cv-item">
-            <p class="cv-period"><a href="https://note.com/retrieva/n/nbd2e342f91b5">Pseudo Training Data Generation using LLM</a></p>
-            <p class="cv-role">Internship Report at Retrieva Inc.</p>
+            <p class="cv-period" lang="en"><a href="https://note.com/retrieva/n/nbd2e342f91b5">Pseudo Training Data Generation using LLM</a></p>
+            <p class="cv-period" lang="ja"><a href="https://note.com/retrieva/n/nbd2e342f91b5">LLMによる擬似学習データ生成</a></p>
+            <p class="cv-role" lang="en">Internship Report at Retrieva Inc.</p>
+            <p class="cv-role" lang="ja">株式会社レトリバ インターンシップ報告</p>
           </div>
 
           <div class="cv-item">
-            <p class="cv-period"><a href="https://note.com/retrieva/n/nac940528b4b3">Inference Time Validation of Japanese LLM</a></p>
-            <p class="cv-role">Internship Report at Retrieva Inc.</p>
+            <p class="cv-period" lang="en"><a href="https://note.com/retrieva/n/nac940528b4b3">Inference Time Validation of Japanese LLM</a></p>
+            <p class="cv-period" lang="ja"><a href="https://note.com/retrieva/n/nac940528b4b3">日本語LLMの推論時間検証</a></p>
+            <p class="cv-role" lang="en">Internship Report at Retrieva Inc.</p>
+            <p class="cv-role" lang="ja">株式会社レトリバ インターンシップ報告</p>
           </div>
         </div>
 
-        <h4>Models and Datasets</h4>
+        <h4><span lang="en">Models and Datasets</span><span lang="ja">モデル・データセット</span></h4>
         <div class="cv-box">
 
           <div class="cv-item">
             <p class="cv-period">JpharmaBench</p>
-            <p class="cv-period">・<a href="https://huggingface.co/datasets/EQUES/Nayose-Bench-Instruction">The Entity Resolution Dataset in the Pharmaceutical Domain (Instruction Type)</a></p>
-            <p class="cv-period">・<a href="https://huggingface.co/datasets/EQUES/Nayose-Bench-QA">The Entity Resolution Dataset in the Pharmaceutical Domain (five-choices QA Type)</a></p>
+            <p class="cv-period" lang="en">・<a href="https://huggingface.co/datasets/EQUES/Nayose-Bench-Instruction">The Entity Resolution Dataset in the Pharmaceutical Domain (Instruction Type)</a></p>
+            <p class="cv-period" lang="ja">・<a href="https://huggingface.co/datasets/EQUES/Nayose-Bench-Instruction">薬学ドメインの名寄せデータセット（Instruction形式）</a></p>
+            <p class="cv-period" lang="en">・<a href="https://huggingface.co/datasets/EQUES/Nayose-Bench-QA">The Entity Resolution Dataset in the Pharmaceutical Domain (five-choices QA Type)</a></p>
+            <p class="cv-period" lang="ja">・<a href="https://huggingface.co/datasets/EQUES/Nayose-Bench-QA">薬学ドメインの名寄せデータセット（5択QA形式）</a></p>
           </div>
 
           <div class="cv-item">
@@ -151,17 +197,19 @@
           </div>
         </div>
 
-        <h4>Grants</h4>
+        <h4><span lang="en">Grants</span><span lang="ja">助成・奨学金</span></h4>
         <div class="cv-box">
 
           <div class="cv-item">
-            <p class="cv-period">・ACL SRW 2023 Student Travel Grant, (2023,7)</p>
-            <p class="cv-period">・Type 1 Scholarship of Japan Student Services Organization (JASSO), half exemption (2024,7)</p>
+            <p class="cv-period" lang="en">・ACL SRW 2023 Student Travel Grant, (2023,7)</p>
+            <p class="cv-period" lang="ja">・ACL SRW 2023 学生渡航助成（2023年7月）</p>
+            <p class="cv-period" lang="en">・Type 1 Scholarship of Japan Student Services Organization (JASSO), half exemption (2024,7)</p>
+            <p class="cv-period" lang="ja">・日本学生支援機構（JASSO）第一種奨学金、半額返還免除（2024年7月）</p>
           </div>
 
         </div>
 
-        <h4>Contact</h4>
+        <h4><span lang="en">Contact</span><span lang="ja">連絡先</span></h4>
         <div class="cv-box">
 
           <div class="cv-item">
