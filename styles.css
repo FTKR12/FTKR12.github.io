@@ -1,7 +1,8 @@
 /* ==========================================================================
    Takuro Fujii — personal site
-   Theme: "Cosmic Ink" — 深宇宙 × 流れるインク × ターミナル
-   Palette: 黒系背景 + グレー/白 + アクセント1色（シアン）のみ
+   Theme: "Cosmic Ink" — 深宇宙 × 水に垂れるインク × ターミナル
+   Palette: 黒系背景 + グレー/白 + アクセント1色（シアン）
+            ランダム色はインタラクティブなインクのみに使用
    ========================================================================== */
 
 :root{
@@ -14,11 +15,11 @@
   --accent:#6ee7f7;      /* 唯一のアクセントカラー */
   --link:#6ee7f7;
 
-  --card:rgba(13,17,36,.58);
-  --card-border:rgba(255,255,255,.1);
-  --card-border-hover:rgba(110,231,247,.38);
+  --card:rgba(11,14,29,.86);
+  --card-border:rgba(255,255,255,.12);
+  --card-border-hover:rgba(110,231,247,.4);
 
-  --radius:14px;
+  --radius:8px;
   --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
 
   font-size:16px;
@@ -74,6 +75,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
 
 /* --------------------------------------------------------------------------
    Cosmic background（JS が .cosmos を body 直下に注入する）
+   レイヤー順: 単色の霧 → 星 → インク → 粒状ノイズ
    -------------------------------------------------------------------------- */
 .cosmos{
   position:fixed;inset:0;
@@ -84,7 +86,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
 
 .nebula{position:absolute;inset:-8%;will-change:transform}
 
-/* 流動するインク：単色の霧が screen 合成でゆっくり混ざり合う */
+/* 漂う単色の霧（ベースの空気感） */
 .ink-blob{
   position:absolute;
   border-radius:50%;
@@ -95,23 +97,23 @@ img,iframe,embed,object{max-width:100%;height:auto}
   background:radial-gradient(circle at 40% 40%, rgba(136,164,196,.45), rgba(136,164,196,0) 70%);
 }
 .ink-1{
-  width:56vmax;height:56vmax;left:-16vmax;top:-22vmax;opacity:.5;
+  width:56vmax;height:56vmax;left:-16vmax;top:-22vmax;opacity:.42;
   animation:ink-drift-1 44s ease-in-out infinite alternate;
 }
 .ink-2{
-  width:48vmax;height:48vmax;right:-14vmax;top:8vmax;opacity:.38;
+  width:48vmax;height:48vmax;right:-14vmax;top:8vmax;opacity:.32;
   animation:ink-drift-2 36s ease-in-out infinite alternate;
 }
 .ink-3{
-  width:46vmax;height:46vmax;left:-10vmax;bottom:-18vmax;opacity:.32;
+  width:46vmax;height:46vmax;left:-10vmax;bottom:-18vmax;opacity:.28;
   animation:ink-drift-3 52s ease-in-out infinite alternate;
 }
 .ink-4{
-  width:40vmax;height:40vmax;right:4vmax;bottom:-12vmax;opacity:.35;
+  width:40vmax;height:40vmax;right:4vmax;bottom:-12vmax;opacity:.3;
   animation:ink-drift-4 30s ease-in-out infinite alternate;
 }
 .ink-5{
-  width:34vmax;height:34vmax;left:32vw;top:24vh;opacity:.25;
+  width:34vmax;height:34vmax;left:32vw;top:24vh;opacity:.22;
   animation:ink-drift-5 40s ease-in-out infinite alternate;
 }
 
@@ -143,6 +145,18 @@ img,iframe,embed,object{max-width:100%;height:auto}
 
 .starfield{position:absolute;inset:0;width:100%;height:100%}
 
+/* 水に垂れるインク（タップ／スライドで滲む。JS 描画）
+   コンテンツの最前面に screen 合成で重ねる。低アルファ＋ぼかしなので
+   文字の可読性は保たれる */
+.inkfield{
+  position:fixed;inset:0;width:100%;height:100%;
+  z-index:5;
+  pointer-events:none;
+  filter:blur(12px);
+  mix-blend-mode:screen;
+  opacity:1;
+}
+
 /* インクの質感を出す微細な粒状ノイズ */
 .grain{
   position:absolute;inset:0;
@@ -157,15 +171,15 @@ img,iframe,embed,object{max-width:100%;height:auto}
 .site{
   min-height:100vh;
   display:grid;
-  grid-template-columns:268px minmax(0,1fr);
-  gap:36px;
-  max-width:1180px;
+  grid-template-columns:264px minmax(0,1fr);
+  gap:32px;
+  max-width:1140px;
   margin:0 auto;
   padding:44px 32px 64px;
 }
 
 .content{max-width:100%}
-.content > * + *{margin-top:30px}
+.content > * + *{margin-top:34px}
 
 /* --------------------------------------------------------------------------
    Sidebar
@@ -176,11 +190,11 @@ img,iframe,embed,object{max-width:100%;height:auto}
   display:flex;flex-direction:column;align-items:center;gap:6px;
   background:var(--card);
   border:1px solid var(--card-border);
-  border-radius:18px;
-  padding:30px 22px 22px;
-  backdrop-filter:blur(14px) saturate(140%);
-  -webkit-backdrop-filter:blur(14px) saturate(140%);
-  box-shadow:0 18px 50px rgba(2,4,16,.5);
+  border-radius:12px;
+  padding:28px 20px 20px;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  box-shadow:0 8px 30px rgba(0,0,0,.35);
 }
 
 .profile{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}
@@ -193,7 +207,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
 }
 .avatar{
   display:block;
-  width:108px;height:108px;
+  width:104px;height:104px;
   border-radius:50%;
   border:3px solid var(--bg-deep);
   object-fit:cover;
@@ -201,26 +215,25 @@ img,iframe,embed,object{max-width:100%;height:auto}
 
 .name{
   margin:0;
-  font-size:1.3rem;font-weight:700;letter-spacing:.01em;
+  font-size:1.28rem;font-weight:700;letter-spacing:.01em;
   white-space:normal;
   color:#eef2ff;
 }
 
-.social-row{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}
+.social-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .social-row a{
   display:inline-flex;align-items:center;justify-content:center;
-  width:38px;height:38px;border-radius:10px;
+  width:38px;height:38px;border-radius:8px;
   color:var(--muted);
   background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.1);
-  transition:color .25s ease,border-color .25s ease,box-shadow .25s ease,transform .25s ease;
+  transition:color .25s ease,border-color .25s ease,box-shadow .25s ease;
 }
 .social-row a svg{width:18px;height:18px;display:block;fill:currentColor}
 .social-row a:hover{
   color:var(--accent);
   border-color:rgba(110,231,247,.45);
-  box-shadow:0 0 16px rgba(110,231,247,.25);
-  transform:translateY(-2px);
+  box-shadow:0 0 16px rgba(110,231,247,.2);
 }
 
 .nav{
@@ -229,9 +242,9 @@ img,iframe,embed,object{max-width:100%;height:auto}
   border-top:1px solid rgba(255,255,255,.1);
 }
 .nav a{
-  font-size:.92rem;font-weight:500;
+  font-size:.9rem;font-weight:500;
   color:var(--muted);text-decoration:none;
-  padding:9px 12px;border-radius:9px;
+  padding:8px 12px;border-radius:6px;
   border:1px solid transparent;
   transition:color .22s ease,background .22s ease,border-color .22s ease;
 }
@@ -247,25 +260,28 @@ img,iframe,embed,object{max-width:100%;height:auto}
 
 /* --------------------------------------------------------------------------
    Content generic
+   セクション見出し＝大文字トラッキングの小ラベル（構造を示す）
    -------------------------------------------------------------------------- */
 .content h4{
   display:flex;align-items:center;gap:10px;
-  margin:34px 0 16px;
-  font-size:1.02rem;font-weight:600;
-  letter-spacing:.05em;
-  color:#e8edff;
+  margin:40px 0 14px;
+  font-size:.82rem;font-weight:600;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#cdd6ea;
 }
 .content h4::before{
   content:'##';
   flex:none;
   white-space:nowrap;
+  letter-spacing:0;
   color:var(--accent);
   text-shadow:0 0 12px rgba(110,231,247,.5);
 }
 .content h4::after{
   content:'';
   flex:1;height:1px;
-  background:linear-gradient(90deg,rgba(255,255,255,.16),transparent);
+  background:rgba(255,255,255,.12);
 }
 .content section > h4:first-child{margin-top:0}
 
@@ -281,23 +297,23 @@ img,iframe,embed,object{max-width:100%;height:auto}
    Terminal（About Me のタイプライター演出）
    -------------------------------------------------------------------------- */
 .terminal{
-  background:rgba(8,10,24,.74);
+  background:rgba(9,11,26,.88);
   border:1px solid var(--card-border);
   border-radius:var(--radius);
   overflow:hidden;
-  backdrop-filter:blur(14px) saturate(140%);
-  -webkit-backdrop-filter:blur(14px) saturate(140%);
-  box-shadow:0 20px 60px rgba(0,0,0,.45);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  box-shadow:0 12px 40px rgba(0,0,0,.4);
 }
 .terminal.is-typing{cursor:pointer}
 
 .terminal-bar{
   display:flex;align-items:center;gap:8px;
-  padding:11px 14px;
+  padding:10px 14px;
   background:rgba(255,255,255,.04);
-  border-bottom:1px solid rgba(255,255,255,.06);
+  border-bottom:1px solid rgba(255,255,255,.08);
 }
-.t-dot{width:12px;height:12px;border-radius:50%;flex:none;background:rgba(255,255,255,.18)}
+.t-dot{width:11px;height:11px;border-radius:50%;flex:none;background:rgba(255,255,255,.18)}
 .terminal-title{
   margin-left:10px;
   color:var(--faint);
@@ -321,8 +337,9 @@ img,iframe,embed,object{max-width:100%;height:auto}
 .terminal-body h4{
   display:block;
   margin:0 0 10px;
-  font-size:1.12rem;font-weight:700;
+  font-size:1.1rem;font-weight:700;
   letter-spacing:.02em;
+  text-transform:none;
   color:#eef2ff;
 }
 .terminal-body h4::before{
@@ -347,95 +364,116 @@ img,iframe,embed,object{max-width:100%;height:auto}
 @keyframes cursor-blink{0%,55%{opacity:1}56%,100%{opacity:0}}
 
 /* --------------------------------------------------------------------------
-   News（タイムライン）
+   News（日付が縦に揃うログ形式）
    -------------------------------------------------------------------------- */
 .news{
   background:var(--card);
   border:1px solid var(--card-border);
   border-radius:var(--radius);
-  padding:20px 22px;
-  backdrop-filter:blur(12px) saturate(140%);
-  -webkit-backdrop-filter:blur(12px) saturate(140%);
+  padding:18px 22px 10px;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
 }
 .news h4{margin-top:0}
 
-.news ul{list-style:none;margin:0;padding:0;position:relative}
-.news ul::before{
-  content:'';
-  position:absolute;left:5px;top:10px;bottom:10px;width:1px;
-  background:linear-gradient(180deg,rgba(110,231,247,.45),rgba(110,231,247,.12) 60%,transparent);
-}
+.news ul{list-style:none;margin:0;padding:0}
 .news li{
-  position:relative;
-  margin:0;padding:7px 0 7px 26px;
-  font-size:.88rem;line-height:1.8;
+  display:grid;
+  grid-template-columns:10ch 1fr;
+  gap:0 10px;
+  margin:0;padding:9px 0;
+  font-size:.86rem;line-height:1.75;
   color:var(--fg);
+  border-top:1px solid rgba(255,255,255,.06);
 }
-.news li::before{
-  content:'';
-  position:absolute;left:0;top:calc(7px + .5em);
-  width:7px;height:7px;border-radius:50%;
-  background:var(--bg-deep);
-  border:2px solid var(--accent);
-  box-shadow:0 0 10px rgba(110,231,247,.55);
-}
+.news li:first-child{border-top:0}
 .news-date{color:var(--accent);font-weight:600}
+
+/* 6件目以降の折りたたみトグル */
+.news-toggle{
+  display:block;width:100%;
+  margin:0;padding:10px 0 12px;
+  background:transparent;border:0;
+  border-top:1px solid rgba(255,255,255,.06);
+  font-family:var(--mono);font-size:.8rem;letter-spacing:.04em;
+  color:var(--muted);text-align:left;cursor:pointer;
+  transition:color .2s ease;
+}
+.news-toggle::before{content:'\276f ';color:var(--accent);opacity:.6}
+.news-toggle:hover{color:var(--accent)}
 
 /* --------------------------------------------------------------------------
    Publications
    -------------------------------------------------------------------------- */
 .publications{margin-top:0}
-.pub-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:8px}
+.pub-grid{
+  display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:8px;
+  counter-reset:pub;
+}
 
 .publication-item{
   position:relative;
+  counter-increment:pub;
   background:var(--card);
   border:1px solid var(--card-border);
   border-radius:var(--radius);
-  padding:18px 20px;
+  padding:16px 18px;
   overflow:hidden;
-  backdrop-filter:blur(12px) saturate(140%);
-  -webkit-backdrop-filter:blur(12px) saturate(140%);
-  transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  transition:border-color .25s ease,background .25s ease;
 }
 .publication-item::before{
   content:'';
   position:absolute;left:0;top:0;bottom:0;width:2px;
   background:linear-gradient(180deg,rgba(110,231,247,.8),rgba(110,231,247,.25),transparent);
   opacity:.45;
-  transition:opacity .3s ease;
+  transition:opacity .25s ease;
+}
+.publication-item::after{
+  content:'[' counter(pub,decimal-leading-zero) ']';
+  position:absolute;top:13px;right:14px;
+  font-size:.72rem;letter-spacing:.05em;
+  color:var(--faint);
 }
 .publication-item:hover{
-  transform:translateY(-3px);
   border-color:var(--card-border-hover);
-  box-shadow:0 14px 44px rgba(2,4,18,.6),0 0 24px rgba(110,231,247,.08);
+  background:rgba(14,18,36,.9);
 }
 .publication-item:hover::before{opacity:1}
 
-.pub-title{margin:0 0 8px;font-size:.98rem;font-weight:600;line-height:1.6;color:#eef2ff}
-.pub-meta{margin:0 0 6px;color:var(--muted);font-size:.8rem;line-height:1.65}
-.pub-meta em{color:#b7c3d9}
+.pub-title{
+  margin:0 0 10px;padding-right:48px;
+  font-size:.96rem;font-weight:600;line-height:1.6;
+  color:#eef2ff;
+}
+.pub-meta{margin:0 0 6px;color:var(--muted);font-size:.79rem;line-height:1.65}
+.pub-meta em{font-style:normal;color:#b9c5db}
+.publication-item .pub-meta:first-of-type{
+  border-left:2px solid rgba(110,231,247,.4);
+  padding-left:10px;
+  margin-bottom:8px;
+}
 .publication-item > p{margin:8px 0 0}
 
 .pub-links{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 0;padding:0}
 .pub-link,
 .content a.pub-link{
   display:inline-block;
-  padding:2px 9px;
+  padding:2px 8px;
   border:1px solid rgba(110,231,247,.25);
-  border-radius:999px;
+  border-radius:4px;
   background:rgba(110,231,247,.06);
   color:var(--accent);
-  font-size:.76rem;
+  font-size:.74rem;
   text-decoration:none;
   white-space:nowrap;
-  transition:background .25s ease,box-shadow .25s ease,border-color .25s ease;
+  transition:background .25s ease,border-color .25s ease;
 }
 .pub-link:hover,
 .content a.pub-link:hover{
   background:rgba(110,231,247,.14);
   border-color:rgba(110,231,247,.5);
-  box-shadow:0 0 14px rgba(110,231,247,.3);
   text-shadow:none;
 }
 
@@ -443,10 +481,10 @@ img,iframe,embed,object{max-width:100%;height:auto}
 .pub-controls{display:flex;gap:10px;align-items:center;margin:0 0 18px}
 .pub-controls select{
   font-family:var(--mono);
-  background:rgba(13,17,36,.7);
+  background:rgba(13,17,36,.85);
   color:var(--fg);
   border:1px solid var(--card-border);
-  border-radius:8px;
+  border-radius:6px;
   padding:7px 12px;
   font-size:.84rem;
   cursor:pointer;
@@ -460,14 +498,14 @@ img,iframe,embed,object{max-width:100%;height:auto}
   background:var(--card);
   border:1px solid var(--card-border);
   border-radius:var(--radius);
-  padding:6px 20px;
-  backdrop-filter:blur(12px) saturate(140%);
-  -webkit-backdrop-filter:blur(12px) saturate(140%);
+  padding:4px 20px;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
 }
-.cv-item{padding:14px 0;border-top:1px dashed rgba(255,255,255,.12)}
+.cv-item{padding:14px 0;border-top:1px solid rgba(255,255,255,.07)}
 .cv-item:first-child{border-top:0}
-.cv-period{margin:0 0 4px;color:#e6ecff;font-weight:600;font-size:.9rem;line-height:1.7}
-.cv-role{margin:0;color:var(--muted);font-size:.84rem;line-height:1.75}
+.cv-period{margin:0 0 4px;color:#e9eeff;font-weight:600;font-size:.88rem;line-height:1.7}
+.cv-role{margin:0;color:var(--muted);font-size:.82rem;line-height:1.75}
 .cv-item > p{margin:0 0 4px}
 .cv-item > p:last-child{margin-bottom:0}
 
@@ -476,8 +514,8 @@ img,iframe,embed,object{max-width:100%;height:auto}
    -------------------------------------------------------------------------- */
 .reveal{
   opacity:0;
-  transform:translateY(14px);
-  transition:opacity .6s cubic-bezier(.2,.7,.3,1),transform .6s cubic-bezier(.2,.7,.3,1);
+  transform:translateY(10px);
+  transition:opacity .55s cubic-bezier(.2,.7,.3,1),transform .55s cubic-bezier(.2,.7,.3,1);
 }
 .reveal.is-visible{opacity:1;transform:none}
 
@@ -486,19 +524,20 @@ img,iframe,embed,object{max-width:100%;height:auto}
    -------------------------------------------------------------------------- */
 @media (max-width:960px){
   .site{grid-template-columns:1fr;gap:24px;padding:24px 18px 48px}
-  .sidebar{position:relative;top:0;padding:24px 18px 16px}
+  .sidebar{position:relative;top:0;padding:22px 16px 14px}
   .avatar{width:84px;height:84px}
   .nav{flex-direction:row;justify-content:center;flex-wrap:wrap;margin-top:10px;padding-top:14px}
-  .nav a{padding:7px 12px;font-size:.88rem}
+  .nav a{padding:7px 12px;font-size:.86rem}
 }
 
 @media (max-width:520px){
   :root{font-size:15px}
   .site{padding:16px 12px 40px}
   .terminal-body{padding:14px 14px 18px;font-size:.88rem}
-  .news{padding:16px 14px}
+  .news{padding:14px 14px 8px}
+  .news li{grid-template-columns:1fr;gap:0}
   .publication-item{padding:14px 14px}
-  .cv-box{padding:4px 14px}
+  .cv-box{padding:2px 14px}
   .ink-blob{filter:blur(60px)}
 }
 
