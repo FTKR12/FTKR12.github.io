@@ -277,6 +277,8 @@ img,iframe,embed,object{max-width:100%;height:auto}
 }
 .content h4::before{
   content:'##';
+  flex:none;
+  white-space:nowrap;
   color:var(--accent);
   text-shadow:0 0 12px rgba(110,231,247,.5);
 }
