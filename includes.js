@@ -152,30 +152,38 @@
       '  vec2 u=f*f*(3.0-2.0*f);',
       '  return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);',
       '}',
+      // 回転を挟んで格子状のムラ（＝斑点）を消し、滑らかな流れにする
       'float fbm(vec2 p){',
-      '  float v=0.0,a=0.5;',
-      '  for(int i=0;i<6;i++){v+=a*noise(p);p=p*2.0+vec2(11.3,7.7);a*=0.5;}',
+      '  float v=0.0,a=0.55;',
+      '  mat2 m=mat2(1.6,1.2,-1.2,1.6);',
+      '  for(int i=0;i<6;i++){v+=a*noise(p);p=m*p;a*=0.5;}',
       '  return v;',
       '}',
       'void main(){',
       '  vec2 uv=gl_FragCoord.xy/u_res.xy;',
-      '  vec2 p=uv;p.x*=u_res.x/u_res.y;',
-      '  p*=2.2;',
-      '  float t=u_time*0.07;',
+      '  vec2 p=(uv-0.5);p.x*=u_res.x/u_res.y;p*=2.6;',
+      '  float t=u_time*0.08;',
       // カーソル付近をゆるく押して液体をかき混ぜる
-      '  vec2 m=u_mouse;m.x*=u_res.x/u_res.y;',
-      '  float md=length(p-m*2.2);',
-      '  p+=normalize(p-m*2.2+0.0001)*0.35*exp(-md*1.2);',
-      // ドメインワーピングで流れる質感を作る
-      '  vec2 q=vec2(fbm(p+vec2(0.0,t)),fbm(p+vec2(5.2,1.3)-t));',
-      '  vec2 r=vec2(fbm(p+3.0*q+vec2(1.7,9.2)+t*0.6),fbm(p+3.0*q+vec2(8.3,2.8)-t*0.6));',
-      '  float f=fbm(p+4.0*r);',
-      '  vec3 col=mix(u_c1,u_c2,clamp(f*1.15,0.0,1.0));',
-      '  col=mix(col,u_c3,clamp(dot(r,r)*0.85,0.0,1.0));',
-      '  col=mix(col,u_c3,clamp(q.x*q.x*0.6,0.0,1.0));',
+      '  vec2 m=(u_mouse-0.5);m.x*=u_res.x/u_res.y;m*=2.6;',
+      '  float md=length(p-m);',
+      '  p+=normalize(p-m+0.0001)*0.28*exp(-md*1.3);',
+      // 大きな流れの場で座標を移流させ、丸い斑点ではなく筋状の流れにする
+      '  vec2 fl=vec2(fbm(p*0.6+vec2(0.0,t)),fbm(p*0.6+vec2(5.2,-t)));',
+      '  fl=(fl-0.5)*2.0;',
+      '  vec2 sp=p+fl*1.15+vec2(t*0.5,t*0.18);',
+      // ドメインワーピング（マーブリング）
+      '  vec2 q=vec2(fbm(sp),fbm(sp+vec2(3.1,1.7)));',
+      '  vec2 r=vec2(fbm(sp+2.2*q+vec2(1.7,9.2)),fbm(sp+2.2*q+vec2(8.3,2.8)));',
+      '  float f=fbm(sp+3.0*r);',
+      // なめらかなグラデーションで色を重ねる
+      '  vec3 col=mix(u_c1,u_c2,smoothstep(0.2,0.85,f));',
+      '  col=mix(col,u_c3,smoothstep(0.55,1.05,length(r)*0.8));',
+      // 流れる光の筋（液面の照り）
+      '  float band=abs(sin((f+length(q)*0.5)*6.2831+t*2.0));',
+      '  col+=u_c3*pow(band,9.0)*0.16;',
       // 周辺をわずかに沈めて中央へ視線を集める
-      '  float vig=smoothstep(1.25,0.25,length(uv-0.5));',
-      '  col*=mix(0.82,1.06,vig);',
+      '  float vig=smoothstep(1.35,0.2,length(uv-0.5));',
+      '  col*=mix(0.85,1.05,vig);',
       '  gl_FragColor=vec4(col,1.0);',
       '}'
     ].join('\n');
@@ -236,8 +244,9 @@
       if (reducedMotion) drawOnce();
     };
 
-    // 低解像度で描いて CSS でぼかすと、軽くて液体らしい滑らかさが出る
-    var scale = 0.5;
+    // やや低めの解像度で描き、CSS で軽くぼかして滑らかにする
+    // （低すぎると斑点状に見えるため 0.75 程度に上げる）
+    var scale = Math.min(0.75 * (window.devicePixelRatio || 1), 1);
     function resize() {
       var w = Math.max(1, Math.round(window.innerWidth * scale));
       var h = Math.max(1, Math.round(window.innerHeight * scale));
