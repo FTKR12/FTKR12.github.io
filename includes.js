@@ -159,31 +159,38 @@
       '  for(int i=0;i<6;i++){v+=a*noise(p);p=m*p;a*=0.5;}',
       '  return v;',
       '}',
+      // 乱流（abs ノイズの重ね合わせ）。煙特有の細い筋とシワを作る
+      'float turb(vec2 p){',
+      '  float v=0.0,a=0.5;',
+      '  mat2 m=mat2(1.6,1.2,-1.2,1.6);',
+      '  for(int i=0;i<7;i++){v+=a*abs(noise(p)*2.0-1.0);p=m*p;a*=0.5;}',
+      '  return v;',
+      '}',
       'void main(){',
       '  vec2 uv=gl_FragCoord.xy/u_res.xy;',
-      '  vec2 p=(uv-0.5);p.x*=u_res.x/u_res.y;p*=2.4;',
-      '  float t=u_time*0.06;',
+      '  vec2 p=(uv-0.5);p.x*=u_res.x/u_res.y;p*=3.0;',
+      '  float t=u_time*0.05;',
       // カーソル付近をゆるく押して煙をかき乱す
-      '  vec2 m=(u_mouse-0.5);m.x*=u_res.x/u_res.y;m*=2.4;',
+      '  vec2 m=(u_mouse-0.5);m.x*=u_res.x/u_res.y;m*=3.0;',
       '  float md=length(p-m);',
       '  p+=normalize(p-m+0.0001)*0.22*exp(-md*1.4);',
       // 大きな流れの場で座標を移流させ、立ち上る煙のように流す
-      '  vec2 fl=vec2(fbm(p*0.6+vec2(0.0,t)),fbm(p*0.6+vec2(5.2,-t)));',
+      '  vec2 fl=vec2(fbm(p*0.5+vec2(0.0,t)),fbm(p*0.5+vec2(5.2,-t)));',
       '  fl=(fl-0.5)*2.0;',
-      '  vec2 sp=p+fl*1.1+vec2(t*0.35,t*0.12);',
-      // 多段ドメインワーピングで、もやもやと渦巻く煙の筋を作る
-      '  vec2 q=vec2(fbm(sp+vec2(0.0,t)),fbm(sp+vec2(5.2,1.3)+t*0.3));',
-      '  vec2 r=vec2(fbm(sp+3.5*q+vec2(1.7,9.2)+t*0.4),fbm(sp+3.5*q+vec2(8.3,2.8)-t*0.35));',
-      '  float f=fbm(sp+4.0*r);',
-      // 煙の濃度：広い smoothstep で柔らかく立ち上げ、塊（斑点）にしない
-      '  float dens=smoothstep(0.30,0.92,f);',
-      // ごく薄い背景のゆらぎ（座標由来のなめらかな場。放射状の塊を作らない）
-      '  vec3 base=mix(u_c1,u_c2,smoothstep(0.2,0.8,q.x));',
-      // 白い煙をふわっと重ねる
-      '  vec3 col=mix(base,u_c3,dens*0.85);',
+      '  vec2 sp=p+fl*1.0+vec2(t*0.3,t*0.1);',
+      // 乱流ベースのドメインワーピングで、シワの寄った煙の筋を作る
+      '  vec2 q=vec2(turb(sp+vec2(0.0,t)),turb(sp+vec2(3.7,1.3)-t*0.2));',
+      '  float f=turb(sp+2.6*q+vec2(0.0,t*0.4));',
+      // コントラストを付けて煙の筋を立たせる（ぼやけ防止）
+      '  float dens=smoothstep(0.18,0.62,f);',
+      // 細かい乱流をもう一段かけて煙のディテール（質感）を足す
+      '  dens*=0.55+0.6*turb(sp*2.3-vec2(0.0,t*0.6));',
+      '  dens=clamp(dens,0.0,1.0);',
+      // 背景（暗色）に白い煙を重ねるだけ。色味は混ぜない
+      '  vec3 col=mix(u_c1,u_c3,dens);',
       // 周辺をわずかに沈めて中央へ視線を集める
-      '  float vig=smoothstep(1.45,0.15,length(uv-0.5));',
-      '  col*=mix(0.88,1.04,vig);',
+      '  float vig=smoothstep(1.5,0.1,length(uv-0.5));',
+      '  col*=mix(0.9,1.03,vig);',
       '  gl_FragColor=vec4(col,1.0);',
       '}'
     ].join('\n');
@@ -228,10 +235,10 @@
     var uC2 = gl.getUniformLocation(prog, 'u_c2');
     var uC3 = gl.getUniformLocation(prog, 'u_c3');
 
-    // 配色（RGB 0–1）。c1=宇宙の闇 / c2=ほのかな青み / c3=煙の色（白）
+    // 配色（RGB 0–1）。色味を出さず c1=背景 / c3=煙 の2色だけで構成する
     var THEMES = {
-      dark:  { c1: [0.012, 0.016, 0.040], c2: [0.043, 0.075, 0.160], c3: [0.93, 0.95, 1.00] },
-      light: { c1: [0.910, 0.930, 0.965], c2: [0.780, 0.830, 0.910], c3: [0.42, 0.50, 0.62] }
+      dark:  { c1: [0.018, 0.020, 0.028], c2: [0.018, 0.020, 0.028], c3: [0.96, 0.97, 0.99] },
+      light: { c1: [0.920, 0.930, 0.945], c2: [0.920, 0.930, 0.945], c3: [0.40, 0.44, 0.50] }
     };
     function applyColors() {
       var th = document.documentElement.classList.contains('light') ? THEMES.light : THEMES.dark;
