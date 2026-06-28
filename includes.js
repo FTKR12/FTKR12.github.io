@@ -161,29 +161,29 @@
       '}',
       'void main(){',
       '  vec2 uv=gl_FragCoord.xy/u_res.xy;',
-      '  vec2 p=(uv-0.5);p.x*=u_res.x/u_res.y;p*=2.6;',
-      '  float t=u_time*0.08;',
-      // カーソル付近をゆるく押して液体をかき混ぜる
-      '  vec2 m=(u_mouse-0.5);m.x*=u_res.x/u_res.y;m*=2.6;',
+      '  vec2 p=(uv-0.5);p.x*=u_res.x/u_res.y;p*=2.4;',
+      '  float t=u_time*0.06;',
+      // カーソル付近をゆるく押して煙をかき乱す
+      '  vec2 m=(u_mouse-0.5);m.x*=u_res.x/u_res.y;m*=2.4;',
       '  float md=length(p-m);',
-      '  p+=normalize(p-m+0.0001)*0.28*exp(-md*1.3);',
-      // 大きな流れの場で座標を移流させ、丸い斑点ではなく筋状の流れにする
+      '  p+=normalize(p-m+0.0001)*0.22*exp(-md*1.4);',
+      // 大きな流れの場で座標を移流させ、立ち上る煙のように流す
       '  vec2 fl=vec2(fbm(p*0.6+vec2(0.0,t)),fbm(p*0.6+vec2(5.2,-t)));',
       '  fl=(fl-0.5)*2.0;',
-      '  vec2 sp=p+fl*1.15+vec2(t*0.5,t*0.18);',
-      // ドメインワーピング（マーブリング）
-      '  vec2 q=vec2(fbm(sp),fbm(sp+vec2(3.1,1.7)));',
-      '  vec2 r=vec2(fbm(sp+2.2*q+vec2(1.7,9.2)),fbm(sp+2.2*q+vec2(8.3,2.8)));',
-      '  float f=fbm(sp+3.0*r);',
-      // インクが水に溶け合うような、なめらかな三色のグラデーション
-      // （広い smoothstep で連続的に混ぜ、塊＝斑点を作らない）
-      '  float a=smoothstep(0.15,0.85,f);',
-      '  float b=smoothstep(0.25,0.95,length(r)*0.7+q.x*0.25);',
-      '  vec3 col=mix(u_c1,u_c2,a);',
-      '  col=mix(col,u_c3,b*0.55);',
+      '  vec2 sp=p+fl*1.1+vec2(t*0.35,t*0.12);',
+      // 多段ドメインワーピングで、もやもやと渦巻く煙の筋を作る
+      '  vec2 q=vec2(fbm(sp+vec2(0.0,t)),fbm(sp+vec2(5.2,1.3)+t*0.3));',
+      '  vec2 r=vec2(fbm(sp+3.5*q+vec2(1.7,9.2)+t*0.4),fbm(sp+3.5*q+vec2(8.3,2.8)-t*0.35));',
+      '  float f=fbm(sp+4.0*r);',
+      // 煙の濃度：広い smoothstep で柔らかく立ち上げ、塊（斑点）にしない
+      '  float dens=smoothstep(0.30,0.92,f);',
+      // ごく薄い背景のゆらぎ（座標由来のなめらかな場。放射状の塊を作らない）
+      '  vec3 base=mix(u_c1,u_c2,smoothstep(0.2,0.8,q.x));',
+      // 白い煙をふわっと重ねる
+      '  vec3 col=mix(base,u_c3,dens*0.85);',
       // 周辺をわずかに沈めて中央へ視線を集める
-      '  float vig=smoothstep(1.35,0.2,length(uv-0.5));',
-      '  col*=mix(0.85,1.05,vig);',
+      '  float vig=smoothstep(1.45,0.15,length(uv-0.5));',
+      '  col*=mix(0.88,1.04,vig);',
       '  gl_FragColor=vec4(col,1.0);',
       '}'
     ].join('\n');
@@ -228,10 +228,10 @@
     var uC2 = gl.getUniformLocation(prog, 'u_c2');
     var uC3 = gl.getUniformLocation(prog, 'u_c3');
 
-    // 配色（RGB 0–1）。ダーク/ライトで切り替える
+    // 配色（RGB 0–1）。c1=宇宙の闇 / c2=ほのかな青み / c3=煙の色（白）
     var THEMES = {
-      dark:  { c1: [0.020, 0.027, 0.063], c2: [0.094, 0.180, 0.353], c3: [0.298, 0.502, 0.741] },
-      light: { c1: [0.886, 0.918, 0.961], c2: [0.741, 0.812, 0.910], c3: [0.984, 0.988, 1.000] }
+      dark:  { c1: [0.012, 0.016, 0.040], c2: [0.043, 0.075, 0.160], c3: [0.93, 0.95, 1.00] },
+      light: { c1: [0.910, 0.930, 0.965], c2: [0.780, 0.830, 0.910], c3: [0.42, 0.50, 0.62] }
     };
     function applyColors() {
       var th = document.documentElement.classList.contains('light') ? THEMES.light : THEMES.dark;
