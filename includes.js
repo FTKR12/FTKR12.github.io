@@ -587,7 +587,10 @@
       var items = Array.prototype.slice.call(list.querySelectorAll('li')).filter(function (li) {
         return (li.getAttribute('lang') || 'en') === L;
       });
-      items.slice(LIMIT).forEach(function (li) { li.classList.add('news-extra'); });
+      items.slice(LIMIT).forEach(function (li, i) {
+        li.classList.add('news-extra');
+        li.style.animationDelay = (i * 50) + 'ms'; // 展開時に順番にポップイン
+      });
       counts[L] = Math.max(0, items.length - LIMIT);
     });
     if (!counts.en && !counts.ja) return;
@@ -615,27 +618,45 @@
     list.parentNode.appendChild(btn);
   }
 
-  /* ---------- reveal on scroll ---------- */
+  /* ---------- reveal on scroll ----------
+     一度きりではなく、ビューポートを出入りするたびに再生する。
+     スクロール方向に合わせて出現方向を変え、同時に入った要素は時差で順番に。 */
   function initReveal() {
     var nodes = Array.prototype.slice.call(
-      document.querySelectorAll('.terminal, .news, .publication-item, .cv-box')
+      document.querySelectorAll('.terminal, .news, .content h4, .publication-item, .cv-item')
     );
     if (!nodes.length) return;
     if (reducedMotion || !('IntersectionObserver' in window)) {
       nodes.forEach(function (el) { el.classList.add('is-visible'); });
       return;
     }
+
+    // スクロール方向（上向きなら要素は上から降りてくる）
+    var lastY = window.scrollY, goingUp = false;
+    window.addEventListener('scroll', function () {
+      var y = window.scrollY;
+      if (y !== lastY) goingUp = y < lastY;
+      lastY = y;
+    }, { passive: true });
+
     var io = new IntersectionObserver(function (entries) {
+      var delay = 0;
       entries.forEach(function (entry) {
+        var el = entry.target;
         if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible');
-          io.unobserve(entry.target);
+          el.style.setProperty('--rv-y', goingUp ? '-12px' : '12px');
+          el.style.transitionDelay = delay + 'ms';
+          delay = Math.min(delay + 70, 350);
+          el.classList.add('is-visible');
+        } else {
+          el.style.transitionDelay = '0ms';
+          el.classList.remove('is-visible');
         }
       });
-    }, { threshold: 0.1 });
-    nodes.forEach(function (el, idx) {
+    }, { threshold: 0.05, rootMargin: '0px 0px -4% 0px' });
+
+    nodes.forEach(function (el) {
       el.classList.add('reveal');
-      el.style.transitionDelay = (idx % 6) * 60 + 'ms';
       io.observe(el);
     });
   }
