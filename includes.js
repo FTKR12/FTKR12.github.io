@@ -2,7 +2,7 @@
    Site runtime
    - 共通サイドバーの読み込み
    - 言語切替（EN デフォルト / JA）・テーマ切替（ダーク / ライト）
-   - 宇宙背景（インクの霧 / 瞬く星 / 流れ星 / 視差）
+   - 流体背景（WebGL シェーダで液体が流れるように描画）
    - 水に垂れるインク（タップ／スライド。マットな色からランダム選択）
    - About Me のタイプライター演出（クリックでスキップ、言語切替で再タイプ）
    - News 折りたたみ / スクロールフェードイン / Publications 年フィルタ
@@ -63,6 +63,7 @@
     try { localStorage.setItem('site-theme', light ? 'light' : 'dark'); } catch (e) {}
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', light ? '#e9edf4' : '#04050e');
+    if (setFluidTheme) setFluidTheme();
   }
 
   /* 言語・テーマ切替ドック（右上固定） */
@@ -97,24 +98,20 @@
     });
   }
 
-  /* ---------- cosmic background ---------- */
+  /* ---------- fluid background ---------- */
+  // テーマ切替時に流体の配色を更新するためのフック
+  var setFluidTheme = null;
+
   function initCosmos() {
     if (document.querySelector('.cosmos')) return;
     var cosmos = document.createElement('div');
     cosmos.className = 'cosmos';
     cosmos.setAttribute('aria-hidden', 'true');
     cosmos.innerHTML =
-      '<div class="nebula">' +
-        '<div class="ink-blob ink-1"></div>' +
-        '<div class="ink-blob ink-2"></div>' +
-        '<div class="ink-blob ink-3"></div>' +
-        '<div class="ink-blob ink-4"></div>' +
-        '<div class="ink-blob ink-5"></div>' +
-      '</div>' +
-      '<canvas class="starfield"></canvas>' +
+      '<canvas class="fluid"></canvas>' +
       '<div class="grain"></div>';
     document.body.prepend(cosmos);
-    startStarfield(cosmos.querySelector('.starfield'));
+    startFluid(cosmos.querySelector('.fluid'));
     if (!reducedMotion) {
       // インクはコンテンツの上に重ねる（pointer-events:none）
       var ink = document.createElement('canvas');
@@ -122,125 +119,164 @@
       ink.setAttribute('aria-hidden', 'true');
       document.body.appendChild(ink);
       startInk(ink);
-      startParallax(cosmos.querySelector('.nebula'));
     }
   }
 
-  function startStarfield(canvas) {
-    var ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var TAU = Math.PI * 2;
-    var TINTS = ['255,255,255', '255,255,255', '255,255,255', '226,235,248', '206,220,238', '236,242,250'];
-    var w = 0, h = 0, stars = [], meteors = [], nextMeteor = 2600;
+  /* 流体シミュレーション風の背景：ドメインワーピングした fbm ノイズを
+     フルスクリーンの WebGL シェーダで描き、液体が流れるように動かす。
+     ダーク=深い藍〜スレートブルー、ライト=淡い空色。
+     WebGL が使えない環境では CSS のグラデーションにフォールバックする。 */
+  function startFluid(canvas) {
+    var gl = null;
+    try {
+      gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: false }) ||
+           canvas.getContext('experimental-webgl', { antialias: false, alpha: true, premultipliedAlpha: false });
+    } catch (e) {}
+    if (!gl) { canvas.classList.add('fluid-fallback'); return; }
 
+    var VERT =
+      'attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}';
+
+    var FRAG = [
+      'precision highp float;',
+      'uniform vec2 u_res;',
+      'uniform float u_time;',
+      'uniform vec2 u_mouse;',
+      'uniform vec3 u_c1;',  // 背景の最暗色
+      'uniform vec3 u_c2;',  // 中間色
+      'uniform vec3 u_c3;',  // ハイライト
+      'float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}',
+      'float noise(vec2 p){',
+      '  vec2 i=floor(p),f=fract(p);',
+      '  float a=hash(i),b=hash(i+vec2(1.0,0.0)),c=hash(i+vec2(0.0,1.0)),d=hash(i+vec2(1.0,1.0));',
+      '  vec2 u=f*f*(3.0-2.0*f);',
+      '  return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);',
+      '}',
+      'float fbm(vec2 p){',
+      '  float v=0.0,a=0.5;',
+      '  for(int i=0;i<6;i++){v+=a*noise(p);p=p*2.0+vec2(11.3,7.7);a*=0.5;}',
+      '  return v;',
+      '}',
+      'void main(){',
+      '  vec2 uv=gl_FragCoord.xy/u_res.xy;',
+      '  vec2 p=uv;p.x*=u_res.x/u_res.y;',
+      '  p*=2.2;',
+      '  float t=u_time*0.07;',
+      // カーソル付近をゆるく押して液体をかき混ぜる
+      '  vec2 m=u_mouse;m.x*=u_res.x/u_res.y;',
+      '  float md=length(p-m*2.2);',
+      '  p+=normalize(p-m*2.2+0.0001)*0.35*exp(-md*1.2);',
+      // ドメインワーピングで流れる質感を作る
+      '  vec2 q=vec2(fbm(p+vec2(0.0,t)),fbm(p+vec2(5.2,1.3)-t));',
+      '  vec2 r=vec2(fbm(p+3.0*q+vec2(1.7,9.2)+t*0.6),fbm(p+3.0*q+vec2(8.3,2.8)-t*0.6));',
+      '  float f=fbm(p+4.0*r);',
+      '  vec3 col=mix(u_c1,u_c2,clamp(f*1.15,0.0,1.0));',
+      '  col=mix(col,u_c3,clamp(dot(r,r)*0.85,0.0,1.0));',
+      '  col=mix(col,u_c3,clamp(q.x*q.x*0.6,0.0,1.0));',
+      // 周辺をわずかに沈めて中央へ視線を集める
+      '  float vig=smoothstep(1.25,0.25,length(uv-0.5));',
+      '  col*=mix(0.82,1.06,vig);',
+      '  gl_FragColor=vec4(col,1.0);',
+      '}'
+    ].join('\n');
+
+    function compile(type, src) {
+      var s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error('fluid shader error:', gl.getShaderInfoLog(s));
+        return null;
+      }
+      return s;
+    }
+
+    var vs = compile(gl.VERTEX_SHADER, VERT);
+    var fs = compile(gl.FRAGMENT_SHADER, FRAG);
+    if (!vs || !fs) { canvas.classList.add('fluid-fallback'); return; }
+
+    var prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      console.error('fluid link error:', gl.getProgramInfoLog(prog));
+      canvas.classList.add('fluid-fallback');
+      return;
+    }
+    gl.useProgram(prog);
+
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    var uRes = gl.getUniformLocation(prog, 'u_res');
+    var uTime = gl.getUniformLocation(prog, 'u_time');
+    var uMouse = gl.getUniformLocation(prog, 'u_mouse');
+    var uC1 = gl.getUniformLocation(prog, 'u_c1');
+    var uC2 = gl.getUniformLocation(prog, 'u_c2');
+    var uC3 = gl.getUniformLocation(prog, 'u_c3');
+
+    // 配色（RGB 0–1）。ダーク/ライトで切り替える
+    var THEMES = {
+      dark:  { c1: [0.020, 0.027, 0.063], c2: [0.094, 0.180, 0.353], c3: [0.298, 0.502, 0.741] },
+      light: { c1: [0.886, 0.918, 0.961], c2: [0.741, 0.812, 0.910], c3: [0.984, 0.988, 1.000] }
+    };
+    function applyColors() {
+      var th = document.documentElement.classList.contains('light') ? THEMES.light : THEMES.dark;
+      gl.uniform3fv(uC1, th.c1);
+      gl.uniform3fv(uC2, th.c2);
+      gl.uniform3fv(uC3, th.c3);
+    }
+    setFluidTheme = function () {
+      applyColors();
+      if (reducedMotion) drawOnce();
+    };
+
+    // 低解像度で描いて CSS でぼかすと、軽くて液体らしい滑らかさが出る
+    var scale = 0.5;
     function resize() {
-      w = window.innerWidth;
-      h = window.innerHeight;
-      canvas.width = Math.round(w * dpr);
-      canvas.height = Math.round(h * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      var n = Math.min(420, Math.round(w * h / 4200));
-      stars = [];
-      for (var i = 0; i < n; i++) {
-        stars.push({
-          x: Math.random() * w,
-          y: Math.random() * h,
-          r: Math.random() < 0.92 ? 0.4 + Math.random() * 0.9 : 1.3 + Math.random() * 0.7,
-          tw: 0.4 + Math.random() * 1.6,
-          ph: Math.random() * TAU,
-          dy: 0.5 + Math.random() * 2.2,
-          tint: TINTS[(Math.random() * TINTS.length) | 0]
-        });
-      }
-      if (reducedMotion) drawStatic();
+      var w = Math.max(1, Math.round(window.innerWidth * scale));
+      var h = Math.max(1, Math.round(window.innerHeight * scale));
+      canvas.width = w;
+      canvas.height = h;
+      gl.viewport(0, 0, w, h);
+      gl.uniform2f(uRes, w, h);
     }
 
-    function drawStatic() {
-      ctx.clearRect(0, 0, w, h);
-      stars.forEach(function (s) {
-        ctx.fillStyle = 'rgba(' + s.tint + ',' + (0.25 + 0.6 * Math.abs(Math.sin(s.ph))).toFixed(3) + ')';
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, TAU);
-        ctx.fill();
-      });
+    var mx = 0.5, my = 0.5, tmx = 0.5, tmy = 0.5;
+    if (window.matchMedia('(hover: hover)').matches) {
+      window.addEventListener('pointermove', function (e) {
+        tmx = e.clientX / window.innerWidth;
+        tmy = 1 - e.clientY / window.innerHeight;
+      }, { passive: true });
     }
 
-    function spawnMeteor() {
-      var ang = (25 + Math.random() * 30) * Math.PI / 180;
-      var dir = Math.random() < 0.5 ? 1 : -1;
-      var speed = 420 + Math.random() * 340;
-      meteors.push({
-        x: w * 0.05 + Math.random() * w * 0.9,
-        y: Math.random() * h * 0.35,
-        vx: Math.cos(ang) * speed * dir,
-        vy: Math.sin(ang) * speed,
-        len: 120 + Math.random() * 120,
-        life: 0,
-        ttl: 0.9 + Math.random() * 0.6
-      });
-    }
-
-    var last = performance.now();
-    function frame(now) {
-      var dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      var t = now / 1000;
-      ctx.clearRect(0, 0, w, h);
-
-      for (var i = 0; i < stars.length; i++) {
-        var s = stars[i];
-        var a = 0.22 + 0.78 * (0.5 + 0.5 * Math.sin(t * s.tw + s.ph));
-        ctx.fillStyle = 'rgba(' + s.tint + ',' + a.toFixed(3) + ')';
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, TAU);
-        ctx.fill();
-        if (s.r > 1.2) {
-          ctx.fillStyle = 'rgba(' + s.tint + ',' + (a * 0.12).toFixed(3) + ')';
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, s.r * 3.2, 0, TAU);
-          ctx.fill();
-        }
-        s.y += s.dy * dt;
-        if (s.y > h + 2) { s.y = -2; s.x = Math.random() * w; }
-      }
-
-      nextMeteor -= dt * 1000;
-      if (nextMeteor <= 0) {
-        spawnMeteor();
-        nextMeteor = 3500 + Math.random() * 5500;
-      }
-      for (var j = meteors.length - 1; j >= 0; j--) {
-        var m = meteors[j];
-        m.life += dt;
-        m.x += m.vx * dt;
-        m.y += m.vy * dt;
-        var k = m.life / m.ttl;
-        if (k >= 1 || m.x < -m.len || m.x > w + m.len || m.y > h + m.len) {
-          meteors.splice(j, 1);
-          continue;
-        }
-        var fade = Math.sin(Math.PI * k);
-        var mag = Math.hypot(m.vx, m.vy);
-        var ux = m.vx / mag, uy = m.vy / mag;
-        var tail = ctx.createLinearGradient(m.x, m.y, m.x - ux * m.len, m.y - uy * m.len);
-        tail.addColorStop(0, 'rgba(210,240,255,' + (0.85 * fade).toFixed(3) + ')');
-        tail.addColorStop(1, 'rgba(210,240,255,0)');
-        ctx.strokeStyle = tail;
-        ctx.lineWidth = 1.4;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(m.x, m.y);
-        ctx.lineTo(m.x - ux * m.len, m.y - uy * m.len);
-        ctx.stroke();
-      }
-
-      requestAnimationFrame(frame);
+    function drawOnce() {
+      gl.uniform1f(uTime, 12.0);
+      gl.uniform2f(uMouse, 0.5, 0.5);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
 
     window.addEventListener('resize', resize);
     resize();
-    if (!reducedMotion) requestAnimationFrame(frame);
+    applyColors();
+
+    if (reducedMotion) { drawOnce(); return; }
+
+    var start = performance.now();
+    function frame(now) {
+      mx += (tmx - mx) * 0.05;
+      my += (tmy - my) * 0.05;
+      gl.uniform1f(uTime, (now - start) / 1000);
+      gl.uniform2f(uMouse, mx, my);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
   }
 
   /* 水に垂れるインク：タップで一滴、スライドで筋状に滲む。
@@ -408,24 +444,6 @@
       lastY = e.clientY;
       spawnDrop(e.clientX, e.clientY, false);
     }, { passive: true });
-  }
-
-  /* マウスに合わせてインク層がわずかに揺れる */
-  function startParallax(nebula) {
-    if (!nebula || !window.matchMedia('(hover: hover)').matches) return;
-    var tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
-    function step() {
-      cx += (tx - cx) * 0.06;
-      cy += (ty - cy) * 0.06;
-      nebula.style.transform = 'translate3d(' + cx.toFixed(2) + 'px,' + cy.toFixed(2) + 'px,0)';
-      if (Math.abs(tx - cx) + Math.abs(ty - cy) > 0.05) raf = requestAnimationFrame(step);
-      else raf = 0;
-    }
-    window.addEventListener('pointermove', function (e) {
-      tx = (e.clientX / window.innerWidth - 0.5) * -26;
-      ty = (e.clientY / window.innerHeight - 0.5) * -18;
-      if (!raf) raf = requestAnimationFrame(step);
-    });
   }
 
   /* ---------- typewriter (About Me) ---------- */
@@ -706,14 +724,21 @@
   }
 
   /* ---------- boot ---------- */
+  // 各モジュールは独立して起動する。1 つが失敗しても
+  // 他（特にサイドバー読み込み）を巻き込まないよう個別に保護する。
+  function safe(fn) {
+    try { fn(); } catch (err) { console.error(fn.name + ' failed:', err); }
+  }
+
   function init() {
-    initControls();
-    initCosmos();
-    initTypewriter();
-    initNewsCollapse();
-    initReveal();
-    initPublicationFilter();
+    // サイドバーは最優先で読み込む（他の演出より重要なため）
     includeSidebar();
+    safe(initControls);
+    safe(initCosmos);
+    safe(initTypewriter);
+    safe(initNewsCollapse);
+    safe(initReveal);
+    safe(initPublicationFilter);
   }
 
   if (document.readyState === 'loading') {

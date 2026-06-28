@@ -139,8 +139,8 @@ img,iframe,embed,object{max-width:100%;height:auto}
 [hidden]{display:none !important}
 
 /* --------------------------------------------------------------------------
-   Cosmic background（JS が .cosmos を body 直下に注入する）
-   レイヤー順: 単色の霧 → 星 → 粒状ノイズ（インクは最前面の .inkfield）
+   Fluid background（JS が .cosmos を body 直下に注入する）
+   レイヤー順: 流体シェーダ → 粒状ノイズ（インクは最前面の .inkfield）
    -------------------------------------------------------------------------- */
 .cosmos{
   position:fixed;inset:0;
@@ -149,68 +149,29 @@ img,iframe,embed,object{max-width:100%;height:auto}
   pointer-events:none;
 }
 
-.nebula{position:absolute;inset:-8%;will-change:transform}
-
-/* 漂う単色の霧（ベースの空気感） */
-.ink-blob{
-  position:absolute;
-  border-radius:50%;
-  filter:blur(80px);
-  mix-blend-mode:screen;
-  will-change:transform;
-  transform:translateZ(0);
-  background:radial-gradient(circle at 40% 40%, rgba(136,164,196,.45), rgba(136,164,196,0) 70%);
-}
-html.light .ink-blob{mix-blend-mode:multiply;opacity:.14 !important}
-.ink-1{
-  width:56vmax;height:56vmax;left:-16vmax;top:-22vmax;opacity:.42;
-  animation:ink-drift-1 44s ease-in-out infinite alternate;
-}
-.ink-2{
-  width:48vmax;height:48vmax;right:-14vmax;top:8vmax;opacity:.32;
-  animation:ink-drift-2 36s ease-in-out infinite alternate;
-}
-.ink-3{
-  width:46vmax;height:46vmax;left:-10vmax;bottom:-18vmax;opacity:.28;
-  animation:ink-drift-3 52s ease-in-out infinite alternate;
-}
-.ink-4{
-  width:40vmax;height:40vmax;right:4vmax;bottom:-12vmax;opacity:.3;
-  animation:ink-drift-4 30s ease-in-out infinite alternate;
-}
-.ink-5{
-  width:34vmax;height:34vmax;left:32vw;top:24vh;opacity:.22;
-  animation:ink-drift-5 40s ease-in-out infinite alternate;
+/* 流れる液体（WebGL 描画）。低解像度で描いて少しぼかし、滑らかさを出す */
+.fluid{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  filter:blur(14px) saturate(1.05);
+  transform:scale(1.06);
+  transform-origin:center;
 }
 
-@keyframes ink-drift-1{
-  0%  {transform:translate(0,0) scale(1) rotate(0deg)}
-  50% {transform:translate(9vmax,7vmax) scale(1.18) rotate(18deg)}
-  100%{transform:translate(-4vmax,12vmax) scale(.92) rotate(-10deg)}
+/* WebGL が使えない環境のフォールバック */
+.fluid-fallback{
+  background:
+    radial-gradient(60% 60% at 25% 25%, rgba(76,128,189,.30), rgba(76,128,189,0) 70%),
+    radial-gradient(60% 60% at 80% 70%, rgba(30,58,107,.40), rgba(30,58,107,0) 70%),
+    linear-gradient(160deg, #06070f, #0b132b 60%, #0a1020);
+  filter:none;
 }
-@keyframes ink-drift-2{
-  0%  {transform:translate(0,0) scale(1)}
-  50% {transform:translate(-10vmax,6vmax) scale(1.12)}
-  100%{transform:translate(-3vmax,-7vmax) scale(.9)}
+html.light .fluid-fallback{
+  background:
+    radial-gradient(60% 60% at 25% 25%, rgba(185,204,230,.55), rgba(185,204,230,0) 70%),
+    radial-gradient(60% 60% at 80% 70%, rgba(221,230,242,.6), rgba(221,230,242,0) 70%),
+    linear-gradient(160deg, #eef3fa, #dde6f2 60%, #e9edf4);
 }
-@keyframes ink-drift-3{
-  0%  {transform:translate(0,0) scale(1) rotate(0deg)}
-  50% {transform:translate(8vmax,-9vmax) scale(1.15) rotate(-14deg)}
-  100%{transform:translate(13vmax,2vmax) scale(1.02) rotate(8deg)}
-}
-@keyframes ink-drift-4{
-  0%  {transform:translate(0,0) scale(1)}
-  50% {transform:translate(-7vmax,-8vmax) scale(1.2)}
-  100%{transform:translate(4vmax,-3vmax) scale(.95)}
-}
-@keyframes ink-drift-5{
-  0%  {transform:translate(0,0) scale(1)}
-  50% {transform:translate(-12vmax,9vmax) scale(1.25)}
-  100%{transform:translate(8vmax,-6vmax) scale(.88)}
-}
-
-.starfield{position:absolute;inset:0;width:100%;height:100%}
-html.light .starfield{display:none}
 
 /* 水に垂れるインク（タップ／スライドで滲む。JS 描画）
    ダーク: screen 合成で発光するインク
@@ -676,7 +637,7 @@ html.lang-ja .news li[lang="ja"]:nth-child(2){border-top:0}
   .news li{grid-template-columns:1fr;gap:0}
   .publication-item{padding:14px 14px}
   .cv-box{padding:2px 14px}
-  .ink-blob{filter:blur(60px)}
+  .fluid{filter:blur(10px)}
 }
 
 /* --------------------------------------------------------------------------
@@ -684,7 +645,6 @@ html.lang-ja .news li[lang="ja"]:nth-child(2){border-top:0}
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
-  .ink-blob{animation:none !important}
   .t-cursor{animation:none;opacity:1}
   .reveal,.reveal.is-visible{transition:none !important;transform:none !important;opacity:1 !important}
   .news ul.news-open li.news-extra{animation:none !important}
