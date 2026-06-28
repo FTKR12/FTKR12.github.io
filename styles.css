@@ -153,9 +153,7 @@ img,iframe,embed,object{max-width:100%;height:auto}
 .fluid{
   position:absolute;inset:0;
   width:100%;height:100%;
-  filter:blur(4px) saturate(1.08);
-  transform:scale(1.03);
-  transform-origin:center;
+  filter:saturate(1.08);
 }
 
 /* WebGL が使えない環境のフォールバック */
@@ -637,7 +635,7 @@ html.lang-ja .news li[lang="ja"]:nth-child(2){border-top:0}
   .news li{grid-template-columns:1fr;gap:0}
   .publication-item{padding:14px 14px}
   .cv-box{padding:2px 14px}
-  .fluid{filter:blur(3px)}
+  .fluid{filter:saturate(1.05)}
 }
 
 /* --------------------------------------------------------------------------
