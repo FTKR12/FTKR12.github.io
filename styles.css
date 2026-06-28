@@ -170,6 +170,18 @@ html.light .fluid-fallback{
     linear-gradient(160deg, #eef3fa, #dde6f2 60%, #e9edf4);
 }
 
+/* タップ／スライドで立ちのぼる白い煙（JS 描画）
+   ダーク: screen 合成で発光する煙 / ライト: 通常合成で薄い煙 */
+.inkfield{
+  position:fixed;inset:0;width:100%;height:100%;
+  z-index:5;
+  pointer-events:none;
+  filter:blur(12px);
+  mix-blend-mode:screen;
+  opacity:1;
+}
+html.light .inkfield{mix-blend-mode:normal;opacity:.5}
+
 /* 煙の質感を出す微細な粒状ノイズ */
 .grain{
   position:absolute;inset:0;
