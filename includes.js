@@ -175,14 +175,12 @@
       '  vec2 q=vec2(fbm(sp),fbm(sp+vec2(3.1,1.7)));',
       '  vec2 r=vec2(fbm(sp+2.2*q+vec2(1.7,9.2)),fbm(sp+2.2*q+vec2(8.3,2.8)));',
       '  float f=fbm(sp+3.0*r);',
-      // なめらかなグラデーション（塊にならないよう連続的に）
-      '  vec3 col=mix(u_c1,u_c2,smoothstep(0.1,0.95,f));',
-      // 流れに沿った細い筋（等高線状）で液体の照りを表現＝斑点にしない
-      '  float vein=pow(abs(sin((f*1.6+q.x-q.y)*6.2831+t*1.5)),14.0);',
-      '  col=mix(col,u_c3,vein*0.5);',
-      // さらにもう一本ゆるい筋を重ねて流れの層を出す
-      '  float vein2=pow(abs(sin((length(r)*2.0+f)*6.2831-t)),20.0);',
-      '  col=mix(col,u_c3,vein2*0.28);',
+      // インクが水に溶け合うような、なめらかな三色のグラデーション
+      // （広い smoothstep で連続的に混ぜ、塊＝斑点を作らない）
+      '  float a=smoothstep(0.15,0.85,f);',
+      '  float b=smoothstep(0.25,0.95,length(r)*0.7+q.x*0.25);',
+      '  vec3 col=mix(u_c1,u_c2,a);',
+      '  col=mix(col,u_c3,b*0.55);',
       // 周辺をわずかに沈めて中央へ視線を集める
       '  float vig=smoothstep(1.35,0.2,length(uv-0.5));',
       '  col*=mix(0.85,1.05,vig);',
