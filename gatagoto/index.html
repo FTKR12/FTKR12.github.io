@@ -292,6 +292,42 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
 .netbar span { flex: 1; min-width: 0; line-height: 1.4; }
 .netbar .btn { min-height: 36px; padding: 6px 12px; font-size: 13px; flex: none; }
 .plist li .btn-plain { margin-left: 8px; min-height: 30px; font-size: 12px; padding: 0 4px; }
+
+/* ---------- v4: air routes, square kinds, vehicles ---------- */
+.rail.air { stroke: #fff; stroke-width: 4; stroke-dasharray: 2 9; opacity: .9; }
+.nd-air { fill: rgba(255,255,255,.85); stroke: #9fd0ea; stroke-width: 2; }
+.nd.nice { fill: #e8573c; }
+.nd.warp { fill: var(--purple); }
+.nd.bonus { fill: #2b2a33; }
+.nd-sym.bonus-sym { font-size: 15px; fill: var(--gold); }
+.tok .veh { display: none; }
+.tok[data-veh="train"] .veh.train, .tok[data-veh="ship"] .veh.ship, .tok[data-veh="plane"] .veh.plane { display: block; }
+.tok[data-veh="ship"] .bob { animation: sway 1.6s ease-in-out infinite; }
+@keyframes sway { 0%,100% { transform: rotate(-4deg) translateY(0); } 50% { transform: rotate(4deg) translateY(-2px); } }
+.tok[data-veh="plane"] .bob { animation: hover 1.2s ease-in-out infinite; }
+@keyframes hover { 0%,100% { transform: translateY(-6px); } 50% { transform: translateY(-11px); } }
+.ev.ev-ginji { border-color: #2b2a33; background: #e9e4f6; }
+/* ---------- the yearly books, as an end roll ---------- */
+.settle { position: absolute; inset: 0; z-index: 6; background: linear-gradient(180deg, rgba(20,16,32,.94), rgba(40,30,60,.96)); color: #fff; display: flex; flex-direction: column; padding: 14px 14px calc(12px + var(--sab)); animation: fade .4s ease-out; overflow: hidden; }
+.settle h2 { font-family: var(--title); font-weight: 400; font-size: 26px; text-align: center; color: var(--gold); margin: 6px 0 2px; letter-spacing: .04em; }
+.settle .sub { text-align: center; font-size: 13px; color: #d8d2e6; font-weight: 600; margin-bottom: 8px; }
+.settle .roll { flex: 1; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; display: grid; gap: 8px; align-content: start; }
+.settle .srow { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); border-radius: 14px; padding: 9px 12px; display: grid; grid-template-columns: 34px 1fr auto; gap: 8px 10px; align-items: center; opacity: 0; transform: translateY(14px); animation: rollin .5s ease-out forwards; }
+.settle .srow.first { border-color: var(--gold); background: rgba(242,183,5,.14); }
+@keyframes rollin { to { opacity: 1; transform: none; } }
+.settle .no { font-family: var(--title); font-size: 24px; text-align: center; color: #d8d2e6; }
+.settle .srow.first .no { color: var(--gold); }
+.settle .who { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+.settle .who i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.settle .who .mv { font-size: 11px; font-weight: 700; color: #9be29b; margin-left: 4px; }
+.settle .who .mv.down { color: #f29b9b; }
+.settle .as { text-align: right; font-size: 16px; font-variant-numeric: tabular-nums; }
+.settle .as small { display: block; font-size: 10px; color: #c8c2d6; }
+.settle .det { grid-column: 2 / span 2; font-size: 12px; color: #d8d2e6; font-weight: 600; line-height: 1.55; }
+.settle .det b { color: #fff; }
+.settle .det .cat { display: inline-block; margin-right: 8px; }
+.settle .tail { text-align: center; font-size: 12px; color: #c8c2d6; font-weight: 600; margin-top: 8px; opacity: 0; animation: rollin .5s ease-out forwards; }
+.settle .btn { margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -439,6 +475,7 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
       <div class="hint-pin" id="hint" hidden></div>
       <div class="dice" id="dice" hidden></div>
       <div class="ev" id="ev" hidden></div>
+      <div class="settle" id="settle" hidden></div>
     </div>
     <footer class="panel">
       <div class="pstrip" id="pstrip"></div>
@@ -485,6 +522,9 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
           <li><span class="sq" style="background:var(--blue)">+</span> プラスのマス：お金がもらえます</li>
           <li><span class="sq" style="background:var(--red)">−</span> マイナスのマス：お金をはらいます</li>
           <li><span class="sq" style="background:var(--gold)">C</span> カードのマス：カードを1枚もらえます（8枚まで）</li>
+          <li><span class="sq" style="background:#e8573c">N</span> ナイスカードのマス：強いカードがもらえます</li>
+          <li><span class="sq" style="background:var(--purple)">✦</span> ワープマス：どこかの駅へ飛ばされます（目的地に当たればゴール！）</li>
+          <li><span class="sq" style="background:#2b2a33;color:var(--gold)">?</span> ？マス：宝箱・落とし穴・銀次・タヌキ・タダの物件……何が起きるかわかりません</li>
           <li><span class="sq" style="background:var(--purple)">店</span> カード売り場：お金でカードを買えます。買うと棚に新しいカードが並びます</li>
           <li><span class="sq" style="background:#fff;color:var(--ink);border:2px solid var(--ink)">駅</span> 駅：物件を買えます。1つの駅の物件をぜんぶ買うと「独占」で収益が2倍！</li>
         </ul>
@@ -493,12 +533,16 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
         <h3>🦝 びんぼうタヌキ</h3>
         <p>誰かが目的地に着くと、そのとき目的地から<b>いちばん遠かった人</b>に びんぼうタヌキがくっつきます。ターンの終わりに お金を持ち逃げしたり、カードをかじったり、勝手にカードを買ってきたり……。タヌキがついた人と<b>すれ違う（同じマスを通る・止まる）</b>と、タヌキは相手に乗りかえます。わざと相手の列車に突っこんで なすりつけましょう。</p>
         <p>たまに変身します：<b>大タヌキ</b>（3ターン、物件を売り飛ばす）、<b>ハリケーンタヌキ</b>（3ターン、毎回どこかへ吹き飛ばす）、<b>ミニタヌキ</b>（3ターン、ほぼ無害）、そしてごくまれに<b>キングタヌキ</b>（3ターン、物件もカードもお金もめちゃくちゃ）。おはらいカードや2月の節分で追いはらえます。</p>
+        <h3>🚢 海と空</h3>
+        <p>点線の航路に出ると列車は<b>船</b>に、白い点線の空路では<b>飛行機</b>に変わります。空路（札幌⇄東京、東京⇄那覇、福岡⇄那覇）は長い距離の近道ですが、マスは海の上。使うかどうかは作戦しだいです。</p>
+        <h3>🥷 スリの銀次・地域のできごと</h3>
+        <p>ときどき<b>スリの銀次</b>が現れて、所持金の一部をすっていきます（お金持ちほど狙われる）。駅に止まると、その地方ならではの<b>できごと</b>が起きることがあります。祭りで祝儀をもらったり、クマに追われて1回休みになったり、その地方の物件を持っている人みんなに臨時収入が入ったり。</p>
         <h3>🌸 季節とイベント</h3>
         <p>4月から3月まで、地図の色が季節で変わります。月のはじめに季節のイベントがあり、<b>観光🏨・農林水産🌾・飲食🍜</b>など物件の種類ごとに臨時収入が入ったり（GW・夏休み・収穫の秋・忘年会）、台風で修理代がかかったり、お正月にお年玉が出たり、節分でタヌキを追いはらえたりします。物件の種類は買うときのアイコンで分かります。</p>
         <h3>🤖 コンピューターの強さ</h3>
         <p>「よわい」は気ままに走ります。「ふつう」はぴったり着ける道を探し、「つよい」は次のターンに着きやすいマスまで考えて止まり、独占をねらい、ゴール目前の相手にいじわるカードを使ってきます。</p>
         <h3>💴 お金・決算</h3>
-        <p>1ターンで1か月が進みます。毎年3月のおわりに決算があり、持っている物件の「収益率」ぶんのお金が入ります。所持金はマイナス（借金）にもなり、決算で<b>10%の利息</b>がつきます。自分の番のあいだは、「対戦状況」から物件を<b>値段の70%で売る</b>こともできます。</p>
+        <p>1ターンで1か月が進みます。毎年3月のおわりに<b>決算</b>があり、持っている物件の「収益率」ぶんのお金が入ります（種類ごとの内訳、独占した駅、順位の変動も発表されます）。所持金はマイナス（借金）にもなり、決算で<b>10%の利息</b>がつきます。自分の番のあいだは、「対戦状況」から物件を<b>値段の70%で売る</b>こともできます。</p>
         <h3>🔗 合言葉であそぶ</h3>
         <p>1台目が合言葉を作って LINE などで送り、2台目が返事の合言葉を作って送り返すと、スマホどうしが<b>じかに</b>つながります。1台目は ひとりずつ順番に さそえます（最大4人）。ゲームは1台目が進行します。</p>
         <p>スマホがスリープしたり LINE を開いたりしても切れません。それでも切れてしまったら、<b>席はそのまま</b>でコンピューターが代走します。1台目がメニューの「再接続」から新しい合言葉を作って送れば、同じ席にもどれます（ページを閉じてしまっても、タイトルから「2台目以降」で貼ればOK）。1台目は「つづきから」で再開できます。</p>
@@ -515,14 +559,14 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
 //  real shape of Japan. Okinawa is moved up into an inset box.
 // ===================================================================
 
-const GAME_VER = '3.0';
-const NET_V = 3;
+const GAME_VER = '4.0';
+const NET_V = 4;
 
 // ---------- projection ----------
 function proj(lat, lon) {
   return [Math.round((lon - 128.6) * 100 + 50), Math.round((45.9 - lat) * 125 + 50)];
 }
-const BOARD = { w: 1800, h: 2100 };
+const BOARD = { w: 1800, h: 2130 };
 
 // ---------- cities: [name, lat, lon, region, [[property, price(万円), yield%], ...]] ----------
 const CITY_DEFS = [
@@ -592,19 +636,21 @@ const CITY_DEFS = [
 ];
 
 // ---------- routes: [from, to, squares between, options] ----------
-// options: via = [[lat, lon], ...] or pts = [[x, y], ...] bends the line; sea = ferry (dashed); shop = n: the n-th square is a カード売り場; all = every square is that type
+// options: via = [[lat, lon], ...] or pts = [[x, y], ...] bends the line; sea = ferry (dashed); air = flight (dotted arc);
+// shop = n: the n-th square is a カード売り場; all = every square is that type
 const ROUTE_DEFS = [
   // 北海道
   ['旭川', '札幌', 2], ['札幌', '函館', 4, { via: [[42.5, 140.9]], shop: 2 }], ['札幌', '帯広', 4, { via: [[42.9, 142.3]] }],
   ['帯広', '釧路', 3, { pts: [[1565, 465]] }], ['旭川', '帯広', 3, { pts: [[1500, 330]] }],
+  ['旭川', '釧路', 4, { pts: [[1555, 255], [1665, 330]] }],
   ['函館', '青森', 2, { sea: true }],
   // 東北
   ['青森', '盛岡', 2, { shop: 1 }], ['青森', '秋田', 3, { via: [[40.5, 140.2]] }], ['秋田', '盛岡', 2], ['盛岡', '仙台', 4, { pts: [[1300, 905]] }],
   ['秋田', '山形', 4, { pts: [[1180, 913]] }], ['山形', '仙台', 1], ['仙台', '福島', 2, { shop: 1 }], ['福島', '宇都宮', 3],
-  ['山形', '新潟', 2, { pts: [[1140, 1010]] }], ['山形', '福島', 1],
+  ['山形', '新潟', 2, { pts: [[1140, 1010]] }], ['山形', '福島', 1], ['福島', '新潟', 3, { pts: [[1165, 1085]] }],
   ['水戸', '仙台', 4, { pts: [[1335, 1130], [1310, 1030]] }],
   // 関東・甲信越
-  ['新潟', '長野', 3, { pts: [[1020, 1070]] }], ['新潟', '前橋', 3, { pts: [[1075, 1120]] }], ['前橋', 'さいたま', 2], ['宇都宮', 'さいたま', 2], ['水戸', '宇都宮', 2],
+  ['新潟', '長野', 3, { pts: [[1020, 1070]] }], ['新潟', '前橋', 3, { pts: [[1075, 1120]] }], ['前橋', 'さいたま', 2], ['宇都宮', 'さいたま', 2], ['水戸', '宇都宮', 2], ['前橋', '宇都宮', 2, { pts: [[1115, 1175]] }],
   ['水戸', '千葉', 2], ['千葉', '東京', 1], ['さいたま', '東京', 1, { pts: [[1140, 1300]], shop: 1 }], ['東京', '横浜', 1], ['東京', '甲府', 2, { pts: [[1100, 1335]] }],
   ['横浜', '千葉', 1, { sea: true }],
   ['千葉', '館山', 4, { pts: [[1290, 1420], [1280, 1490]], all: 'card' }],   // 房総半島：カードマスだらけ
@@ -614,10 +660,11 @@ const ROUTE_DEFS = [
   ['金沢', '福井', 2, { shop: 2 }],
   ['金沢', '輪島', 3, { pts: [[770, 1165]], all: 'card' }],   // 能登半島：カードマスだらけ
   ['福井', '京都', 2, { pts: [[790, 1330]] }], ['長野', '松本', 1], ['松本', '名古屋', 2, { pts: [[905, 1330]] }], ['松本', '甲府', 1],
-  ['岐阜', '富山', 2], ['名古屋', '岐阜', 1, { shop: 1 }], ['名古屋', '津', 2], ['津', '奈良', 2],
+  ['岐阜', '富山', 2], ['名古屋', '岐阜', 1, { shop: 1 }], ['名古屋', '津', 2], ['津', '奈良', 2], ['岐阜', '金沢', 2, { pts: [[810, 1285]] }],
+  ['津', '静岡', 2, { sea: true, pts: [[985, 1548]] }],
   ['名古屋', '京都', 2, { pts: [[840, 1395]] }],
   // 近畿
-  ['京都', '大阪', 1], ['京都', '奈良', 1], ['奈良', '大阪', 1], ['大阪', '神戸', 1, { shop: 1 }], ['大阪', '和歌山', 2],
+  ['京都', '大阪', 1], ['京都', '奈良', 1], ['奈良', '大阪', 1], ['大阪', '神戸', 1, { shop: 1 }], ['大阪', '和歌山', 2], ['京都', '鳥取', 3, { pts: [[700, 1340]] }],
   ['奈良', '和歌山', 2, { pts: [[760, 1545]] }], ['津', '和歌山', 3, { via: [[33.75, 136.0], [33.5, 135.75]] }],
   ['和歌山', '徳島', 1, { sea: true }], ['神戸', '徳島', 1, { sea: true }], ['神戸', '岡山', 2], ['神戸', '鳥取', 2, { pts: [[650, 1395]] }],
   // 中国
@@ -628,11 +675,15 @@ const ROUTE_DEFS = [
   ['高松', '松山', 2], ['松山', '高知', 2], ['松山', '広島', 1, { sea: true }], ['松山', '大分', 1, { sea: true }],
   ['高知', '宮崎', 4, { sea: true, pts: [[430, 1760]] }],
   // 九州
-  ['福岡', '佐賀', 1], ['佐賀', '長崎', 2], ['福岡', '熊本', 2, { shop: 1 }], ['福岡', '大分', 2], ['大分', '宮崎', 3, { pts: [[372, 1690], [360, 1750]] }],
+  ['福岡', '佐賀', 1], ['佐賀', '長崎', 2], ['福岡', '熊本', 2, { shop: 1 }], ['福岡', '大分', 2], ['大分', '宮崎', 3, { pts: [[372, 1690], [360, 1750]] }], ['佐賀', '熊本', 2, { pts: [[205, 1690]] }],
   ['熊本', '鹿児島', 3, { pts: [[250, 1760], [215, 1800]] }], ['宮崎', '鹿児島', 2, { pts: [[300, 1850]] }], ['熊本', '大分', 2, { pts: [[320, 1690]] }],
   ['山口', '大分', 2, { sea: true }], ['熊本', '長崎', 2, { sea: true, pts: [[215, 1745]] }],
   // 沖縄（航路）
   ['鹿児島', '那覇', 4, { sea: true, pts: [[200, 1925]] }],
+  // 空路：海の上を大きく回りこむ
+  ['札幌', '東京', 6, { air: true, pts: [[1580, 650], [1560, 1000], [1400, 1250]] }],
+  ['東京', '那覇', 6, { air: true, pts: [[1230, 1720], [850, 2010], [420, 2070]] }],
+  ['福岡', '那覇', 4, { air: true, pts: [[70, 1600], [40, 1850]] }],
 ];
 
 // ---------- island outlines ([lat, lon] polygons, very simplified) ----------
@@ -676,6 +727,7 @@ const CARD_DEFS = {
 const ATTACK_CARDS = ['swap', 'gyuho', 'itazura', 'north', 'grab', 'seal', 'katana'];
 const CARD_IDS = Object.keys(CARD_DEFS);
 const SHOP_IDS = CARD_IDS.filter(id => CARD_DEFS[id].price > 0);
+const NICE_IDS = ['ltd', 'skn', 'nozomi', 'expx', 'ltdx', 'exact', 'near', 'omamori', 'swap', 'grab'];
 const MAX_CARDS = 8;
 
 // ---------- squares: events on plus / minus squares ----------
@@ -713,6 +765,33 @@ const MINUS_EVENTS = [
   ['コンサートのチケットを買いすぎた', 2],
   ['屋根の修理代がかかった', 4],
   ['投資話にのって損をした……', 6],
+];
+
+// ---------- スリの銀次 ----------
+const GINJI_EVENTS = [
+  ['「へっへっへ、いただきやした」 スリの銀次に財布をすられた！', 0.25],
+  ['人ごみでドンとぶつかった男……気づいたら財布が軽い。スリの銀次だ！', 0.20],
+  ['「おっと失礼」 銀次がすれ違いざまに札束を抜き取った！', 0.30],
+  ['スリの銀次が変装して近づいてきた。気づいたときには もう遅かった……', 0.15],
+];
+// ---------- 地域イベント: landing on a station sometimes brings the local colour ----------
+// effect: money (+unit × k), pay (−unit × k), card (a random card), nice (a good card), skip (1回休み), region (owners of that region's properties get 5%)
+const REGION_EVENTS = {
+  '北海道': [['雪まつりの雪像コンテストで優勝！', 'money', 3], ['ジンギスカンをごちそうになった', 'money', 1], ['クマが出た！ 逃げるのに精いっぱいで 1回休み', 'skip', 0], ['流氷ツアーが大当たり。この地方の観光物件が大にぎわい', 'region', 0], ['ラベンダー畑で記念撮影。写真が雑誌に売れた', 'money', 2]],
+  '東北': [['ねぶた祭りのハネトで大活躍！ ご祝儀をもらった', 'money', 2], ['わんこそば大会で優勝！', 'money', 2], ['大雪で列車が止まり、宿代がかかった', 'pay', 2], ['りんごの収穫を手伝ってカードをもらった', 'card', 0], ['芋煮会に飛び入り参加。この地方の物件が注目された', 'region', 0]],
+  '関東': [['隅田川の花火大会で屋台が大もうけ', 'money', 3], ['満員電車でスマホを落とした……', 'pay', 1], ['テレビの街頭インタビューに出て 謝礼をもらった', 'money', 1], ['渋滞にはまって 1回休み', 'skip', 0], ['東京土産が大ヒット！ この地方の物件が注目された', 'region', 0], ['宝くじ売り場でナイスカードをもらった', 'nice', 0]],
+  '中部': [['おわら風の盆で踊りをほめられ、祝儀をもらった', 'money', 2], ['雪山で遭難しかけた。救助のお礼が高い……', 'pay', 3], ['名古屋めしを食べ歩きしすぎた', 'pay', 1], ['信州のそば打ち大会で優勝', 'money', 2], ['北陸のカニが豊漁！ この地方の物件がにぎわった', 'region', 0]],
+  '近畿': [['天神祭の奉納花火で露店が大繁盛', 'money', 3], ['鹿に弁当を食べられた……', 'pay', 1], ['たこ焼き早食い大会で優勝！', 'money', 2], ['祇園祭の山鉾巡行で観光客が殺到。この地方の物件が大にぎわい', 'region', 0], ['商売の神様にお参りしたら カードをさずかった', 'card', 0]],
+  '中国': [['砂丘のラクダが大人気。乗り場のお手伝いでアルバイト代', 'money', 1], ['カキ打ちの名人に弟子入り。カキをもらって売った', 'money', 2], ['出雲大社で縁結び。ご利益でカードをもらった', 'card', 0], ['ふぐの毒にあたりかけて 病院へ……', 'pay', 2], ['よさこい祭りの観光客がこの地方にも流れてきた', 'region', 0]],
+  '四国': [['阿波おどりの連に飛び入り！ 投げ銭をもらった', 'money', 2], ['うどん屋をハシゴしすぎた', 'pay', 1], ['お遍路さんにナイスカードをいただいた', 'nice', 0], ['カツオの一本釣り大会で優勝！', 'money', 3], ['しまなみ海道のサイクリング客でこの地方がにぎわった', 'region', 0]],
+  '九州': [['博多どんたくで屋台を手伝い、分け前をもらった', 'money', 2], ['火山灰で車がまっ白。洗車代をはらった', 'pay', 1], ['温泉地獄めぐりの人気で この地方の物件が大にぎわい', 'region', 0], ['明太子の試食で食べすぎた……', 'pay', 1], ['長崎くんちの龍踊りで活躍！ 祝儀をもらった', 'money', 2]],
+  '沖縄': [['エイサー祭りの投げ銭で大もうけ', 'money', 3], ['台風でホテルに足止め。宿代がかさんだ', 'pay', 2], ['海で拾った貝が高く売れた', 'money', 1], ['観光客が殺到！ この地方の物件が大にぎわい', 'region', 0]],
+};
+// ---------- ？マス ----------
+const BONUS_EVENTS = [
+  ['宝箱を見つけた！', 'money', 8], ['落とし穴に落ちた……1回休み', 'skip', 0], ['カードが2枚ふってきた！', 'card2', 0], ['ナイスカードが落ちていた', 'nice', 0],
+  ['スリの銀次がいた！', 'ginji', 0], ['びんぼうタヌキに遭遇……くっついてきた！', 'tanuki', 0], ['空き店舗をゆずり受けた！（いちばん近い駅の売り出し中の物件を1件タダでもらう）', 'freeprop', 0],
+  ['ジャックポット！！', 'money', 15], ['財布を落とした……', 'pay', 3], ['ワープゾーンに吸いこまれた！', 'warp', 0],
 ];
 
 // ---------- tiny seeded random ----------
@@ -765,7 +844,7 @@ function alongPolyline(pts, f) {
 function buildWorld() {
   const rng = mulberry32(20261101);
   const nodes = [], adj = [], edges = [], cityIdx = {};
-  const link = (a, b, sea) => { adj[a].push(b); adj[b].push(a); edges.push({ a, b, sea: !!sea }); };
+  const link = (a, b, sea, air) => { adj[a].push(b); adj[b].push(a); edges.push({ a, b, sea: !!sea, air: !!air }); };
   for (const [name, lat, lon, region, props, at] of CITY_DEFS) {
     for (const pr of props) pr.push(propCat(pr[0]));
     // crowded areas are spread out by hand, like a subway map: `at` overrides the projected spot
@@ -775,7 +854,8 @@ function buildWorld() {
     adj.push([]);
   }
   // squares in between: the type is drawn from a fixed seed so every device builds the same board
-  const pick = () => { const r = rng(); return r < 0.46 ? 'plus' : r < 0.80 ? 'minus' : 'card'; };
+  // plus, minus, card, and a few rarer ones: ナイスカード (a good card), ワープ, and ？ (anything can happen)
+  const pick = () => { const r = rng(); return r < 0.43 ? 'plus' : r < 0.73 ? 'minus' : r < 0.90 ? 'card' : r < 0.94 ? 'nice' : r < 0.97 ? 'warp' : 'bonus'; };
   for (const [a, b, n, opt = {}] of ROUTE_DEFS) {
     const A = nodes[cityIdx[a]], B = nodes[cityIdx[b]];
     if (!A || !B) throw new Error('unknown city in route ' + a + '-' + b);
@@ -785,12 +865,12 @@ function buildWorld() {
       const [x, y] = alongPolyline(pts, (i + 1) / (n + 1));
       const id = nodes.length;
       const type = pick();   // always drawn, so the board stays the same when a shop is added
-      nodes.push({ id, type: opt.shop === i + 1 ? 'shop' : (opt.all || type), x, y, sea: !!opt.sea });
+      nodes.push({ id, type: opt.shop === i + 1 ? 'shop' : (opt.all || type), x, y, sea: !!opt.sea, air: !!opt.air });
       adj.push([]);
-      link(prev, id, opt.sea);
+      link(prev, id, opt.sea, opt.air);
       prev = id;
     }
-    link(prev, B.id, opt.sea);
+    link(prev, B.id, opt.sea, opt.air);
   }
   const cities = nodes.filter(n => n.type === 'city').map(n => n.id);
   // all-pairs distances (the board is small: ~250 squares)
@@ -1044,7 +1124,7 @@ class Game {
   // ---------- turns ----------
   turnStart() {
     const S = this.s, p = this.cur();
-    S.dice = null; S.branch = null; S.buy = null; S.shop = null; S.pick = null; S.last = null; S.steps = 0;
+    S.dice = null; S.branch = null; S.buy = null; S.shop = null; S.pick = null; S.last = null; S.steps = 0; S.ginjiSeen = false;
     if (p.sealed > 0) p.sealed--;
     if (p.skip > 0) {
       p.skip--;
@@ -1121,12 +1201,30 @@ class Game {
   landSquare() {
     const S = this.s, p = this.cur(), node = WORLD.nodes[p.pos], cpu = this.isCpu(p);
     if (node.type === 'city') {
-      const free = S.own[node.id].map((o, i) => o < 0 ? i : -1).filter(i => i >= 0);
-      if (!free.length) { S.phase = 'turnend'; return 300; }
-      S.buy = { node: node.id };
-      S.phase = 'buy';
-      return cpu ? 900 : 0;
+      // the local colour, now and then
+      if (this.rng() < 0.13) { const d = this.regionEvent(p, node); if (d) return d; }
+      return this.cityBuy();
     }
+    if (node.type === 'nice') {
+      if (p.cards.length >= MAX_CARDS) {
+        this.log(`${p.name} はカードがいっぱいで ナイスカードをもらえなかった`);
+        return this.setEvent({ kind: 'card', title: 'ナイスカードのマス', text: `カードがいっぱいで、もらえなかった……（${MAX_CARDS}枚まで）` }, 2000);
+      }
+      const id = NICE_IDS[Math.floor(this.rng() * NICE_IDS.length)];
+      p.cards.push(mkCard(id));
+      this.log(`${p.name} はナイスカードのマスで ${cardName(id)} を手に入れた`);
+      return this.setEvent({ kind: 'card', title: `ナイス！ ${cardName(id)}`, text: CARD_DEFS[id].desc, card: id }, 2300);
+    }
+    if (node.type === 'warp') {
+      const pool = WORLD.cities.filter(x => x !== p.pos);
+      const to = pool[Math.floor(this.rng() * pool.length)];
+      S.last = { kind: 'warp', pid: p.id, from: p.pos, to };
+      p.prev = -1; p.pos = to;
+      this.log(`${p.name} はワープマスで ${WORLD.nodes[to].name} へ飛ばされた`);
+      const hit = to === S.dest;
+      return this.setEvent({ kind: 'warp', title: hit ? 'ワープ……目的地に命中！' : 'ワープ！', text: `${WORLD.nodes[to].name} まで飛ばされた！`, next: hit ? 'arriving' : 'landing' }, 1800);
+    }
+    if (node.type === 'bonus') return this.bonusSquare(p);
     if (node.type === 'shop') {
       if (p.money <= 0) {
         this.log(`${p.name} はカード売り場に来たが、お金がなかった`);
@@ -1159,10 +1257,85 @@ class Game {
     S.phase = 'turnend';
     return 300;
   }
+  cityBuy() {
+    const S = this.s, p = this.cur(), node = WORLD.nodes[p.pos], cpu = this.isCpu(p);
+    if (node.type !== 'city') { S.phase = 'turnend'; return 300; }
+    const free = S.own[node.id].map((o, i) => o < 0 ? i : -1).filter(i => i >= 0);
+    if (!free.length) { S.phase = 'turnend'; return 300; }
+    S.buy = { node: node.id };
+    S.phase = 'buy';
+    return cpu ? 900 : 0;
+  }
+  // what a flavour effect does; returns the text to append
+  applyEffect(p, effect, k) {
+    const S = this.s;
+    switch (effect) {
+      case 'money': { const amt = this.unit() * k; p.money += amt; return `（＋${yen(amt)}）`; }
+      case 'pay': { const amt = Math.min(this.unit() * k, Math.max(100, Math.round(Math.max(p.money, 0) * 0.3 / 100) * 100)); p.money -= amt; return `（−${yen(amt)}）`; }
+      case 'card': { if (p.cards.length >= MAX_CARDS) return '（カードがいっぱいでもらえなかった）'; const id = randomCardId(this.rng); p.cards.push(mkCard(id)); return `（${cardName(id)}）`; }
+      case 'nice': { if (p.cards.length >= MAX_CARDS) return '（カードがいっぱいでもらえなかった）'; const id = NICE_IDS[Math.floor(this.rng() * NICE_IDS.length)]; p.cards.push(mkCard(id)); return `（${cardName(id)}）`; }
+      case 'card2': { const got = []; for (let i = 0; i < 2 && p.cards.length < MAX_CARDS; i++) { const id = randomCardId(this.rng); p.cards.push(mkCard(id)); got.push(cardName(id)); } return got.length ? `（${got.join('、')}）` : '（カードがいっぱいでもらえなかった）'; }
+      case 'skip': { p.skip++; return ''; }
+      case 'region': {
+        const region = WORLD.nodes[p.pos].region, parts = [];
+        for (const q of S.players) {
+          let base = 0;
+          for (const c in S.own) if (WORLD.nodes[c].region === region) S.own[c].forEach((o, i) => { if (o === q.id) base += WORLD.nodes[c].props[i].price; });
+          const amt = Math.round(base * 0.05 / 10) * 10;
+          if (amt) { q.money += amt; parts.push(`${q.name} ＋${yen(amt)}`); }
+        }
+        return parts.length ? `（${region}の物件を持つ人に臨時収入：${parts.join('、')}）` : `（${region}の物件を持つ人はいなかった）`;
+      }
+    }
+    return '';
+  }
+  regionEvent(p, node) {
+    const list = REGION_EVENTS[node.region];
+    if (!list) return 0;
+    const [text, effect, k] = list[Math.floor(this.rng() * list.length)];
+    const extra = this.applyEffect(p, effect, k);
+    this.log(`${p.name}（${node.name}）：${text}${extra}`);
+    const kind = effect === 'money' || effect === 'region' ? 'plus' : effect === 'pay' || effect === 'skip' ? 'minus' : 'card';
+    return this.setEvent({ kind, title: `${node.region}のできごと`, text: text + (extra ? '\n' + extra : ''), next: 'city' }, 2600);
+  }
+  bonusSquare(p) {
+    const S = this.s;
+    const [text, effect, k] = BONUS_EVENTS[Math.floor(this.rng() * BONUS_EVENTS.length)];
+    let extra = '', next = 'turnend', kind = 'card';
+    if (effect === 'ginji') return this.ginji(p, '？マスの先で、スリの銀次が待ちかまえていた！');
+    if (effect === 'tanuki') {
+      const T = S.tanuki;
+      if (T.at === p.id) extra = '（もうくっついていた……）';
+      else { T.at = p.id; T.form = 0; T.left = 0; extra = ''; kind = 'tanuki'; }
+    } else if (effect === 'freeprop') {
+      const c = nearestCity(p.pos, -1);
+      const free = c >= 0 ? S.own[c].map((o, i) => o < 0 ? i : -1).filter(i => i >= 0) : [];
+      if (free.length) { const i = free[Math.floor(this.rng() * free.length)]; S.own[c][i] = p.id; extra = `（${WORLD.nodes[c].name}の「${WORLD.nodes[c].props[i].name}」をもらった！）`; kind = 'buy'; }
+      else extra = '（でも、近くの駅に売り出し中の物件はなかった）';
+    } else if (effect === 'warp') {
+      const pool = WORLD.cities.filter(x => x !== p.pos);
+      const to = pool[Math.floor(this.rng() * pool.length)];
+      S.last = { kind: 'warp', pid: p.id, from: p.pos, to };
+      p.prev = -1; p.pos = to;
+      extra = `（${WORLD.nodes[to].name} へ）`; kind = 'warp'; next = to === S.dest ? 'arriving' : 'landing';
+    } else { extra = this.applyEffect(p, effect, k); kind = effect === 'money' ? 'plus' : effect === 'pay' || effect === 'skip' ? 'minus' : 'card'; }
+    this.log(`${p.name}（？マス）：${text}${extra}`);
+    return this.setEvent({ kind, title: '？マス', text: text + (extra ? '\n' + extra : ''), next, form: 0 }, 2600);
+  }
+  // スリの銀次 helps himself to a share of your money
+  ginji(p, lead) {
+    const S = this.s;
+    const [text, share] = GINJI_EVENTS[Math.floor(this.rng() * GINJI_EVENTS.length)];
+    const amt = Math.max(100, Math.round(p.money * share / 100) * 100);
+    p.money -= amt;
+    S.ginjiTotal = (S.ginjiTotal || 0) + amt;
+    this.log(`${p.name}：${text}（−${yen(amt)}）`);
+    return this.setEvent({ kind: 'ginji', title: 'スリの銀次！', text: (lead ? lead + '\n' : '') + text + `\n${yen(amt)} をすられた……`, next: 'turnend' }, 2800);
+  }
   arrive() {
     const S = this.s, p = this.cur(), city = WORLD.nodes[S.dest], T = S.tanuki;
     const bonus = Math.round((3000 + 1500 * (S.year - 1)) * (0.8 + this.rng() * 0.4) / 100) * 100;
-    p.money += bonus; p.arrivals++;
+    p.money += bonus; p.arrivals++; p.arrY = (p.arrY || 0) + 1;
     const far = this.farthestFrom(S.dest, p.id);
     const old = S.dest;
     this.newDest(p.pos);
@@ -1179,6 +1352,7 @@ class Game {
     S.event = null;
     if (!ev) { S.phase = 'turnend'; return 100; }
     if (ev.next === 'landing2') return this.landSquare();
+    if (ev.next === 'city') return this.cityBuy();
     if (ev.next === 'yearend') {
       S.month = 0; S.year++;
       if (S.year > S.years) { S.phase = 'gameover'; this.finish(); return 0; }
@@ -1233,6 +1407,7 @@ class Game {
   turnEnd() {
     const S = this.s, p = this.cur(), T = S.tanuki;
     S.buy = null; S.shop = null; S.branch = null; S.pick = null;
+    if (!S.ginjiSeen && p.money >= 1500 && this.rng() < 0.035) { S.ginjiSeen = true; return this.ginji(p, ''); }
     if (T.at === p.id) return this.tanukiAct(p);
     S.phase = 'nextturn';
     return 60;
@@ -1362,17 +1537,37 @@ class Game {
     this.log(`${MONTHS[S.month]}：${ev.title}` + (rows.length ? ' ' + rows.map(r => `${r.name} ${r.text}`).join('、') : ''));
     return this.setEvent({ kind: 'season', title: ev.title, text, rows: rows.length ? rows : null, next: 'monthstart', pid: -1, season: SEASON_OF[S.month] }, rows.length ? 3600 : 2800);
   }
+  // income split by the kind of property
+  incomeByCat(p) {
+    const out = {};
+    for (const c in this.s.own) {
+      const owners = this.s.own[c], mono = owners.every(o => o === p.id);
+      owners.forEach((o, i) => { if (o === p.id) { const pr = WORLD.nodes[c].props[i]; out[pr.cat] = (out[pr.cat] || 0) + pr.price * pr.rate / 100 * (mono ? 2 : 1); } });
+    }
+    for (const k in out) out[k] = Math.round(out[k]);
+    return out;
+  }
   settlement() {
     const S = this.s, yr = S.year;
+    const before = S.players.map(p => ({ pid: p.id, assets: this.assets(p) })).sort((a, b) => b.assets - a.assets);
+    const prevRank = {}; before.forEach((r, i) => { prevRank[r.pid] = i + 1; });
     const rows = S.players.map(p => {
-      const inc = this.income(p);
+      const inc = this.income(p), cats = this.incomeByCat(p);
       const interest = p.money < 0 ? Math.round(-p.money * 0.1 / 100) * 100 : 0;
+      const moneyBefore = p.money;
       p.money += inc - interest;
-      return { pid: p.id, name: p.name, inc, interest, assets: this.assets(p) };
+      const props = this.ownedProps(p);
+      const mono = WORLD.cities.filter(c => S.own[c].every(o => o === p.id)).map(c => WORLD.nodes[c].name);
+      const r = { pid: p.id, name: p.name, inc, cats, interest, moneyBefore, money: p.money, props: props.length, mono, arrY: p.arrY || 0, assets: this.assets(p), prevRank: S.lastRank ? S.lastRank[p.id] : prevRank[p.id] };
+      p.arrY = 0;
+      return r;
     });
-    this.log(`${yr}年目の決算：` + rows.map(r => `${r.name} ＋${yen(r.inc)}` + (r.interest ? `（利息 −${yen(r.interest)}）` : '')).join('、'));
+    rows.sort((a, b) => b.assets - a.assets);
+    rows.forEach((r, i) => { r.rank = i + 1; });
+    S.lastRank = {}; rows.forEach(r => { S.lastRank[r.pid] = r.rank; });
+    this.log(`${yr}年目の決算：` + rows.map(r => `${r.rank}位 ${r.name} ${yen(r.assets)}（収益 ＋${yen(r.inc)}）`).join('、'));
     const last = yr >= S.years;
-    return this.setEvent({ kind: 'settle', title: `${yr}年目の決算`, text: (last ? '最終決算！ ' : '3月は決算。') + '物件の収益が入った。' + (rows.some(r => r.interest) ? '借金には10%の利息がついた。' : ''), rows, next: 'yearend', pid: -1 }, last ? 4200 : 3800);
+    return this.setEvent({ kind: 'settle', title: last ? '最終決算' : `${yr}年目の決算`, text: (last ? '最終決算！ ' : '3月は決算。') + '物件の収益が入った。' + (rows.some(r => r.interest) ? '借金には10%の利息がついた。' : ''), rows, year: yr, last, next: 'yearend', pid: -1 }, last ? 16000 : 14000);
   }
   finish() {
     const S = this.s;
@@ -1566,6 +1761,9 @@ class Game {
     if (n.type === 'plus') v += 60;
     else if (n.type === 'minus') v -= 60;
     else if (n.type === 'card') v += p.cards.length < MAX_CARDS ? 70 : 0;
+    else if (n.type === 'nice') v += p.cards.length < MAX_CARDS ? 120 : 0;
+    else if (n.type === 'bonus') v += 20;
+    else if (n.type === 'warp') v -= this.distTo(node, S.dest) <= 8 ? 150 : -30;   // a gamble, welcome only when far away
     else if (n.type === 'shop') v += p.money > 2500 && p.cards.length < MAX_CARDS ? 40 : 0;
     else if (n.type === 'city') {
       const free = S.own[node].filter((o, i) => o < 0 && n.props[i].price <= p.money).length;
@@ -2013,6 +2211,17 @@ const TANUKI_SVG = (size, form) => {
 </svg>`;
 };
 
+// スリの銀次: a shifty fellow in a hat
+const GINJI_SVG = (size) => `<svg viewBox="0 0 40 40" width="${size}" height="${size}" aria-hidden="true">
+  <ellipse cx="20" cy="36" rx="12" ry="3" fill="rgba(0,0,0,.15)"/>
+  <path d="M8 22 Q20 10 32 22 L30 34 Q20 38 10 34 Z" fill="#3b3550"/>
+  <circle cx="20" cy="18" r="9" fill="#f1cfa9"/>
+  <path d="M8 14 L32 14 L30 9 L10 9 Z" fill="#2b2a33"/><path d="M12 9 Q20 2 28 9 Z" fill="#2b2a33"/>
+  <path d="M14 16 L18 17 M26 16 L22 17" stroke="#2b2a33" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="16" cy="19" r="1.3" fill="#2b2a33"/><circle cx="24" cy="19" r="1.3" fill="#2b2a33"/>
+  <path d="M15 24 Q20 27 25 24" stroke="#2b2a33" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+  <rect x="24" y="24" width="10" height="7" rx="1.5" fill="#f2b705" stroke="#8a6508" stroke-width="1"/>
+</svg>`;
 const Board = {
   svg: null, cam: null, layers: {}, nodeEls: [], tokens: [], built: false,
   view: { x: 0, y: 0, k: 1 }, anim: 0, fitK: 0.3,
@@ -2029,7 +2238,7 @@ function buildBoard() {
   // thinner in the land colour on top, which leaves a single rim around the union.
   L.land = svgEl('g', {}, cam);
   const islands = Object.keys(ISLANDS).map(k => smoothPath(ISLANDS[k].map(([la, lo]) => proj(la, lo))));
-  const landRails = WORLD.edges.filter(e => !e.sea);
+  const landRails = WORLD.edges.filter(e => !e.sea && !e.air);
   for (const pass of [['coast', 'var(--land-edge)', 92, 14], ['fill', 'var(--land)', 78, 0]]) {
     const g = svgEl('g', { class: 'land-' + pass[0] }, L.land);
     for (const d of islands) svgEl('path', { d, fill: pass[1], stroke: pass[3] ? pass[1] : 'none', 'stroke-width': pass[3], 'stroke-linejoin': 'round' }, g);
@@ -2044,8 +2253,8 @@ function buildBoard() {
   L.rail2 = svgEl('g', {}, cam);
   for (const e of WORLD.edges) {
     const a = WORLD.nodes[e.a], b = WORLD.nodes[e.b];
-    svgEl('line', { class: 'rail' + (e.sea ? ' sea' : ''), x1: a.x, y1: a.y, x2: b.x, y2: b.y }, L.rail);
-    if (!e.sea) svgEl('line', { class: 'rail2', x1: a.x, y1: a.y, x2: b.x, y2: b.y }, L.rail2);
+    svgEl('line', { class: 'rail' + (e.air ? ' air' : e.sea ? ' sea' : ''), x1: a.x, y1: a.y, x2: b.x, y2: b.y }, L.rail);
+    if (!e.sea && !e.air) svgEl('line', { class: 'rail2', x1: a.x, y1: a.y, x2: b.x, y2: b.y }, L.rail2);
   }
   // the shortest way to the goal, and the squares you may step to, sit under the nodes
   L.route = svgEl('g', {}, cam);
@@ -2065,9 +2274,11 @@ function buildBoard() {
       const t = svgEl('text', { class: 'nd-sym shop-sym', x: n.x, y: n.y + 0.5 }, g);
       t.textContent = '店';
     } else {
+      if (n.air) svgEl('circle', { class: 'nd-air', cx: n.x, cy: n.y, r: 15.5 }, g);
       svgEl('circle', { class: 'nd ' + n.type, cx: n.x, cy: n.y, r: 11.5 }, g);
-      const t = svgEl('text', { class: 'nd-sym' + (n.type === 'card' ? ' card-sym' : ''), x: n.x, y: n.y + (n.type === 'card' ? 0 : 0.5) }, g);
-      t.textContent = n.type === 'plus' ? '+' : n.type === 'minus' ? '−' : 'C';
+      const sym = { plus: '+', minus: '−', card: 'C', nice: 'N', warp: '✦', bonus: '?' }[n.type] || '';
+      const t = svgEl('text', { class: 'nd-sym' + (n.type === 'card' || n.type === 'nice' ? ' card-sym' : n.type === 'bonus' ? ' bonus-sym' : ''), x: n.x, y: n.y + (n.type === 'card' || n.type === 'nice' ? 0 : 0.5) }, g);
+      t.textContent = sym;
     }
     Board.nodeEls.push(g);
   }
@@ -2087,15 +2298,29 @@ function buildBoard() {
 }
 
 // ---------- tokens ----------
+// a train on land, a ship on the sea, a plane in the air
 function tokenEl(p) {
   const g = svgEl('g', { class: 'tok nomove', id: 'tok-' + p.id });
   const b = svgEl('g', { class: 'bob' }, g);
-  svgEl('rect', { class: 'body', x: -15, y: -11, width: 30, height: 19, rx: 5.5, fill: p.color }, b);
-  svgEl('rect', { x: -11, y: -7, width: 8, height: 6, rx: 1.5, fill: '#fff' }, b);
-  svgEl('rect', { x: 0, y: -7, width: 8, height: 6, rx: 1.5, fill: '#fff' }, b);
-  svgEl('rect', { x: -15, y: 3, width: 30, height: 2.5, fill: '#f2b705' }, b);
-  svgEl('circle', { cx: -8, cy: 10, r: 3.2, fill: '#2b2a33', stroke: '#fff', 'stroke-width': 1 }, b);
-  svgEl('circle', { cx: 8, cy: 10, r: 3.2, fill: '#2b2a33', stroke: '#fff', 'stroke-width': 1 }, b);
+  const train = svgEl('g', { class: 'veh train' }, b);
+  svgEl('rect', { class: 'body', x: -15, y: -11, width: 30, height: 19, rx: 5.5, fill: p.color }, train);
+  svgEl('rect', { x: -11, y: -7, width: 8, height: 6, rx: 1.5, fill: '#fff' }, train);
+  svgEl('rect', { x: 0, y: -7, width: 8, height: 6, rx: 1.5, fill: '#fff' }, train);
+  svgEl('rect', { x: -15, y: 3, width: 30, height: 2.5, fill: '#f2b705' }, train);
+  svgEl('circle', { cx: -8, cy: 10, r: 3.2, fill: '#2b2a33', stroke: '#fff', 'stroke-width': 1 }, train);
+  svgEl('circle', { cx: 8, cy: 10, r: 3.2, fill: '#2b2a33', stroke: '#fff', 'stroke-width': 1 }, train);
+  const ship = svgEl('g', { class: 'veh ship' }, b);
+  svgEl('path', { class: 'body', d: 'M-17,2 h34 l-6,10 h-22 z', fill: p.color }, ship);
+  svgEl('rect', { x: -9, y: -8, width: 16, height: 10, rx: 2, fill: '#fff', stroke: '#2b2a33', 'stroke-width': 1.5 }, ship);
+  svgEl('rect', { x: -3, y: -15, width: 6, height: 8, rx: 1, fill: '#2b2a33' }, ship);
+  svgEl('circle', { cx: -4, cy: -3, r: 1.6, fill: '#2f7de1' }, ship);
+  svgEl('circle', { cx: 3, cy: -3, r: 1.6, fill: '#2f7de1' }, ship);
+  const plane = svgEl('g', { class: 'veh plane' }, b);
+  svgEl('path', { class: 'body', d: 'M-16,0 Q-12,-5 0,-5 L14,-5 Q19,-5 19,0 Q19,5 14,5 L0,5 Q-12,5 -16,0 Z', fill: p.color }, plane);
+  svgEl('path', { d: 'M-2,-4 L-10,-15 L-3,-15 L6,-4 Z', fill: '#fff', stroke: '#2b2a33', 'stroke-width': 1.2 }, plane);
+  svgEl('path', { d: 'M-2,4 L-10,15 L-3,15 L6,4 Z', fill: '#fff', stroke: '#2b2a33', 'stroke-width': 1.2 }, plane);
+  svgEl('path', { d: 'M-16,0 L-19,-7 L-13,-7 L-10,-1 Z', fill: '#2b2a33' }, plane);
+  for (let i = 0; i < 4; i++) svgEl('circle', { cx: 2 + i * 4, cy: -1.5, r: 1.3, fill: '#2b2a33' }, plane);
   return g;
 }
 const STACK = [[[0, -8]], [[-11, -8], [11, -8]], [[-12, -10], [12, -10], [0, 6]], [[-12, -11], [12, -11], [-12, 7], [12, 7]]];
@@ -2113,6 +2338,7 @@ function placeTokens(S, animate) {
     const [ox, oy] = STACK[grp.length - 1][i];
     g.classList.toggle('nomove', !animate);
     g.classList.toggle('cur', p.id === S.turn && S.phase !== 'gameover');
+    g.dataset.veh = n.air ? 'plane' : n.sea ? 'ship' : 'train';
     g.style.transform = `translate(${n.x + ox}px, ${n.y + oy}px)`;
     // the current player's train sits on top
     if (p.id === S.turn) L.tok.appendChild(g);
@@ -2241,7 +2467,7 @@ function setupMapGestures(onTap) {
   const ptrs = new Map();
   let moved = false, down = null;
   map.addEventListener('pointerdown', e => {
-    if (e.target.closest('.map-ctl, .ev, .sheet, .sheet-bg')) return;
+    if (e.target.closest('.map-ctl, .ev, .settle, .sheet, .sheet-bg')) return;
     camStop();
     ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
     try { map.setPointerCapture(e.pointerId); } catch (er) {}
@@ -2360,9 +2586,42 @@ const Sound = {
   fanfare() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.18, 'square', 0.06, i * 0.12)); this.tone(1319, 0.5, 'square', 0.06, 0.5); },
   tanuki() { this.tone(330, 0.1, 'sawtooth', 0.05); this.tone(277, 0.1, 'sawtooth', 0.05, 0.12); this.tone(233, 0.2, 'sawtooth', 0.05, 0.24); },
 };
+// ---------- BGM: a little chiptune loop, scheduled a beat ahead ----------
+const BGM = {
+  on: true, timer: 0, next: 0, step: 0, gain: null,
+  // two voices, 32 steps each (null = rest); midi note numbers
+  mel: [72, null, 76, 79, 76, null, 72, null, 74, null, 77, 81, 77, null, 74, null, 76, null, 79, 83, 79, null, 76, null, 77, 76, 74, 72, 74, null, 67, null],
+  bass: [48, null, 48, null, 55, null, 55, null, 50, null, 50, null, 57, null, 57, null, 52, null, 52, null, 59, null, 59, null, 53, null, 55, null, 43, null, 55, null],
+  tempo: 0.17,
+  start() {
+    if (!this.on || !Sound.ctx || this.timer) return;
+    const c = Sound.ctx;
+    if (!this.gain) { this.gain = c.createGain(); this.gain.gain.value = 0.045; this.gain.connect(c.destination); }
+    this.next = c.currentTime + 0.1; this.step = 0;
+    this.timer = setInterval(() => this.pump(), 120);
+  },
+  stop() { clearInterval(this.timer); this.timer = 0; },
+  pump() {
+    const c = Sound.ctx; if (!c || c.state !== 'running' || UI.screen !== 'game') return;
+    while (this.next < c.currentTime + 0.35) {
+      const i = this.step % 32;
+      this.note(this.mel[i], this.next, this.tempo * 0.9, 'square', 1);
+      this.note(this.bass[i], this.next, this.tempo * 0.8, 'triangle', 1.6);
+      if (i % 4 === 0) this.note(84, this.next, 0.03, 'square', 0.25);   // a tick on the beat
+      this.next += this.tempo; this.step++;
+    }
+  },
+  note(n, t, d, type, vol) {
+    if (n === null || n === undefined) return;
+    const c = Sound.ctx, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = 440 * Math.pow(2, (n - 69) / 12);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(this.gain); o.start(t); o.stop(t + d + 0.02);
+  },
+};
 // any tap or key starts the sound (iPhones only allow it inside one), and after the phone
 // interrupted it (a call, another app) the next tap brings it back
-const soundUnlock = () => { if (!Sound.ctx || Sound.ctx.state !== 'running' || (silentEl && silentEl.paused)) Sound.ensure(); };
+const soundUnlock = () => { if (!Sound.ctx || Sound.ctx.state !== 'running' || (silentEl && silentEl.paused)) Sound.ensure(); if (BGM.on && UI.screen === 'game' && !BGM.timer) BGM.start(); };
 for (const ev of ['touchend', 'pointerup', 'click', 'keydown']) window.addEventListener(ev, soundUnlock, true);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && Sound.ctx && Sound.ctx.state !== 'running') { try { Sound.ctx.resume().catch(() => {}); } catch (e) {} }
@@ -2378,13 +2637,16 @@ const pref = { sound: true, name: '' };
 try { Object.assign(pref, JSON.parse(localStorage.getItem(PREF_KEY) || '{}')); } catch (e) {}
 function savePref() { try { localStorage.setItem(PREF_KEY, JSON.stringify(pref)); } catch (e) {} }
 Sound.on = pref.sound !== false;
+BGM.on = pref.bgm !== false;
 
 const SCREENS = ['title', 'setup', 'p2p', 'game', 'result', 'howto'];
 function show(name) {
   UI.screen = name;
   for (const s of SCREENS) $('#scr-' + s).hidden = s !== name;
   if (name === 'title') renderTitle();
+  if (name !== 'game') BGM.stop();
   if (name === 'game') {
+    if (BGM.on) { Sound.ensure(); BGM.start(); }
     if (!Board.built) buildBoard();
     camFit(0);
     if (UI.state) { const p = UI.state.players[UI.state.turn]; camCenterOn(WORLD.nodes[p.pos].x, WORLD.nodes[p.pos].y, 1, 0); render(true); }
@@ -2509,7 +2771,7 @@ function render(force) {
     if (S.event && (!prev.event || prev.event !== S.event)) {
       const k = S.event.kind;
       if (k === 'plus' || k === 'buy' || k === 'steal') Sound.cash();
-      else if (k === 'minus') Sound.bad();
+      else if (k === 'minus' || k === 'ginji') Sound.bad();
       else if (k === 'card' || k === 'warp' || k === 'oharai') Sound.card();
       else if (k === 'arrive' || k === 'settle' || k === 'season') Sound.fanfare();
       else if (k === 'tanuki') Sound.tanuki();
@@ -2580,10 +2842,40 @@ function renderDice(S, prev) {
     Array.from(d.children).forEach((e, i) => { if (e.classList.contains('rolling') || e.textContent !== String(S.dice.vals[i])) { e.classList.remove('rolling'); e.classList.add('pop'); e.textContent = S.dice.vals[i]; } });
   }
 }
+function renderSettle(S, ev) {
+  const box = $('#settle');
+  if (!ev) { if (!box.hidden) { box.hidden = true; box.innerHTML = ''; } return; }
+  const key = S.rev + ':settle';
+  if (!box.hidden && UI.settleKey === key) return;
+  UI.settleKey = key;
+  const rows = ev.rows || [];
+  let html = `<h2>${ev.last ? '最終決算' : `${ev.year}年目 決算`}</h2><div class="sub">${esc(ev.text || '')}</div><div class="roll">`;
+  rows.forEach((r, i) => {
+    const p = S.players[r.pid];
+    const mv = r.prevRank && r.prevRank !== r.rank ? (r.rank < r.prevRank ? `<span class="mv">▲ ${r.prevRank}位から</span>` : `<span class="mv down">▼ ${r.prevRank}位から</span>`) : '';
+    const cats = Object.keys(r.cats || {}).filter(k => r.cats[k] > 0).map(k => `<span class="cat">${PROP_CATS[k].icon}${PROP_CATS[k].name} ＋${esc(yen(r.cats[k]))}</span>`).join('');
+    html += `<div class="srow${r.rank === 1 ? ' first' : ''}" style="animation-delay:${0.35 + i * 0.75}s">
+      <div class="no">${r.rank}</div>
+      <div class="who"><i style="background:${p.color}"></i>${esc(r.name)}${p.ctrl === 'cpu' ? ' (CPU)' : ''}${mv}</div>
+      <div class="as">${esc(yen(r.assets))}<small>総資産</small></div>
+      <div class="det">所持金 ${esc(yen(r.moneyBefore))} → <b>${esc(yen(r.money))}</b>・物件 ${r.props}件${r.mono && r.mono.length ? `・独占 ${esc(r.mono.join('、'))}` : ''}・今年の到着 ${r.arrY}回<br>
+      収益 <b>＋${esc(yen(r.inc))}</b> ${cats}${r.interest ? `<span class="cat" style="color:#f29b9b">借金の利息 −${esc(yen(r.interest))}</span>` : ''}</div>
+    </div>`;
+  });
+  html += '</div>';
+  const tail = ev.last ? 'おつかれさまでした！ けっか発表へ…' : `${ev.year + 1}年目、4月へ。`;
+  html += `<div class="tail" style="animation-delay:${0.5 + rows.length * 0.75}s">${esc(tail)}</div>`;
+  const canSkip = UI.mode !== 'guest';
+  if (canSkip) html += `<button class="btn btn-main btn-wide" id="settle-ok" type="button">${ev.last ? 'けっかを見る' : 'つぎの年へ'}</button>`;
+  box.innerHTML = html;
+  box.hidden = false;
+  const b = $('#settle-ok'); if (b) b.onclick = () => { Sound.click(); act({ t: 'ok' }); };
+}
 function renderEvent(S, prev) {
   const box = $('#ev');
   const ev = S.phase === 'event' ? S.event : null;
-  if (!ev) { box.hidden = true; box.innerHTML = ''; return; }
+  renderSettle(S, ev && ev.kind === 'settle' ? ev : null);
+  if (!ev || ev.kind === 'settle') { box.hidden = true; box.innerHTML = ''; return; }
   const key = S.rev + ':' + (ev.title || '') + ':' + (ev.text || '');
   if (!box.hidden && prev && prev.evKey === key) return;
   UI.evKey = key;
@@ -2591,6 +2883,7 @@ function renderEvent(S, prev) {
   box.className = 'ev ev-' + (ev.kind || 'info');
   let html = '';
   if (ev.kind === 'tanuki') html += `<div class="tanuki-art">${TANUKI_SVG(54, ev.form || 0)}</div>`;
+  if (ev.kind === 'ginji') html += `<div class="tanuki-art">${GINJI_SVG(54)}</div>`;
   if (who) html += `<div class="ev-who"><i style="background:${who.color}"></i>${esc(who.name)}</div>`;
   html += `<div class="ev-title">${esc(ev.title || '')}</div><div class="ev-text">${esc(ev.text || '')}</div>`;
   if (ev.rows) html += '<table>' + ev.rows.map(r => `<tr><td><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${S.players[r.pid].color};margin-right:6px"></i>${esc(r.name)}</td>` + (r.text !== undefined ? `<td colspan="2">${esc(r.text)}</td>` : `<td>収益 ＋${esc(yen(r.inc))}${r.interest ? `<br><span style="color:var(--red)">利息 −${esc(yen(r.interest))}</span>` : ''}</td><td>総資産 ${esc(yen(r.assets))}</td>`) + '</tr>').join('') + '</table>';
@@ -2834,7 +3127,8 @@ function openMenuSheet() {
   add('📜 これまでの出来事', () => openLogSheet(UI.state));
   if (UI.mode === 'host') add('🔗 再接続・さそい直し（合言葉）', () => openReconnectSheet());
   add('🗺 地図ぜんたいを見る', () => { closeSheet(); camFit(400); });
-  add(Sound.on ? '🔊 音：オン（タップでオフ）' : '🔇 音：オフ（タップでオン）', () => { Sound.on = !Sound.on; pref.sound = Sound.on; savePref(); openMenuSheet(); });
+  add(Sound.on ? '🔊 効果音：オン（タップでオフ）' : '🔇 効果音：オフ（タップでオン）', () => { Sound.on = !Sound.on; pref.sound = Sound.on; savePref(); openMenuSheet(); });
+  add(BGM.on ? '🎵 BGM：オン（タップでオフ）' : '🎵 BGM：オフ（タップでオン）', () => { BGM.on = !BGM.on; pref.bgm = BGM.on; savePref(); if (BGM.on) { Sound.ensure(); BGM.start(); } else BGM.stop(); openMenuSheet(); });
   add('📖 あそびかた', () => { closeSheet(); UI.howtoFrom = 'game'; show('howto'); });
   add(UI.mode === 'guest' ? '🚪 部屋を出る（タイトルへ）' : '🏠 タイトルにもどる' + (UI.mode === 'solo' || UI.mode === 'local' ? '（つづきは保存されます）' : '（ゲーム終了）'), () => {
     if (UI.mode === 'host' && !confirm('ゲームを終了して、みんなとの接続を切ります。よろしいですか？')) return;
