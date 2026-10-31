@@ -274,6 +274,24 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
 @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 .own-dot { stroke: #fff; stroke-width: 1.5; }
 .tanuki-badge { transition: transform .42s cubic-bezier(.3,.7,.3,1); }
+
+/* ---------- seasons ---------- */
+#scr-game[data-season="spring"] { --land: #fbf3e4; --land-edge: #e3c8c0; --sea: #c6e2ef; }
+#scr-game[data-season="summer"] { --land: #f3f6d9; --land-edge: #c9d59a; --sea: #a9dcf0; }
+#scr-game[data-season="autumn"] { --land: #f9ecd2; --land-edge: #e0b98a; --sea: #bcd6e3; }
+#scr-game[data-season="winter"] { --land: #f9f9fc; --land-edge: #cfd6e4; --sea: #c3d2e0; }
+.weather { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+.weather i { position: absolute; top: -20px; display: block; animation: drift linear infinite; opacity: .85; }
+.weather[data-season="spring"] i { width: 10px; height: 8px; border-radius: 60% 0 60% 0; background: #f7b4c4; }
+.weather[data-season="autumn"] i { width: 11px; height: 8px; border-radius: 0 60% 0 60%; background: #e0862e; }
+.weather[data-season="winter"] i { width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 4px rgba(255,255,255,.9); }
+@keyframes drift { 0% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(var(--sw, 20px), 50vh) rotate(180deg); } 100% { transform: translate(0, 100vh) rotate(360deg); opacity: .4; } }
+.ev.ev-season { border-color: var(--purple); background: #f6f0ff; }
+.chip .dist { font-size: 11px; color: var(--ink); font-weight: 800; white-space: nowrap; }
+.netbar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #fde4e1; color: #a52a22; font-size: 13px; font-weight: 700; z-index: 3; border-bottom: 2px solid #f3c5c0; }
+.netbar span { flex: 1; min-width: 0; line-height: 1.4; }
+.netbar .btn { min-height: 36px; padding: 6px 12px; font-size: 13px; flex: none; }
+.plist li .btn-plain { margin-left: 8px; min-height: 30px; font-size: 12px; padding: 0 4px; }
 </style>
 </head>
 <body>
@@ -323,6 +341,8 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
         <div class="slots" id="slots"></div>
         <h3 class="o-label">なん年あそぶ？（1年＝12ターン）</h3>
         <div class="seg" id="seg-y"><button type="button" data-y="1">1年</button><button type="button" data-y="3" class="on">3年</button><button type="button" data-y="5">5年</button><button type="button" data-y="10">10年</button></div>
+        <h3 class="o-label">コンピューターの強さ</h3>
+        <div class="seg" id="seg-cpulv"><button type="button" data-l="easy">よわい</button><button type="button" data-l="normal" class="on">ふつう</button><button type="button" data-l="hard">つよい</button></div>
         <div class="actions-row">
           <button class="btn btn-plain" id="setup-back" type="button">もどる</button>
           <button class="btn btn-main btn-big" id="setup-go" type="button">出発！</button>
@@ -361,6 +381,8 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
             <div class="seg" id="seg-y2"><button type="button" data-y="1">1年</button><button type="button" data-y="3" class="on">3年</button><button type="button" data-y="5">5年</button><button type="button" data-y="10">10年</button></div>
             <h3 class="o-label">コンピューターを足す</h3>
             <div class="seg" id="seg-cpu"><button type="button" data-c="0" class="on">なし</button><button type="button" data-c="1">1人</button><button type="button" data-c="2">2人</button><button type="button" data-c="3">3人</button></div>
+            <h3 class="o-label">コンピューターの強さ</h3>
+            <div class="seg" id="seg-cpulv2"><button type="button" data-l="easy">よわい</button><button type="button" data-l="normal" class="on">ふつう</button><button type="button" data-l="hard">つよい</button></div>
             <div class="pp-row" style="margin-top:14px"><button class="btn btn-main btn-big btn-wide" id="pp-start" type="button" disabled>ゲーム開始</button></div>
           </div>
         </div>
@@ -404,8 +426,10 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
       <div class="top-dest"><small>目的地</small><b id="t-dest">—</b><span id="t-dist"></span></div>
       <button class="icon-btn" id="g-menu" type="button" aria-label="メニュー">☰</button>
     </header>
+    <div class="netbar" id="netbar" hidden></div>
     <div class="map" id="map">
       <svg id="board" xmlns="http://www.w3.org/2000/svg"><g id="cam"></g></svg>
+      <div class="weather" id="weather" aria-hidden="true"></div>
       <div class="map-ctl">
         <button type="button" id="m-fit">全体</button>
         <button type="button" id="m-me">現在地</button>
@@ -464,14 +488,20 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
           <li><span class="sq" style="background:var(--purple)">店</span> カード売り場：お金でカードを買えます。買うと棚に新しいカードが並びます</li>
           <li><span class="sq" style="background:#fff;color:var(--ink);border:2px solid var(--ink)">駅</span> 駅：物件を買えます。1つの駅の物件をぜんぶ買うと「独占」で収益が2倍！</li>
         </ul>
-        <h3>🃏 カード（17種類）</h3>
-        <p>サイコロのかわりに使います。<b>急行・特急・新幹線</b>はサイコロの数がふえ、<b>急行周遊</b>は3回使えます。<b>ちょうど</b>は1〜6の好きな数だけ進めるので、ぴったり到着のきりふだ。<b>まぢか・ぶっとび・場所がえ・集合</b>で位置を変え、<b>牛歩・いたずら・刀狩り・スリ</b>でライバルをじゃま。<b>おはらい</b>でタヌキを追いはらい、<b>たからくじ・福袋・徳政令</b>は困ったときに。</p>
+        <h3>🃏 カード（24種類）</h3>
+        <p>サイコロのかわりに使います。<b>急行・特急・新幹線・のぞみ</b>はサイコロの数がふえ、<b>急行周遊・特急周遊</b>は3回使えます。<b>ちょうど</b>は1〜6の好きな数だけ進めるので、ぴったり到着のきりふだ。<b>まぢか・最寄り駅・ぶっとび・場所がえ・集合</b>で位置を変え、<b>牛歩・いたずら・ふういん・北へ！・ぶんどり・刀狩り・スリ</b>でライバルをじゃま。<b>おまもり</b>は持っているだけで、いじわるカードを1回はねかえします。<b>おはらい</b>でタヌキを追いはらい、<b>たからくじ・福袋・徳政令</b>は困ったときに。千葉の先の<b>房総半島</b>と金沢の先の<b>能登半島</b>はカードマスだらけ！</p>
         <h3>🦝 びんぼうタヌキ</h3>
-        <p>誰かが目的地に着くと、そのとき目的地から<b>いちばん遠かった人</b>に びんぼうタヌキがくっつきます。ターンの終わりに お金を持ち逃げしたり、カードをかじったり、勝手にカードを買ってきたり……。タヌキがついた人と同じマスに止まると、タヌキはそっちに乗りかえます。たまに<b>大タヌキ</b>に変身して物件を売り飛ばします！</p>
+        <p>誰かが目的地に着くと、そのとき目的地から<b>いちばん遠かった人</b>に びんぼうタヌキがくっつきます。ターンの終わりに お金を持ち逃げしたり、カードをかじったり、勝手にカードを買ってきたり……。タヌキがついた人と<b>すれ違う（同じマスを通る・止まる）</b>と、タヌキは相手に乗りかえます。わざと相手の列車に突っこんで なすりつけましょう。</p>
+        <p>たまに変身します：<b>大タヌキ</b>（3ターン、物件を売り飛ばす）、<b>ハリケーンタヌキ</b>（3ターン、毎回どこかへ吹き飛ばす）、<b>ミニタヌキ</b>（3ターン、ほぼ無害）、そしてごくまれに<b>キングタヌキ</b>（3ターン、物件もカードもお金もめちゃくちゃ）。おはらいカードや2月の節分で追いはらえます。</p>
+        <h3>🌸 季節とイベント</h3>
+        <p>4月から3月まで、地図の色が季節で変わります。月のはじめに季節のイベントがあり、<b>観光🏨・農林水産🌾・飲食🍜</b>など物件の種類ごとに臨時収入が入ったり（GW・夏休み・収穫の秋・忘年会）、台風で修理代がかかったり、お正月にお年玉が出たり、節分でタヌキを追いはらえたりします。物件の種類は買うときのアイコンで分かります。</p>
+        <h3>🤖 コンピューターの強さ</h3>
+        <p>「よわい」は気ままに走ります。「ふつう」はぴったり着ける道を探し、「つよい」は次のターンに着きやすいマスまで考えて止まり、独占をねらい、ゴール目前の相手にいじわるカードを使ってきます。</p>
         <h3>💴 お金・決算</h3>
         <p>1ターンで1か月が進みます。毎年3月のおわりに決算があり、持っている物件の「収益率」ぶんのお金が入ります。所持金はマイナス（借金）にもなり、決算で<b>10%の利息</b>がつきます。自分の番のあいだは、「対戦状況」から物件を<b>値段の70%で売る</b>こともできます。</p>
         <h3>🔗 合言葉であそぶ</h3>
         <p>1台目が合言葉を作って LINE などで送り、2台目が返事の合言葉を作って送り返すと、スマホどうしが<b>じかに</b>つながります。1台目は ひとりずつ順番に さそえます（最大4人）。ゲームは1台目が進行します。</p>
+        <p>スマホがスリープしたり LINE を開いたりしても切れません。それでも切れてしまったら、<b>席はそのまま</b>でコンピューターが代走します。1台目がメニューの「再接続」から新しい合言葉を作って送れば、同じ席にもどれます（ページを閉じてしまっても、タイトルから「2台目以降」で貼ればOK）。1台目は「つづきから」で再開できます。</p>
         <div class="actions-row"><button class="btn btn-main" id="howto-back" type="button">もどる</button></div>
       </article>
     </div>
@@ -485,8 +515,8 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
 //  real shape of Japan. Okinawa is moved up into an inset box.
 // ===================================================================
 
-const GAME_VER = '2.0';
-const NET_V = 2;
+const GAME_VER = '3.0';
+const NET_V = 3;
 
 // ---------- projection ----------
 function proj(lat, lon) {
@@ -515,6 +545,7 @@ const CITY_DEFS = [
   ['前橋', 36.39, 139.06, '関東', [['焼きまんじゅう店', 500, 70], ['温泉旅館', 9000, 12], ['自動車部品工場', 12000, 10]], [1030, 1200]],
   ['さいたま', 35.86, 139.65, '関東', [['盆栽園', 1500, 30], ['うなぎ店', 1200, 50], ['大スタジアム', 20000, 8]], [1100, 1280]],
   ['千葉', 35.61, 140.12, '関東', [['落花生農園', 1000, 45], ['テーマパーク', 50000, 10], ['梨農園', 1200, 40], ['魚市場', 3000, 25]], [1250, 1365]],
+  ['館山', 34.99, 139.87, '関東', [['びわ農園', 1000, 45], ['なめろう定食店', 700, 60], ['海の家', 500, 80]], [1250, 1540]],
   ['東京', 35.68, 139.69, '関東', [['すし店', 3000, 40], ['タワー展望台', 30000, 10], ['オフィスビル', 100000, 5], ['老舗和菓子店', 2000, 40]], [1160, 1340]],
   ['横浜', 35.44, 139.64, '関東', [['中華街レストラン', 2000, 50], ['港の倉庫', 8000, 15], ['大観覧車', 15000, 12], ['シュウマイ店', 1000, 60]], [1130, 1420]],
   // 中部
@@ -523,6 +554,8 @@ const CITY_DEFS = [
   ['新潟', 37.92, 139.04, '中部', [['米農家', 3000, 25], ['酒蔵', 6000, 15], ['せんべい工場', 2500, 30], ['海鮮丼店', 1000, 50]], [1080, 1050]],
   ['富山', 36.70, 137.21, '中部', [['ますずし店', 900, 50], ['ホタルイカ漁船', 2000, 35], ['くすり商会', 3000, 25]], [880, 1210]],
   ['金沢', 36.56, 136.66, '中部', [['金ぱく工房', 2000, 40], ['和菓子店', 1500, 45], ['海鮮市場', 4000, 25], ['温泉旅館', 9000, 12]], [810, 1230]],
+  ['輪島', 37.39, 136.90, '中部', [['朝市の露店', 400, 90], ['輪島塗工房', 2000, 35], ['能登牛レストラン', 2500, 35]], [790, 1100]],
+  ['松本', 36.24, 137.97, '中部', [['そば店', 800, 60], ['お城の観光', 3000, 25], ['わさび農園', 1500, 40]], [925, 1268]],
   ['福井', 36.07, 136.22, '中部', [['カニ料理店', 2500, 40], ['めがね工場', 4000, 25], ['恐竜グッズ店', 1500, 35]], [730, 1300]],
   ['静岡', 34.98, 138.38, '中部', [['お茶農園', 1500, 40], ['うなぎ店', 1200, 50], ['みかん農園', 1000, 45], ['おでん店', 500, 70]], [1030, 1440]],
   ['名古屋', 35.18, 136.91, '中部', [['手羽先店', 900, 60], ['みそかつ店', 1200, 50], ['自動車工場', 150000, 5], ['みそ蔵', 5000, 15]], [890, 1400]],
@@ -559,25 +592,28 @@ const CITY_DEFS = [
 ];
 
 // ---------- routes: [from, to, squares between, options] ----------
-// options: via = [[lat, lon], ...] or pts = [[x, y], ...] bends the line; sea = ferry (dashed); shop = n: the n-th square is a カード売り場
+// options: via = [[lat, lon], ...] or pts = [[x, y], ...] bends the line; sea = ferry (dashed); shop = n: the n-th square is a カード売り場; all = every square is that type
 const ROUTE_DEFS = [
   // 北海道
-  ['旭川', '札幌', 2], ['札幌', '函館', 3, { via: [[42.5, 140.9]], shop: 2 }], ['札幌', '帯広', 3, { via: [[42.9, 142.3]] }],
-  ['帯広', '釧路', 2], ['旭川', '帯広', 2, { via: [[43.3, 142.9]] }],
+  ['旭川', '札幌', 2], ['札幌', '函館', 4, { via: [[42.5, 140.9]], shop: 2 }], ['札幌', '帯広', 4, { via: [[42.9, 142.3]] }],
+  ['帯広', '釧路', 3, { pts: [[1565, 465]] }], ['旭川', '帯広', 3, { pts: [[1500, 330]] }],
   ['函館', '青森', 2, { sea: true }],
   // 東北
-  ['青森', '盛岡', 2, { shop: 1 }], ['青森', '秋田', 2, { via: [[40.5, 140.2]] }], ['秋田', '盛岡', 2], ['盛岡', '仙台', 3],
-  ['秋田', '山形', 3, { pts: [[1180, 913]] }], ['山形', '仙台', 1], ['仙台', '福島', 2, { shop: 1 }], ['福島', '宇都宮', 3],
+  ['青森', '盛岡', 2, { shop: 1 }], ['青森', '秋田', 3, { via: [[40.5, 140.2]] }], ['秋田', '盛岡', 2], ['盛岡', '仙台', 4, { pts: [[1300, 905]] }],
+  ['秋田', '山形', 4, { pts: [[1180, 913]] }], ['山形', '仙台', 1], ['仙台', '福島', 2, { shop: 1 }], ['福島', '宇都宮', 3],
   ['山形', '新潟', 2, { pts: [[1140, 1010]] }], ['山形', '福島', 1],
-  ['水戸', '仙台', 3, { pts: [[1320, 1130]] }],
+  ['水戸', '仙台', 4, { pts: [[1335, 1130], [1310, 1030]] }],
   // 関東・甲信越
   ['新潟', '長野', 3, { pts: [[1020, 1070]] }], ['新潟', '前橋', 3, { pts: [[1075, 1120]] }], ['前橋', 'さいたま', 2], ['宇都宮', 'さいたま', 2], ['水戸', '宇都宮', 2],
   ['水戸', '千葉', 2], ['千葉', '東京', 1], ['さいたま', '東京', 1, { pts: [[1140, 1300]], shop: 1 }], ['東京', '横浜', 1], ['東京', '甲府', 2, { pts: [[1100, 1335]] }],
   ['横浜', '千葉', 1, { sea: true }],
+  ['千葉', '館山', 4, { pts: [[1290, 1420], [1280, 1490]], all: 'card' }],   // 房総半島：カードマスだらけ
   ['甲府', '長野', 2], ['甲府', '静岡', 2], ['横浜', '静岡', 2, { pts: [[1085, 1470]] }],
   // 中部
   ['静岡', '名古屋', 3, { pts: [[960, 1470]] }], ['長野', '富山', 1], ['富山', '金沢', 1],
-  ['金沢', '福井', 2, { shop: 2 }], ['福井', '京都', 2, { pts: [[790, 1330]] }], ['長野', '名古屋', 4, { pts: [[930, 1260], [905, 1330]] }],
+  ['金沢', '福井', 2, { shop: 2 }],
+  ['金沢', '輪島', 3, { pts: [[770, 1165]], all: 'card' }],   // 能登半島：カードマスだらけ
+  ['福井', '京都', 2, { pts: [[790, 1330]] }], ['長野', '松本', 1], ['松本', '名古屋', 2, { pts: [[905, 1330]] }], ['松本', '甲府', 1],
   ['岐阜', '富山', 2], ['名古屋', '岐阜', 1, { shop: 1 }], ['名古屋', '津', 2], ['津', '奈良', 2],
   ['名古屋', '京都', 2, { pts: [[840, 1395]] }],
   // 近畿
@@ -585,18 +621,18 @@ const ROUTE_DEFS = [
   ['奈良', '和歌山', 2, { pts: [[760, 1545]] }], ['津', '和歌山', 3, { via: [[33.75, 136.0], [33.5, 135.75]] }],
   ['和歌山', '徳島', 1, { sea: true }], ['神戸', '徳島', 1, { sea: true }], ['神戸', '岡山', 2], ['神戸', '鳥取', 2, { pts: [[650, 1395]] }],
   // 中国
-  ['鳥取', '松江', 2], ['鳥取', '岡山', 1], ['松江', '山口', 3, { pts: [[380, 1400]] }], ['松江', '広島', 2], ['岡山', '広島', 2],
+  ['鳥取', '松江', 2], ['鳥取', '岡山', 1], ['松江', '山口', 4, { pts: [[380, 1400]] }], ['松江', '広島', 2], ['岡山', '広島', 2],
   ['広島', '山口', 2, { shop: 1 }], ['山口', '下関', 1], ['下関', '福岡', 1, { sea: true }],
   // 四国
   ['岡山', '高松', 1, { sea: true }], ['高松', '徳島', 1], ['高松', '高知', 2, { shop: 1 }], ['徳島', '高知', 2, { pts: [[600, 1600]] }],
   ['高松', '松山', 2], ['松山', '高知', 2], ['松山', '広島', 1, { sea: true }], ['松山', '大分', 1, { sea: true }],
-  ['高知', '宮崎', 3, { sea: true }],
+  ['高知', '宮崎', 4, { sea: true, pts: [[430, 1760]] }],
   // 九州
-  ['福岡', '佐賀', 1], ['佐賀', '長崎', 2], ['福岡', '熊本', 2, { shop: 1 }], ['福岡', '大分', 2], ['大分', '宮崎', 2],
-  ['熊本', '鹿児島', 2], ['宮崎', '鹿児島', 2], ['熊本', '大分', 2],
-  ['山口', '大分', 2, { sea: true }], ['熊本', '長崎', 2, { sea: true, pts: [[200, 1760]] }],
+  ['福岡', '佐賀', 1], ['佐賀', '長崎', 2], ['福岡', '熊本', 2, { shop: 1 }], ['福岡', '大分', 2], ['大分', '宮崎', 3, { pts: [[372, 1690], [360, 1750]] }],
+  ['熊本', '鹿児島', 3, { pts: [[250, 1760], [215, 1800]] }], ['宮崎', '鹿児島', 2, { pts: [[300, 1850]] }], ['熊本', '大分', 2, { pts: [[320, 1690]] }],
+  ['山口', '大分', 2, { sea: true }], ['熊本', '長崎', 2, { sea: true, pts: [[215, 1745]] }],
   // 沖縄（航路）
-  ['鹿児島', '那覇', 3, { sea: true, pts: [[200, 1925]] }],
+  ['鹿児島', '那覇', 4, { sea: true, pts: [[200, 1925]] }],
 ];
 
 // ---------- island outlines ([lat, lon] polygons, very simplified) ----------
@@ -628,7 +664,16 @@ const CARD_DEFS = {
   lottery: { name: 'たからくじカード', desc: '500万〜3000万円が当たる', w: 6, price: 1500 },
   fuku:    { name: '福袋カード',     desc: 'カードを2枚もらえる', w: 4, price: 1200 },
   tokusei: { name: '徳政令カード',   desc: '自分の借金がぜんぶ帳消しになる', w: 3, price: 0 },
+  nozomi:  { name: 'のぞみカード',   desc: 'サイコロを5個ふって進む', dice: 5, w: 2, price: 6000 },
+  ltdx:    { name: '特急周遊カード', desc: 'サイコロを3個ふって進む。3回使える', dice: 3, uses: 3, w: 3, price: 4500 },
+  station: { name: '最寄り駅カード', desc: 'いちばん近い駅へ移動する', w: 5, price: 600 },
+  north:   { name: '北へ！カード',   desc: 'ほかの人1人を北海道のどこかの駅へ飛ばす', needs: 'target', w: 3, price: 2000 },
+  grab:    { name: 'ぶんどりカード', desc: 'ほかの人1人の物件を1件うばう', needs: 'target', w: 2, price: 5000 },
+  seal:    { name: 'ふういんカード', desc: 'ほかの人1人を3ターンのあいだ、カードを使えなくする', needs: 'target', w: 4, price: 1800 },
+  omamori: { name: 'おまもりカード', desc: '持っているだけで、ほかの人のいじわるカードを1回はねかえす', passive: true, w: 5, price: 1500 },
 };
+// cards that do something TO another player; おまもり bounces these
+const ATTACK_CARDS = ['swap', 'gyuho', 'itazura', 'north', 'grab', 'seal', 'katana'];
 const CARD_IDS = Object.keys(CARD_DEFS);
 const SHOP_IDS = CARD_IDS.filter(id => CARD_DEFS[id].price > 0);
 const MAX_CARDS = 8;
@@ -682,6 +727,22 @@ function mulberry32(seed) {
   };
 }
 
+// ---------- property kinds (seasons favour different ones) ----------
+const PROP_CATS = {
+  tour: { name: '観光', icon: '🏨' }, farm: { name: '農林水産', icon: '🌾' }, factory: { name: '工業', icon: '🏭' },
+  food: { name: '飲食', icon: '🍜' }, other: { name: 'その他', icon: '🏢' },
+};
+function propCat(name) {
+  if (/温泉|旅館|ホテル|観光|展望|ロープウェイ|観覧|スタジアム|テーマパーク|水族館|スキー場|乗り場|夜景|どうぶつ園|お城|海の家|砂むし|地獄/.test(name)) return 'tour';
+  if (/農園|農家|牧場|畑|漁|養殖|市場/.test(name)) return 'farm';
+  if (/工場|工房|蔵|酒造|造船|窯元|商会|ワイナリー|加工/.test(name)) return 'factory';
+  if (/店|屋台|レストラン|バー|パーラー|露店|居酒屋/.test(name)) return 'food';
+  return 'other';
+}
+// 12 months starting in 4月; the season colours the map and brings its own events
+const SEASON_OF = ['spring', 'spring', 'summer', 'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter', 'winter', 'winter', 'spring'];
+const SEASON_ICON = { spring: '🌸', summer: '☀️', autumn: '🍁', winter: '⛄' };
+
 // ---------- building the board ----------
 function alongPolyline(pts, f) {
   const segs = [];
@@ -706,10 +767,11 @@ function buildWorld() {
   const nodes = [], adj = [], edges = [], cityIdx = {};
   const link = (a, b, sea) => { adj[a].push(b); adj[b].push(a); edges.push({ a, b, sea: !!sea }); };
   for (const [name, lat, lon, region, props, at] of CITY_DEFS) {
+    for (const pr of props) pr.push(propCat(pr[0]));
     // crowded areas are spread out by hand, like a subway map: `at` overrides the projected spot
     const [x, y] = at || proj(lat, lon);
     cityIdx[name] = nodes.length;
-    nodes.push({ id: nodes.length, type: 'city', name, region, x, y, props: props.map(([n, price, rate]) => ({ name: n, price, rate })) });
+    nodes.push({ id: nodes.length, type: 'city', name, region, x, y, props: props.map(([n, price, rate, cat]) => ({ name: n, price, rate, cat })) });
     adj.push([]);
   }
   // squares in between: the type is drawn from a fixed seed so every device builds the same board
@@ -723,7 +785,7 @@ function buildWorld() {
       const [x, y] = alongPolyline(pts, (i + 1) / (n + 1));
       const id = nodes.length;
       const type = pick();   // always drawn, so the board stays the same when a shop is added
-      nodes.push({ id, type: opt.shop === i + 1 ? 'shop' : type, x, y, sea: !!opt.sea });
+      nodes.push({ id, type: opt.shop === i + 1 ? 'shop' : (opt.all || type), x, y, sea: !!opt.sea });
       adj.push([]);
       link(prev, id, opt.sea);
       prev = id;
@@ -777,6 +839,22 @@ const START_MONEY = 5000;
 const STEP_MS = 420;
 const SELL_RATE = 0.7;
 const DEST_MIN = 7, DEST_MAX = 18;
+// びんぼうタヌキ forms: 0 ふつう, 1 大, 2 キング, 3 ミニ, 4 ハリケーン
+const TANUKI_FORMS = {
+  0: { name: 'びんぼうタヌキ' }, 1: { name: '大タヌキ', turns: 3 }, 2: { name: 'キングタヌキ', turns: 3 },
+  3: { name: 'ミニタヌキ', turns: 3 }, 4: { name: 'ハリケーンタヌキ', turns: 3 },
+};
+// what each month brings (index 0 = 4月). pct = share of that kind of property's price paid out
+const MONTH_EVENTS = {
+  1: { title: '🎏 ゴールデンウィーク', text: '行楽シーズン！ 観光物件が大にぎわい。', cat: 'tour', pct: 10 },
+  3: { title: '🌊 海開き・夏休み', text: '夏休みがはじまった！ 観光物件に人がどっと来た。', cat: 'tour', pct: 10 },
+  4: { title: '🎆 夏祭り', text: '祭りの屋台は大もうけ。飲食の物件がにぎわった。', cat: 'food', pct: 10 },
+  5: { title: '🌀 台風上陸！', text: '', kind: 'typhoon' },
+  6: { title: '🌾 収穫の秋', text: '実りの秋。農園・漁業の物件が豊作！', cat: 'farm', pct: 10 },
+  8: { title: '🍻 忘年会シーズン', text: '飲食の物件は毎晩満員。', cat: 'food', pct: 10 },
+  9: { title: '🎍 お正月', text: 'あけましておめでとう！ 全員にお年玉。', kind: 'otoshidama' },
+  10: { title: '👹 節分', text: '', kind: 'setsubun' },
+};
 
 function weightedPick(rng, items, weightOf) {
   let total = 0;
@@ -788,6 +866,11 @@ function weightedPick(rng, items, weightOf) {
 function randomCardId(rng) { return weightedPick(rng, CARD_IDS, id => CARD_DEFS[id].w); }
 function randomShopId(rng) { return weightedPick(rng, SHOP_IDS, id => CARD_DEFS[id].w); }
 function mkCard(id) { return { id, uses: CARD_DEFS[id].uses || 1 }; }
+function nearestCity(node, except) {
+  let best = -1, bd = 1e9;
+  for (const c of WORLD.cities) { if (c === except) continue; const d = WORLD.dist[c][node]; if (d < bd) { bd = d; best = c; } }
+  return best;
+}
 function cardName(id) { return CARD_DEFS[id] ? CARD_DEFS[id].name : id; }
 function cardLabel(c) { const d = CARD_DEFS[c.id]; return d ? d.name + (d.uses ? `（あと${c.uses}回）` : '') : c.id; }
 // the ways you may leave a square: not straight back the way you came (unless it is a dead end)
@@ -818,9 +901,10 @@ class Game {
     const start = WORLD.cityIdx['東京'];
     const S = this.s = {
       v: GAME_VER, rev: 0, years: opts.years || 3, year: 1, month: 0, turn: 0, phase: 'turnstart',
+      cpu: opts.cpu || 'normal',
       players: opts.players.map((p, i) => ({
         id: i, name: p.name || PLAYER_NAMES[i], ctrl: p.ctrl || 'local', color: PLAYER_COLORS[i],
-        money: START_MONEY, pos: start, prev: -1, cards: [], skip: 0, slow: 0, arrivals: 0,
+        money: START_MONEY, pos: start, prev: -1, cards: [], skip: 0, slow: 0, sealed: 0, arrivals: 0,
       })),
       own: {}, dest: -1, destNo: 0,
       tanuki: { at: -1, form: 0, left: 0, total: 0 },
@@ -889,13 +973,15 @@ class Game {
     return ms;
   }
   canReach(node, prev, k) { return canReachExact(this.s.dest, node, prev, k); }
+  // a player the computer moves for: a CPU, or a person whose phone is away (the seat stays theirs)
+  isCpu(p) { return p.ctrl === 'cpu' || !!p.away; }
 
   // ---------- the clock: one automatic action per call; returns ms until the next one (0 = waiting for a person) ----------
   tick() {
     const S = this.s;
     if (S.phase === 'gameover') { if (!S.result) { this.finish(); this.touch(); } return 0; }
     const p = this.cur();
-    const cpu = p.ctrl === 'cpu';
+    const cpu = this.isCpu(p);
     let d = 0;
     switch (S.phase) {
       case 'turnstart': d = this.turnStart(); break;
@@ -903,7 +989,7 @@ class Game {
       case 'pick': d = cpu ? this.cpuPick() : 0; break;
       case 'rolling': S.phase = 'moving'; d = this.moveStep(); break;
       case 'moving': d = this.moveStep(); break;
-      case 'branch': d = 0; break;
+      case 'branch': d = cpu && S.branch ? this.advanceTo(p, this.cpuBranch(S.branch)) : 0; break;   // (a person who went away mid-move)
       case 'landing': d = this.land(); break;
       case 'arriving': d = this.arrive(); break;
       case 'buy': d = cpu ? this.cpuBuy() : 0; break;
@@ -925,13 +1011,13 @@ class Game {
     let d = false;
     if (a.t === 'ok') {
       if (S.phase !== 'event') return false;
-      if (pid !== p.id && p.ctrl !== 'cpu' && S.event && S.event.pid >= 0) return false;
+      if (pid !== p.id && !this.isCpu(p) && S.event && S.event.pid >= 0) return false;
       d = this.eventOk();
     } else {
       if (p.id !== pid) return false;
       switch (a.t) {
         case 'roll': if (S.phase !== 'choose') return false; d = this.roll(p, 1); break;
-        case 'card': if (S.phase !== 'choose' || !(a.idx >= 0 && a.idx < p.cards.length)) return false; d = this.useCard(p, a.idx); break;
+        case 'card': if (S.phase !== 'choose' || p.sealed > 0 || !(a.idx >= 0 && a.idx < p.cards.length)) return false; d = this.useCard(p, a.idx); break;
         case 'sell': if (S.phase !== 'choose') return false; d = this.sellProp(p, a.node, a.idx); break;
         case 'pick': {
           if (S.phase !== 'pick' || !S.pick || !S.pick.opts.some(o => o.id === a.id)) return false;
@@ -959,13 +1045,14 @@ class Game {
   turnStart() {
     const S = this.s, p = this.cur();
     S.dice = null; S.branch = null; S.buy = null; S.shop = null; S.pick = null; S.last = null; S.steps = 0;
+    if (p.sealed > 0) p.sealed--;
     if (p.skip > 0) {
       p.skip--;
       this.log(`${p.name} は1回休み`);
       return this.setEvent({ kind: 'skip', title: `${p.name} は1回休み`, text: 'いたずらカードのせいで、今月は動けない……', next: 'nextturn' }, 1600);
     }
     S.phase = 'choose';
-    return p.ctrl === 'cpu' ? 800 : 0;
+    return this.isCpu(p) ? 800 : 0;
   }
   // n dice; `fixed` = a chosen number (ちょうどカード)
   roll(p, n, fixed) {
@@ -988,20 +1075,36 @@ class Game {
     if (S.steps <= 0) { S.phase = 'landing'; return 50; }
     const opts = waysOut(p.pos, p.prev);
     if (opts.length > 1) {
-      if (p.ctrl !== 'cpu') { S.phase = 'branch'; S.branch = opts; return 0; }
+      if (!this.isCpu(p)) { S.phase = 'branch'; S.branch = opts; return 0; }
       return this.advanceTo(p, this.cpuBranch(opts));
     }
     return this.advanceTo(p, opts[0]);
   }
   advanceTo(p, next) {
-    const S = this.s;
+    const S = this.s, T = S.tanuki;
     S.branch = null;
     S.last = { kind: 'step', pid: p.id, from: p.pos, to: next };
     p.prev = p.pos; p.pos = next; S.steps--;
     // only an exact stop counts; passing through the goal is just passing through
-    if (S.steps === 0 && next === S.dest) { S.phase = 'arriving'; return STEP_MS + 200; }
-    S.phase = S.steps > 0 ? 'moving' : 'landing';
-    return STEP_MS;
+    const after = S.steps === 0 && next === S.dest ? 'arriving' : S.steps > 0 ? 'moving' : 'landing';
+    // crossing paths with the tanuki's owner: it jumps to the other one (すれ違いなすりつけ)
+    if (T.at >= 0) {
+      const here = S.players.filter(q => q.id !== p.id && q.pos === next);
+      if (T.at === p.id && here.length) {
+        const q = here[Math.floor(this.rng() * here.length)];
+        T.at = q.id;
+        this.log(`${p.name} は ${q.name} とすれ違い、${TANUKI_FORMS[T.form].name}をなすりつけた！`);
+        return this.setEvent({ kind: 'tanuki', title: 'なすりつけた！', text: `${q.name} とすれ違った！ ${TANUKI_FORMS[T.form].name}は ${q.name} のほうへ……`, next: after, form: T.form }, 1900);
+      }
+      if (T.at !== p.id && S.players[T.at].pos === next) {
+        const was = S.players[T.at];
+        T.at = p.id;
+        this.log(`${p.name} は ${was.name} とすれ違い、${TANUKI_FORMS[T.form].name}がくっついてきた！`);
+        return this.setEvent({ kind: 'tanuki', title: `${TANUKI_FORMS[T.form].name}がくっついた！`, text: `${was.name} とすれ違ってしまった……`, next: after, form: T.form }, 1900);
+      }
+    }
+    S.phase = after;
+    return after === 'arriving' ? STEP_MS + 200 : STEP_MS;
   }
   land() {
     const S = this.s, p = this.cur(), T = S.tanuki;
@@ -1010,13 +1113,13 @@ class Game {
     if (T.at >= 0 && T.at !== p.id && S.players[T.at].pos === p.pos) {
       const was = S.players[T.at];
       T.at = p.id;
-      this.log(`${p.name} は ${was.name} と同じマスに止まり、びんぼうタヌキがくっついてきた！`);
-      return this.setEvent({ kind: 'tanuki', title: 'びんぼうタヌキがくっついた！', text: `${was.name} と同じマスに止まってしまった。びんぼうタヌキは ${p.name} のほうへ……`, next: 'landing2' }, 2200);
+      this.log(`${p.name} は ${was.name} と同じマスに止まり、${TANUKI_FORMS[T.form].name}がくっついてきた！`);
+      return this.setEvent({ kind: 'tanuki', title: `${TANUKI_FORMS[T.form].name}がくっついた！`, text: `${was.name} と同じマスに止まってしまった。タヌキは ${p.name} のほうへ……`, next: 'landing2', form: T.form }, 2200);
     }
     return this.landSquare();
   }
   landSquare() {
-    const S = this.s, p = this.cur(), node = WORLD.nodes[p.pos], cpu = p.ctrl === 'cpu';
+    const S = this.s, p = this.cur(), node = WORLD.nodes[p.pos], cpu = this.isCpu(p);
     if (node.type === 'city') {
       const free = S.own[node.id].map((o, i) => o < 0 ? i : -1).filter(i => i >= 0);
       if (!free.length) { S.phase = 'turnend'; return 300; }
@@ -1066,7 +1169,7 @@ class Game {
     let text = `援助金 ${yen(bonus)} を受け取った！\n次の目的地は「${WORLD.nodes[S.dest].name}」（${this.distTo(p.pos, S.dest)}マス先）。`;
     if (far) {
       T.at = far.id; T.form = 0; T.left = 0;
-      text += `\n目的地からいちばん遠かった ${far.name} に、びんぼうタヌキがくっついた！`;
+      text += `\n目的地からいちばん遠かった ${far.name}（${this.distTo(far.pos, old)}マス）に、びんぼうタヌキがくっついた！`;
     }
     this.log(`${p.name} が ${city.name} にぴったり到着！ 援助金 ${yen(bonus)}。次の目的地は ${WORLD.nodes[S.dest].name}` + (far ? `。びんぼうタヌキは ${far.name} へ` : ''));
     return this.setEvent({ kind: 'arrive', title: `${city.name} にぴったり到着！`, text, next: 'landing2', city: old }, 3600);
@@ -1082,6 +1185,7 @@ class Game {
       S.phase = 'turnstart';
       return 400;
     }
+    if (ev.next === 'monthstart') { S.phase = 'turnstart'; return 300; }
     if (ev.next === 'gameover') { S.phase = 'gameover'; this.finish(); return 0; }
     S.phase = ev.next || 'turnend';
     return 150;
@@ -1137,20 +1241,42 @@ class Game {
     const S = this.s, T = S.tanuki;
     T.total++;
     const r = this.rng();
-    let title = 'びんぼうタヌキ', text = '', ms = 2300;
-    const grab = () => { const amt = Math.max(300, Math.round(Math.max(p.money, 0) * 0.25 / 100) * 100); p.money -= amt; return `所持金から ${yen(amt)} を持ち逃げされた！`; };
+    let title = TANUKI_FORMS[T.form].name, text = '', ms = 2300;
+    const grab = (share, floor) => { const amt = Math.max(floor, Math.round(Math.max(p.money, 0) * share / 100) * 100); p.money -= amt; return amt; };
+    const loseProp = () => { const mine = this.ownedProps(p); if (!mine.length) return ''; const pr = mine[Math.floor(this.rng() * mine.length)]; S.own[pr.node][pr.idx] = -1; return `${WORLD.nodes[pr.node].name}の「${pr.name}」`; };
     if (T.form === 1) {
-      // the big one: three turns of real damage
-      T.left--;
-      title = '大タヌキのいたずら！';
-      const mine = this.ownedProps(p);
-      if (mine.length && this.rng() < 0.45) {
-        const pr = mine[Math.floor(this.rng() * mine.length)];
-        S.own[pr.node][pr.idx] = -1;
-        text = `${WORLD.nodes[pr.node].name}の「${pr.name}」を ただ同然で売り飛ばされた！`;
-      } else text = grab();
-      if (T.left <= 0) { T.form = 0; text += '\n……大タヌキは満足して、小さなタヌキにもどった。'; }
+      // 大タヌキ: three turns of real damage
+      T.left--; title = '大タヌキのいたずら！';
+      const gone = this.rng() < 0.45 ? loseProp() : '';
+      text = gone ? `${gone}を ただ同然で売り飛ばされた！` : `所持金から ${yen(grab(0.25, 300))} を持ち逃げされた！`;
       ms = 2800;
+    } else if (T.form === 2) {
+      // キングタヌキ: the worst thing that can happen to you
+      T.left--; title = 'キングタヌキの大あばれ！！';
+      const k = this.rng();
+      if (k < 0.4) { const g = [loseProp(), loseProp()].filter(Boolean); text = g.length ? `${g.join('と')}を 海に投げすてた！！` : `所持金から ${yen(grab(0.4, 500))} をうばって豪遊した！！`; }
+      else if (k < 0.7) text = `所持金から ${yen(grab(0.4, 500))} をうばって豪遊した！！`;
+      else if (p.cards.length) { const n = p.cards.length; p.cards = []; text = `カードを${n}枚ぜんぶ 燃やしてしまった！！`; }
+      else text = `所持金から ${yen(grab(0.4, 500))} をうばって豪遊した！！`;
+      ms = 3000;
+    } else if (T.form === 3) {
+      // ミニタヌキ: mostly harmless, sometimes even nice
+      T.left--; title = 'ミニタヌキ';
+      const k = this.rng();
+      if (k < 0.45) { const amt = 100 * S.year; p.money += amt; text = `どんぐりを拾ってきてくれた。売ったら ${yen(amt)} になった`; }
+      else if (k < 0.75) { const amt = Math.min(100 * S.year, Math.max(0, p.money)); p.money -= amt; text = amt ? `おやつ代に ${yen(amt)} をつまみ食い` : 'おなかをすかせている……'; }
+      else text = 'つぶらな瞳で見つめてくる……（何もしなかった）';
+      ms = 2000;
+    } else if (T.form === 4) {
+      // ハリケーンタヌキ: blows you somewhere else every turn
+      T.left--; title = 'ハリケーンタヌキ！';
+      const pool = WORLD.cities.filter(c => c !== p.pos);
+      const to = pool[Math.floor(this.rng() * pool.length)];
+      S.last = { kind: 'warp', pid: p.id, from: p.pos, to };
+      p.pos = to; p.prev = -1;
+      const amt = Math.min(200 * S.year, Math.max(0, p.money)); p.money -= amt;
+      text = `大風をおこして ${WORLD.nodes[to].name} まで吹き飛ばされた！` + (amt ? `（修理代 ${yen(amt)}）` : '');
+      ms = 2600;
     } else if (r < 0.42) {
       const amt = p.money > 0 ? Math.min(Math.max(100, Math.round(p.money * 0.08 / 100) * 100), 1500 * S.year) : 0;
       if (amt > 0) { p.money -= amt; text = `財布から ${yen(amt)} を持ち逃げした！`; }
@@ -1164,17 +1290,25 @@ class Game {
         p.money -= price; p.cards.push(mkCard(id));
         text = `勝手にカード売り場で ${cardName(id)} を買ってきた！（代金 ${yen(price)} はあなた持ち）`;
       } else text = 'カードがいっぱいで、買い物できずにすねている……';
-    } else if (r < 0.80) {
+    } else if (r < 0.78) {
       text = 'ぐうぐうとお昼寝をしている……';
-    } else if (r < 0.90) {
+    } else if (r < 0.86) {
       const amt = 100 * S.year; p.money += amt; text = `どんぐりを拾ってきてくれた。売ったら ${yen(amt)} になった`;
     } else {
-      T.form = 1; T.left = 3; title = 'びんぼうタヌキが変身！？';
-      text = 'タヌキがムクムクふくらんで…… 大タヌキになった！\n3ターンのあいだ、大あばれする！';
+      // a change of form
+      const k = this.rng();
+      if (k < 0.3) { T.form = 3; title = 'タヌキが小さくなった？'; text = 'びんぼうタヌキがちぢんで…… ミニタヌキになった！\nしばらくはおとなしい。'; }
+      else if (k < 0.55) { T.form = 4; title = 'びんぼうタヌキが変身！？'; text = 'タヌキがぐるぐる回りだして…… ハリケーンタヌキになった！\n3ターンのあいだ、毎回どこかへ吹き飛ばされる！'; }
+      else if (k < 0.92 || T.total < 6) { T.form = 1; title = 'びんぼうタヌキが変身！？'; text = 'タヌキがムクムクふくらんで…… 大タヌキになった！\n3ターンのあいだ、大あばれする！'; }
+      else { T.form = 2; title = '！！！'; text = 'タヌキが金色にかがやいて…… キングタヌキになった！！\n3ターンのあいだ、物件もカードもお金もめちゃくちゃにされる！'; }
+      T.left = TANUKI_FORMS[T.form].turns;
       ms = 3200;
+      this.log(`${p.name} のタヌキは ${TANUKI_FORMS[T.form].name} になった`);
+      return this.setEvent({ kind: 'tanuki', title, text, next: 'nextturn', form: T.form }, ms);
     }
-    this.log(`${p.name} のびんぼうタヌキ：${text.replace(/\n/g, ' ')}`);
-    return this.setEvent({ kind: 'tanuki', title, text, next: 'nextturn', big: T.form === 1 }, ms);
+    if (T.form !== 0 && T.left <= 0) { text += `\n……${TANUKI_FORMS[T.form].name}は ふつうのタヌキにもどった。`; T.form = 0; }
+    this.log(`${p.name} の${title}：${text.replace(/\n/g, ' ')}`);
+    return this.setEvent({ kind: 'tanuki', title, text, next: 'nextturn', form: T.form }, ms);
   }
   nextTurn() {
     const S = this.s;
@@ -1184,9 +1318,49 @@ class Game {
       S.turn = 0;
       S.month++;
       if (S.month >= 12) { S.month = 11; return this.settlement(); }   // stay on 3月 while the books are shown
+      const me = this.monthEvent();
+      if (me) return me;
     }
     S.phase = 'turnstart';
     return 250;
+  }
+  // the seasons: a little something at the start of certain months
+  monthEvent() {
+    const S = this.s, ev = MONTH_EVENTS[S.month];
+    if (!ev) return null;
+    const rows = [];
+    let text = ev.text;
+    if (ev.cat) {
+      for (const p of S.players) {
+        let base = 0;
+        for (const c in S.own) S.own[c].forEach((o, i) => { if (o === p.id && WORLD.nodes[c].props[i].cat === ev.cat) base += WORLD.nodes[c].props[i].price; });
+        const amt = Math.round(base * ev.pct / 100 / 10) * 10;
+        p.money += amt;
+        rows.push({ pid: p.id, name: p.name, text: amt ? `＋${yen(amt)}` : `（${PROP_CATS[ev.cat].name}の物件なし）` });
+      }
+      text += `\n${PROP_CATS[ev.cat].icon}${PROP_CATS[ev.cat].name}の物件の値段の${ev.pct}%が臨時収入！`;
+    } else if (ev.kind === 'typhoon') {
+      const regions = [...new Set(WORLD.cities.map(c => WORLD.nodes[c].region))];
+      const region = regions[Math.floor(this.rng() * regions.length)];
+      text = `${region}地方に台風が直撃！ ${region}の物件を持っている人は修理代（値段の5%）をはらった。`;
+      for (const p of S.players) {
+        let base = 0;
+        for (const c in S.own) if (WORLD.nodes[c].region === region) S.own[c].forEach((o, i) => { if (o === p.id) base += WORLD.nodes[c].props[i].price; });
+        const amt = Math.round(base * 0.05 / 10) * 10;
+        p.money -= amt;
+        rows.push({ pid: p.id, name: p.name, text: amt ? `−${yen(amt)}` : '被害なし' });
+      }
+    } else if (ev.kind === 'otoshidama') {
+      const amt = 300 * S.year;
+      for (const p of S.players) { p.money += amt; rows.push({ pid: p.id, name: p.name, text: `＋${yen(amt)}` }); }
+    } else if (ev.kind === 'setsubun') {
+      const T = S.tanuki;
+      if (T.at < 0) text = '「鬼はそと！」 ……でも、びんぼうタヌキはどこにもいなかった。';
+      else if (this.rng() < 0.5) { const q = S.players[T.at]; text = `「鬼はそと！」 ${q.name} の${TANUKI_FORMS[T.form].name}は豆をぶつけられて逃げていった！`; T.at = -1; T.form = 0; T.left = 0; }
+      else text = `「鬼はそと！」 ……${S.players[T.at].name} のタヌキは豆を食べて、しぶとく居すわった。`;
+    }
+    this.log(`${MONTHS[S.month]}：${ev.title}` + (rows.length ? ' ' + rows.map(r => `${r.name} ${r.text}`).join('、') : ''));
+    return this.setEvent({ kind: 'season', title: ev.title, text, rows: rows.length ? rows : null, next: 'monthstart', pid: -1, season: SEASON_OF[S.month] }, rows.length ? 3600 : 2800);
   }
   settlement() {
     const S = this.s, yr = S.year;
@@ -1215,7 +1389,7 @@ class Game {
   useCard(p, idx) {
     const S = this.s, c = p.cards[idx], def = c && CARD_DEFS[c.id];
     if (!def) return false;
-    const cpu = p.ctrl === 'cpu';
+    const cpu = this.isCpu(p);
     if (def.needs === 'target') {
       const opts = S.players.filter(q => q.id !== p.id).map(q => ({ id: q.id, label: q.name }));
       S.pick = { idx, card: c.id, kind: 'target', title: `${def.name}：だれに使う？`, opts };
@@ -1243,7 +1417,16 @@ class Game {
     this.log(`${p.name} は ${def.name} を使った`);
     if (def.dice) return this.roll(p, def.dice);
     const others = S.players.filter(q => q.id !== p.id);
-    const target = others.find(q => q.id === choice) || null;
+    let target = others.find(q => q.id === choice) || null;
+    // おまもり: the first mean card aimed at its owner bounces off
+    if (target && ATTACK_CARDS.includes(id) && id !== 'katana') {
+      const oi = target.cards.findIndex(c => c.id === 'omamori');
+      if (oi >= 0) {
+        target.cards.splice(oi, 1);
+        this.log(`${target.name} のおまもりが ${def.name} をはねかえした！`);
+        return this.setEvent({ kind: 'oharai', title: 'おまもりがはねかえした！', text: `${target.name} はおまもりを持っていた。${def.name} の効果は消えた……` }, 2200);
+      }
+    }
     switch (id) {
       case 'exact': return this.roll(p, 1, Math.max(1, Math.min(6, choice | 0)));
       case 'warp': {
@@ -1302,6 +1485,8 @@ class Game {
         const got = [];
         for (const q of others) {
           if (!q.cards.length || p.cards.length >= MAX_CARDS) continue;
+          const oi = q.cards.findIndex(c => c.id === 'omamori');
+          if (oi >= 0) { q.cards.splice(oi, 1); got.push(`${q.name}はおまもりで守った`); continue; }
           const cc = q.cards.splice(Math.floor(this.rng() * q.cards.length), 1)[0];
           p.cards.push(cc); got.push(`${q.name}の${cardName(cc.id)}`);
         }
@@ -1326,6 +1511,41 @@ class Game {
         this.log(`${p.name} の福袋：${got.join('、') || 'カードがいっぱい'}`);
         return this.setEvent({ kind: 'card', title: '福袋！', text: got.length ? `${got.join('、')} が入っていた！` : 'カードがいっぱいで、何も入らなかった……' }, 2200);
       }
+      case 'station': {
+        const to = nearestCity(p.pos, p.pos);
+        if (to < 0 || to === p.pos) return this.setEvent({ kind: 'info', title: '最寄り駅', text: 'ここが駅だった……' }, 1500);
+        S.last = { kind: 'warp', pid: p.id, from: p.pos, to };
+        p.prev = -1; p.pos = to;
+        this.log(`${p.name} は最寄り駅の ${WORLD.nodes[to].name} へ移動した`);
+        return this.setEvent({ kind: 'warp', title: '最寄り駅へ', text: `${WORLD.nodes[to].name}駅に移動した！`, next: to === S.dest ? 'arriving' : 'landing' }, 1800);
+      }
+      case 'north': {
+        if (!target) return this.setEvent({ kind: 'info', title: '北へ！', text: '相手がいなかった……' }, 1500);
+        const pool = WORLD.cities.filter(c => WORLD.nodes[c].region === '北海道' && c !== target.pos);
+        const to = pool[Math.floor(this.rng() * pool.length)];
+        target.pos = to; target.prev = -1;
+        this.log(`${p.name} の北へ！カードで ${target.name} は ${WORLD.nodes[to].name} へ飛ばされた`);
+        return this.setEvent({ kind: 'itazura', title: '北へ！', text: `${target.name} は ${WORLD.nodes[to].name} まで飛ばされた！` }, 2200);
+      }
+      case 'grab': {
+        if (!target) return this.setEvent({ kind: 'info', title: 'ぶんどり', text: '相手がいなかった……' }, 1500);
+        const theirs = this.ownedProps(target);
+        if (!theirs.length) return this.setEvent({ kind: 'info', title: 'ぶんどり……', text: `${target.name} は物件を持っていなかった。` }, 1800);
+        const pr = theirs[Math.floor(this.rng() * theirs.length)];
+        S.own[pr.node][pr.idx] = p.id;
+        this.log(`${p.name} は ${target.name} から ${WORLD.nodes[pr.node].name}の${pr.name} をぶんどった`);
+        return this.setEvent({ kind: 'buy', title: 'ぶんどり成功！', text: `${target.name} の ${WORLD.nodes[pr.node].name}「${pr.name}」（${yen(pr.price)}）が自分のものになった！` }, 2400);
+      }
+      case 'seal': {
+        if (!target) return this.setEvent({ kind: 'info', title: 'ふういん', text: '相手がいなかった……' }, 1500);
+        target.sealed = 4;   // counts down at their turn start: three full turns
+        this.log(`${p.name} のふういんで ${target.name} は3ターン カードを使えない`);
+        return this.setEvent({ kind: 'itazura', title: 'ふういん！', text: `${target.name} は3ターンのあいだ、カードを使えない！` }, 2200);
+      }
+      case 'omamori': {
+        p.cards.push(mkCard('omamori'));   // it stays: it only works while you hold it
+        return this.setEvent({ kind: 'info', title: 'おまもり', text: '持っているだけで効く。使わなくていい！' }, 1600);
+      }
       case 'tokusei': {
         if (p.money < 0) { const d = -p.money; p.money = 0; this.log(`${p.name} の借金 ${yen(d)} が徳政令で帳消しに`); return this.setEvent({ kind: 'plus', title: '徳政令！', text: `借金 ${yen(d)} がぜんぶ帳消しになった！` }, 2200); }
         this.log(`${p.name} は徳政令を使ったが、借金はなかった`);
@@ -1336,10 +1556,10 @@ class Game {
     return 200;
   }
 
-  // ---------- the computer players ----------
+  // ---------- the computer players (S.cpu = 'easy' | 'normal' | 'hard') ----------
   // how good is it to end a move on this square?
   endValue(node, p) {
-    const S = this.s;
+    const S = this.s, hard = S.cpu === 'hard';
     if (node === S.dest) return 10000;
     const n = WORLD.nodes[node];
     let v = -100 * this.distTo(node, S.dest);
@@ -1347,13 +1567,32 @@ class Game {
     else if (n.type === 'minus') v -= 60;
     else if (n.type === 'card') v += p.cards.length < MAX_CARDS ? 70 : 0;
     else if (n.type === 'shop') v += p.money > 2500 && p.cards.length < MAX_CARDS ? 40 : 0;
-    else if (n.type === 'city') { const free = S.own[node].some((o, i) => o < 0 && n.props[i].price <= p.money); if (free) v += 40; }
+    else if (n.type === 'city') {
+      const free = S.own[node].filter((o, i) => o < 0 && n.props[i].price <= p.money).length;
+      if (free) v += 40;
+      if (hard && free && S.own[node].every((o, i) => o === p.id || (o < 0 && n.props[i].price <= p.money))) v += 120;   // could take the whole station
+    }
     const T = S.tanuki;
     if (T.at >= 0 && T.at !== p.id && S.players[T.at].pos === node) v -= 400;
+    if (hard) {
+      // a square from which many rolls land exactly next turn is worth a lot
+      let hits = 0;
+      for (let k = 1; k <= 6; k++) if (this.canReach(node, -1, k)) hits++;
+      v += hits * 60;
+    }
     return v;
   }
   cpuBranch(opts) {
-    const S = this.s, p = this.cur(), k = S.steps, memo = new Map();
+    const S = this.s, p = this.cur(), k = S.steps;
+    if (S.cpu === 'easy') {
+      // mostly heads the right way, sometimes wanders
+      const dd = WORLD.dist[S.dest];
+      if (this.rng() < 0.35) return opts[Math.floor(this.rng() * opts.length)];
+      let best = [], bd = 1e9;
+      for (const o of opts) { if (dd[o] < bd) { bd = dd[o]; best = [o]; } else if (dd[o] === bd) best.push(o); }
+      return best[Math.floor(this.rng() * best.length)];
+    }
+    const memo = new Map();
     const val = (n, pv, k) => {
       if (k === 0) return this.endValue(n, p);
       const key = n + ',' + pv + ',' + k;
@@ -1371,38 +1610,58 @@ class Game {
     return best[Math.floor(this.rng() * best.length)];
   }
   cpuChoose() {
-    const S = this.s, p = this.cur(), d = this.distTo(p.pos, S.dest), T = S.tanuki;
+    const S = this.s, p = this.cur(), d = this.distTo(p.pos, S.dest), T = S.tanuki, lv = S.cpu;
     // in debt: sell the weakest properties first
-    if (p.money < 0) {
+    if (p.money < 0 && lv !== 'easy') {
       const mine = this.ownedProps(p).sort((a, b) => a.rate - b.rate);
       for (const pr of mine) { if (p.money >= 0) break; this.sellProp(p, pr.node, pr.idx); }
     }
     const has = id => p.cards.findIndex(c => c.id === id);
     const use = (id, choice) => this.resolveCard(p, has(id), choice);
+    if (p.sealed > 0) return this.roll(p, 1);
+    if (lv === 'easy') {
+      // plays its movement cards when far away, nothing clever
+      if (d >= 5) for (const id of ['exp', 'expx', 'ltd', 'ltdx', 'skn', 'nozomi']) if (has(id) >= 0 && this.rng() < 0.6) return use(id);
+      if (has('lottery') >= 0) return use('lottery');
+      if (has('fuku') >= 0 && p.cards.length <= MAX_CARDS - 2) return use('fuku');
+      if (has('exact') >= 0 && d <= 6 && this.rng() < 0.5) return use('exact', d);
+      return this.roll(p, 1);
+    }
+    const hard = lv === 'hard';
     const leader = S.players.reduce((a, b) => this.assets(a) >= this.assets(b) ? a : b);
     const rival = S.players.filter(q => q.id !== p.id).map(q => ({ q, d: this.distTo(q.pos, S.dest) })).sort((a, b) => a.d - b.d)[0];
-    if (T.at === p.id && has('oharai') >= 0) return use('oharai');
+    const guarded = q => q.cards.some(c => c.id === 'omamori');
+    if (T.at === p.id && has('oharai') >= 0 && T.form !== 3) return use('oharai');
     if (has('tokusei') >= 0 && p.money < -500) return use('tokusei');
     if (has('exact') >= 0 && d >= 1 && d <= 6) return use('exact', d);
-    if (rival && rival.d <= 4 && d > rival.d) {
-      if (has('gyuho') >= 0 && rival.q.slow === 0) return use('gyuho', rival.q.id);
-      if (has('swap') >= 0 && d > 6) return use('swap', rival.q.id);
-      if (has('itazura') >= 0 && rival.q.skip === 0) return use('itazura', rival.q.id);
+    if (rival && rival.d <= (hard ? 6 : 4) && d > rival.d) {
+      if (has('gyuho') >= 0 && rival.q.slow === 0 && !guarded(rival.q)) return use('gyuho', rival.q.id);
+      if (has('north') >= 0 && WORLD.nodes[rival.q.pos].region !== '北海道' && !guarded(rival.q)) return use('north', rival.q.id);
+      if (has('swap') >= 0 && d > 6 && !guarded(rival.q)) return use('swap', rival.q.id);
+      if (has('itazura') >= 0 && rival.q.skip === 0 && !guarded(rival.q)) return use('itazura', rival.q.id);
       if (has('gather') >= 0 && d >= 8) return use('gather');
     }
-    if (has('near') >= 0 && d >= 7) return use('near');
+    if (has('near') >= 0 && d >= (hard ? 5 : 7)) return use('near');
+    if (has('nozomi') >= 0 && d >= 18) return use('nozomi');
     if (has('skn') >= 0 && d >= 14) return use('skn');
+    if (has('ltdx') >= 0 && d >= 10) return use('ltdx');
     if (has('ltd') >= 0 && d >= 10) return use('ltd');
     if (has('expx') >= 0 && d >= 6) return use('expx');
     if (has('exp') >= 0 && d >= 6) return use('exp');
     if (has('warp') >= 0 && d >= 16) return use('warp');
+    if (has('station') >= 0 && d >= 8 && p.money > 3000) {
+      const c = nearestCity(p.pos, p.pos);
+      if (c >= 0 && S.own[c].some((o, i) => o < 0 && WORLD.nodes[c].props[i].price <= p.money - 1500)) return use('station');
+    }
     if (d >= 7) {
+      if (has('grab') >= 0 && leader.id !== p.id && this.ownedProps(leader).length && !guarded(leader)) return use('grab', leader.id);
+      if (has('seal') >= 0 && leader.id !== p.id && leader.cards.length >= 3 && leader.sealed === 0 && !guarded(leader)) return use('seal', leader.id);
       if (has('lottery') >= 0) return use('lottery');
       if (has('fuku') >= 0 && p.cards.length <= MAX_CARDS - 2) return use('fuku');
       if (has('katana') >= 0 && S.players.some(q => q.id !== p.id && q.cards.length >= 2)) return use('katana');
       if (has('steal') >= 0 && S.players.some(q => q.id !== p.id && q.money > 3000)) return use('steal');
-      if (has('itazura') >= 0 && leader.id !== p.id && leader.skip === 0) return use('itazura', leader.id);
-      if (has('gyuho') >= 0 && leader.id !== p.id && leader.slow === 0) return use('gyuho', leader.id);
+      if (has('itazura') >= 0 && leader.id !== p.id && leader.skip === 0 && !guarded(leader)) return use('itazura', leader.id);
+      if (has('gyuho') >= 0 && leader.id !== p.id && leader.slow === 0 && !guarded(leader)) return use('gyuho', leader.id);
     }
     return this.roll(p, 1);
   }
@@ -1419,17 +1678,22 @@ class Game {
     return this.resolveCard(p, pk.idx, id);
   }
   cpuBuy() {
-    const S = this.s, p = this.cur(), node = WORLD.nodes[S.buy.node], owners = S.own[node.id];
-    const reserve = 800 + 400 * S.year;
+    const S = this.s, p = this.cur(), node = WORLD.nodes[S.buy.node], owners = S.own[node.id], lv = S.cpu;
     const free = owners.map((o, i) => o < 0 ? i : -1).filter(i => i >= 0);
-    const allCost = free.reduce((a, i) => a + node.props[i].price, 0);
     let picks = [];
-    if (p.money - allCost >= reserve * 0.5) picks = free;   // the whole station: twice the income
-    else {
+    if (lv === 'easy') {
       let money = p.money;
-      for (const i of free.slice().sort((a, b) => node.props[b].rate - node.props[a].rate)) {
-        const pr = node.props[i];
-        if (money - pr.price >= reserve && pr.rate >= 10) { picks.push(i); money -= pr.price; }
+      for (const i of free) { const pr = node.props[i]; if (this.rng() < 0.5 && money - pr.price >= 500) { picks.push(i); money -= pr.price; } }
+    } else {
+      const reserve = (lv === 'hard' ? 500 : 800) + 400 * S.year;
+      const allCost = free.reduce((a, i) => a + node.props[i].price, 0);
+      if (p.money - allCost >= reserve * 0.5) picks = free;   // the whole station: twice the income
+      else {
+        let money = p.money;
+        for (const i of free.slice().sort((a, b) => node.props[b].rate - node.props[a].rate)) {
+          const pr = node.props[i];
+          if (money - pr.price >= reserve && pr.rate >= (lv === 'hard' ? 8 : 10)) { picks.push(i); money -= pr.price; }
+        }
       }
     }
     if (picks.length) return this.doBuy(p, picks);
@@ -1437,14 +1701,15 @@ class Game {
     return 300;
   }
   cpuShop() {
-    const S = this.s, p = this.cur(), items = S.stock[S.shop.node], reserve = 1500 + 500 * S.year;
-    const want = ['exact', 'near', 'expx', 'ltd', 'exp', 'oharai', 'skn', 'gyuho', 'swap', 'katana', 'fuku', 'lottery', 'steal', 'itazura', 'warp', 'gather'];
+    const S = this.s, p = this.cur(), items = S.stock[S.shop.node], lv = S.cpu;
+    const reserve = (lv === 'hard' ? 1000 : 1500) + 500 * S.year;
+    const want = lv === 'easy' ? ['exp', 'ltd', 'lottery', 'warp'] : ['exact', 'near', 'omamori', 'expx', 'ltdx', 'ltd', 'exp', 'oharai', 'skn', 'nozomi', 'gyuho', 'north', 'swap', 'seal', 'grab', 'katana', 'fuku', 'lottery', 'steal', 'itazura', 'warp', 'gather', 'station'];
     const bought = [];
-    for (let round = 0; round < 2; round++) {
+    for (let round = 0; round < (lv === 'easy' ? 1 : 2); round++) {
       let bestI = -1, bestRank = 99;
       items.forEach((id, i) => {
         const r = want.indexOf(id), price = CARD_DEFS[id].price;
-        if (r >= 0 && r < bestRank && p.money - price >= reserve && p.cards.length < MAX_CARDS && !(id === 'oharai' && S.tanuki.at !== p.id)) { bestRank = r; bestI = i; }
+        if (r >= 0 && r < bestRank && p.money - price >= reserve && p.cards.length < MAX_CARDS && !(id === 'oharai' && S.tanuki.at !== p.id) && !(id === 'omamori' && p.cards.some(c => c.id === 'omamori'))) { bestRank = r; bestI = i; }
       });
       if (bestI < 0) break;
       bought.push(cardName(items[bestI]));
@@ -1463,10 +1728,16 @@ class Game {
 //  "reply" code, the host pastes that, and the two browsers are linked
 //  directly. No server carries the game. The host does this once per
 //  friend, so up to four phones can play.
+//
+//  Staying linked: a phone that goes to sleep, switches to LINE to paste
+//  a code, or loses Wi-Fi for a moment is NOT dropped — silence only
+//  counts while the page is visible, ICE gets a long grace to recover,
+//  and if the link really dies the seat is kept and a fresh pair of
+//  codes reconnects it (see Net in ui.js).
 // ===================================================================
 
 const P2P_ICE = [
-  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
+  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] },
   { urls: 'stun:stun.cloudflare.com:3478' },
 ];
 const RTC = () => window.RTCPeerConnection || window.webkitRTCPeerConnection;
@@ -1530,11 +1801,16 @@ function p2pGathered(pc, ms) {
 }
 
 // ---------- one link = one friend ----------
+const CHUNK = 12000;            // data-channel messages are split so every browser pair accepts them
+const QUIET_MS = 45000;         // silence while the page is visible before the link is given up
+const DISCONNECT_GRACE = 40000; // ICE "disconnected" usually heals; wait this long before giving up
 class Link {
   constructor(handlers) {
     this.h = handlers || {};
     this.pc = null; this.dc = null; this.state = 'idle'; this.code = ''; this.nocand = false;
     this.open = false; this.ended = false; this.lastRx = 0; this.beat = 0; this.timer = 0; this.id = '';
+    this.parts = {}; this.seq = 0;
+    this.onVis = () => { if (!document.hidden) this.lastRx = performance.now(); };
   }
   set(state, err) { this.state = state; this.err = err || ''; if (this.h.change) this.h.change(this); }
   newPc() {
@@ -1544,7 +1820,7 @@ class Link {
       const s = pc.connectionState;
       if (s === 'failed') this.end('failed');
       else if (s === 'closed' && this.open) this.end('closed');
-      else if (s === 'disconnected') setTimeout(() => { if (this.pc === pc && pc.connectionState === 'disconnected') this.end('lost'); }, 20000);
+      else if (s === 'disconnected') setTimeout(() => { if (this.pc === pc && pc.connectionState === 'disconnected') this.end('lost'); }, DISCONNECT_GRACE);
     };
     return pc;
   }
@@ -1557,6 +1833,13 @@ class Link {
       this.lastRx = performance.now();
       let m; try { m = JSON.parse(e.data); } catch (er) { return; }
       if (!m || typeof m !== 'object' || m.t === 'k') return;
+      if (m.t === 'ch') {   // a piece of a long message
+        const p = this.parts[m.id] = this.parts[m.id] || { n: m.n, got: 0, d: new Array(m.n) };
+        if (p.d[m.i] === undefined) { p.d[m.i] = m.d; p.got++; }
+        if (p.got < p.n) return;
+        delete this.parts[m.id];
+        try { m = JSON.parse(p.d.join('')); } catch (er) { return; }
+      }
       if (this.h.msg) this.h.msg(m, this);
     };
   }
@@ -1566,19 +1849,27 @@ class Link {
     if (v) {
       this.lastRx = performance.now();
       this.set('open');
-      // a small heartbeat: a phone that went to sleep or lost the network is noticed in seconds
-      // (a turn-based game can afford a long grace: a phone that was locked for a bit is not dropped)
+      document.addEventListener('visibilitychange', this.onVis);
+      // a small heartbeat. Silence is only held against the link while this page is awake:
+      // a phone in a pocket or on another app is simply waited for.
       this.beat = setInterval(() => {
         if (!this.open) return;
+        if (document.hidden) { this.lastRx = performance.now(); return; }
         this.send({ t: 'k' });
-        if (performance.now() - this.lastRx > 60000) this.end('timeout');
+        if (performance.now() - this.lastRx > QUIET_MS) this.end('timeout');
       }, 3000);
       if (this.h.open) this.h.open(this);
     }
   }
   send(obj) {
     if (!this.open || !this.dc || this.dc.readyState !== 'open') return false;
-    try { this.dc.send(JSON.stringify(obj)); return true; } catch (e) { return false; }
+    try {
+      const str = JSON.stringify(obj);
+      if (str.length <= CHUNK) { this.dc.send(str); return true; }
+      const id = ++this.seq, n = Math.ceil(str.length / CHUNK);
+      for (let i = 0; i < n; i++) this.dc.send(JSON.stringify({ t: 'ch', id, i, n, d: str.slice(i * CHUNK, (i + 1) * CHUNK) }));
+      return true;
+    } catch (e) { return false; }
   }
   // host: make the first code
   async offer() {
@@ -1610,7 +1901,7 @@ class Link {
       if (this.pc !== pc) return;
       if (this.state !== 'open') this.set('linking');
       clearTimeout(this.timer);
-      this.timer = setTimeout(() => { if (this.pc === pc && this.state === 'linking') this.end('failed'); }, 25000);
+      this.timer = setTimeout(() => { if (this.pc === pc && this.state === 'linking') this.end('failed'); }, 40000);
     } catch (e) { if (this.pc === pc) this.set('offer', 'stale'); }
   }
   // friend: paste the host's code, make the reply
@@ -1633,8 +1924,8 @@ class Link {
       this.code = await p2pEncode({ t: 'a', s: sdp });
       if (this.pc !== pc) return;
       if (this.state !== 'open') this.set('answer');
-      // the host has a few minutes to paste it
-      this.timer = setTimeout(() => { if (this.pc === pc && this.state === 'answer') this.end('failed'); }, 300000);
+      // the host has a while to paste it
+      this.timer = setTimeout(() => { if (this.pc === pc && this.state === 'answer') this.end('failed'); }, 600000);
     } catch (e) { console.error(e); this.set('idle', 'badcode'); }
   }
   end(why) {
@@ -1642,6 +1933,7 @@ class Link {
     const wasOpen = this.open;
     this.ended = true;
     clearTimeout(this.timer); clearInterval(this.beat);
+    document.removeEventListener('visibilitychange', this.onVis);
     this.open = false;
     try { if (this.dc) this.dc.close(); } catch (e) {}
     try { if (this.pc) this.pc.close(); } catch (e) {}
@@ -1697,16 +1989,29 @@ function smoothPath(pts) {
   }
   return d + 'Z';
 }
-const TANUKI_SVG = (size) => `<svg viewBox="0 0 40 40" width="${size}" height="${size}" aria-hidden="true">
-  <path d="M8 10 L14 18 M32 10 L26 18" stroke="#6b4a2b" stroke-width="7" stroke-linecap="round"/>
-  <circle cx="20" cy="22" r="15" fill="#a97b4f" stroke="#5b3d22" stroke-width="2"/>
-  <path d="M7 20 Q11 14 17 18 Q20 20 23 18 Q29 14 33 20 Q31 27 24 25 Q20 23 16 25 Q9 27 7 20Z" fill="#4a3220"/>
+// the tanuki, in its forms: 0 ふつう, 1 大, 2 キング, 3 ミニ, 4 ハリケーン
+const TANUKI_SVG = (size, form) => {
+  form = form || 0;
+  const fur = form === 2 ? '#d9a93a' : form === 3 ? '#d4a089' : form === 1 ? '#8a5f3a' : '#a97b4f';
+  const mask = form === 2 ? '#7a4a12' : form === 3 ? '#8a5a4a' : '#4a3220';
+  const brow = form === 1 || form === 2 ? '<path d="M11 15 L17 18 M29 15 L23 18" stroke="#2b1a0e" stroke-width="2.2" stroke-linecap="round"/>' : '';
+  const crown = form === 2 ? '<path d="M11 10 L14 3 L19 8 L24 2 L29 8 L32 10 Z" fill="#f2b705" stroke="#8a6508" stroke-width="1.5"/><circle cx="20" cy="9" r="1.6" fill="#e8453c"/>' : '';
+  const wind = form === 4 ? '<path d="M2 12 q8 -6 16 0 q8 6 16 0" fill="none" stroke="#8fc8e8" stroke-width="2.4" stroke-linecap="round"/><path d="M1 32 q8 -6 16 0 q8 6 16 0" fill="none" stroke="#8fc8e8" stroke-width="2.4" stroke-linecap="round"/>' : '';
+  const blush = form === 3 ? '<circle cx="12" cy="26" r="2.2" fill="#f28b9b" opacity=".8"/><circle cx="28" cy="26" r="2.2" fill="#f28b9b" opacity=".8"/>' : '';
+  return `<svg viewBox="0 0 40 40" width="${size}" height="${size}" aria-hidden="true">
+  ${wind}
+  <path d="M8 10 L14 18 M32 10 L26 18" stroke="${mask}" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="20" cy="22" r="15" fill="${fur}" stroke="${mask}" stroke-width="2"/>
+  <path d="M7 20 Q11 14 17 18 Q20 20 23 18 Q29 14 33 20 Q31 27 24 25 Q20 23 16 25 Q9 27 7 20Z" fill="${mask}"/>
   <ellipse cx="20" cy="29" rx="8" ry="5.5" fill="#f3e3c8"/>
   <circle cx="15" cy="20.5" r="2.2" fill="#fff"/><circle cx="25" cy="20.5" r="2.2" fill="#fff"/>
   <circle cx="15.5" cy="21" r="1.1" fill="#222"/><circle cx="25.5" cy="21" r="1.1" fill="#222"/>
+  ${brow}${blush}
   <ellipse cx="20" cy="27" rx="2.2" ry="1.6" fill="#3a2718"/>
   <path d="M17 31 Q20 33 23 31" stroke="#3a2718" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+  ${crown}
 </svg>`;
+};
 
 const Board = {
   svg: null, cam: null, layers: {}, nodeEls: [], tokens: [], built: false,
@@ -1818,9 +2123,9 @@ function placeTokens(S, animate) {
   if (T.at >= 0) {
     const p = S.players[T.at], n = WORLD.nodes[p.pos], grp = groups[p.pos], [ox, oy] = STACK[grp.length - 1][grp.indexOf(p.id)];
     const g = svgEl('g', { class: 'tanuki-badge' }, L.tanuki);
-    const sz = T.form === 1 ? 44 : 30;
+    const sz = T.form === 1 ? 44 : T.form === 2 ? 50 : T.form === 3 ? 24 : T.form === 4 ? 38 : 30;
     const fo = svgEl('foreignObject', { x: -sz / 2, y: -sz / 2, width: sz, height: sz }, g);
-    fo.innerHTML = TANUKI_SVG(sz);
+    fo.innerHTML = TANUKI_SVG(sz, T.form);
     g.style.transform = `translate(${n.x + ox + 16}px, ${n.y + oy - 20}px)`;
   }
 }
@@ -1995,11 +2300,52 @@ function shortYen(man) {
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ---------- sounds (tiny synth, no files) ----------
+// iPhones mute Web Audio when the ring/silent switch is on silent, and suspend it after a switch
+// to another app (say, LINE to paste a code). The same tricks as てんてこまいキッチン: play as
+// media, resume on any tap, and resume again when the page comes back.
+let silentEl = null;
+function silentWav() {
+  const n = 800, b = new Uint8Array(44 + n), v = new DataView(b.buffer);
+  const w = (o, str) => { for (let i = 0; i < str.length; i++) b[o + i] = str.charCodeAt(i); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVE'); w(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+  w(36, 'data'); v.setUint32(40, n, true); b.fill(128, 44);
+  let bin = ''; for (let i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
+  return 'data:audio/wav;base64,' + btoa(bin);
+}
+function playAsMedia() {
+  try {
+    const as = navigator.audioSession;
+    if (as && 'type' in as) { if (as.type !== 'playback') as.type = 'playback'; return; }
+  } catch (e) {}
+  const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!ios) return;
+  try {
+    if (!silentEl) {
+      silentEl = document.createElement('audio');
+      silentEl.src = silentWav(); silentEl.loop = true; silentEl.preload = 'auto';
+      silentEl.setAttribute('playsinline', ''); silentEl.setAttribute('x-webkit-airplay', 'deny');
+    }
+    if (silentEl.paused) { const pr = silentEl.play(); if (pr && pr.catch) pr.catch(() => {}); }
+  } catch (e) {}
+}
 const Sound = {
   ctx: null, on: true,
-  ensure() { if (!this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
+  ensure() {
+    try {
+      playAsMedia();
+      if (!this.ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; this.ctx = new AC(); }
+      if (this.ctx.state !== 'running') {
+        const pr = this.ctx.resume(); if (pr && pr.catch) pr.catch(() => {});
+        // a one-sample sound inside the tap is what finally unlocks audio on older iPhones
+        try { const src = this.ctx.createBufferSource(); src.buffer = this.ctx.createBuffer(1, 1, 22050); src.connect(this.ctx.destination); src.start(0); } catch (e) {}
+      }
+    } catch (e) {}
+  },
   tone(f, t, type, vol, when) {
     if (!this.on || !this.ctx) return;
+    if (this.ctx.state !== 'running') { try { this.ctx.resume().catch(() => {}); } catch (e) {} }
     const c = this.ctx, o = c.createOscillator(), g = c.createGain(), t0 = c.currentTime + (when || 0);
     o.type = type || 'square'; o.frequency.setValueAtTime(f, t0);
     g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol || 0.08, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + t);
@@ -2014,6 +2360,13 @@ const Sound = {
   fanfare() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.18, 'square', 0.06, i * 0.12)); this.tone(1319, 0.5, 'square', 0.06, 0.5); },
   tanuki() { this.tone(330, 0.1, 'sawtooth', 0.05); this.tone(277, 0.1, 'sawtooth', 0.05, 0.12); this.tone(233, 0.2, 'sawtooth', 0.05, 0.24); },
 };
+// any tap or key starts the sound (iPhones only allow it inside one), and after the phone
+// interrupted it (a call, another app) the next tap brings it back
+const soundUnlock = () => { if (!Sound.ctx || Sound.ctx.state !== 'running' || (silentEl && silentEl.paused)) Sound.ensure(); };
+for (const ev of ['touchend', 'pointerup', 'click', 'keydown']) window.addEventListener(ev, soundUnlock, true);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && Sound.ctx && Sound.ctx.state !== 'running') { try { Sound.ctx.resume().catch(() => {}); } catch (e) {} }
+});
 
 // ---------- app state ----------
 const UI = {
@@ -2040,16 +2393,16 @@ function show(name) {
 
 // ---------- local save ----------
 function saveLocal() {
-  if (UI.mode !== 'solo' && UI.mode !== 'local') return;
+  if (UI.mode !== 'solo' && UI.mode !== 'local' && UI.mode !== 'host') return;
   if (!UI.game || UI.game.S.phase === 'gameover') { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} return; }
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ mode: UI.mode, s: UI.game.S, ts: Date.now() })); } catch (e) {}
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ mode: UI.mode, s: UI.game.S, seats: UI.mode === 'host' ? Net.seats : null, ts: Date.now() })); } catch (e) {}
 }
 function loadLocal() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) { return null; } }
 function renderTitle() {
   const sv = loadLocal();
   const b = $('#b-resume');
   b.hidden = !(sv && sv.s && sv.s.v === GAME_VER && sv.s.phase !== 'gameover');
-  if (!b.hidden) $('#resume-info').textContent = `${sv.s.year}年目 ${MONTHS[sv.s.month]}・${sv.s.players.map(p => p.name).join('、')}`;
+  if (!b.hidden) $('#resume-info').textContent = `${sv.s.year}年目 ${MONTHS[sv.s.month]}・${sv.s.players.map(p => p.name).join('、')}` + (sv.mode === 'host' ? '（合言葉で再接続）' : '');
 }
 
 // ===================================================================
@@ -2079,12 +2432,12 @@ function act(a) {
   if (UI.mode === 'guest') { Net.send({ t: 'act', a }); return; }
   hostAct(pid, a);
 }
-function startGame(players, years, mode) {
+function startGame(players, years, mode, cpu) {
   clearTimeout(UI.timer);
   UI.mode = mode; UI.prev = null; UI.followTurn = -1; UI.buyPick = new Set(); closeSheet();
-  UI.game = new Game({ players, years });
+  UI.game = new Game({ players, years, cpu: cpu || 'normal' });
   UI.state = UI.game.S;
-  UI.lastSetup = { players: players.map(p => ({ ...p })), years, mode };
+  UI.lastSetup = { players: players.map(p => ({ ...p })), years, mode, cpu: cpu || 'normal' };
   show('game');
   publish();
   schedule(UI.game.tick());
@@ -2093,14 +2446,20 @@ function startGame(players, years, mode) {
 function resumeGame(sv) {
   clearTimeout(UI.timer);
   UI.mode = sv.mode; UI.prev = null; UI.followTurn = -1; closeSheet();
-  UI.game = new Game({ players: sv.s.players.map(p => ({ name: p.name, ctrl: p.ctrl })), years: sv.s.years });
+  UI.game = new Game({ players: sv.s.players.map(p => ({ name: p.name, ctrl: p.ctrl })), years: sv.s.years, cpu: sv.s.cpu });
   UI.game.s = sv.s;
   UI.state = sv.s;
-  UI.lastSetup = { players: sv.s.players.map(p => ({ name: p.name, ctrl: p.ctrl })), years: sv.s.years, mode: sv.mode };
+  UI.lastSetup = { players: sv.s.players.map(p => ({ name: p.name, ctrl: p.ctrl })), years: sv.s.years, mode: sv.mode, cpu: sv.s.cpu };
+  if (sv.mode === 'host') {
+    // every friend's phone has to be re-linked with fresh codes; their seats wait for them
+    Net.role = 'host'; Net.peers = []; Net.invite = null; Net.seats = sv.seats || [];
+    for (const p of sv.s.players) if (/^peer/.test(p.ctrl)) p.away = true;
+  }
   show('game');
   publish();
   schedule(UI.game.tick());
   publish();
+  if (sv.mode === 'host') openReconnectSheet();
 }
 function quitToTitle() {
   clearTimeout(UI.timer);
@@ -2120,7 +2479,9 @@ function render(force) {
   const cur = S.players[S.turn];
   // top bar
   $('#t-year').textContent = `${S.year}年目`;
-  $('#t-month').textContent = MONTHS[S.month];
+  $('#t-month').textContent = MONTHS[S.month] + SEASON_ICON[SEASON_OF[S.month]];
+  const season = SEASON_OF[S.month];
+  if ($('#scr-game').dataset.season !== season) { $('#scr-game').dataset.season = season; renderWeather(season); }
   $('#t-dest').textContent = WORLD.nodes[S.dest].name;
   const me = UI.mode === 'guest' ? S.players[UI.myPid] : cur;
   $('#t-dist').textContent = me ? `${me.name}から あと${WORLD.dist[S.dest][me.pos]}マス` : '';
@@ -2136,6 +2497,7 @@ function render(force) {
   renderHint(S);
   const last = S.log[S.log.length - 1];
   $('#logline').textContent = last ? last.t : '';
+  renderNetBar(S);
   // camera: follow the moving train; look at whoever's turn it is
   if (S.last && S.last.kind === 'step' && (!prev || prev.rev !== S.rev)) camFollow(WORLD.nodes[S.last.to].x, WORLD.nodes[S.last.to].y);
   else if (S.last && S.last.kind === 'warp' && (!prev || prev.rev !== S.rev)) camCenterOn(WORLD.nodes[S.last.to].x, WORLD.nodes[S.last.to].y, Board.view.k, 500);
@@ -2149,7 +2511,7 @@ function render(force) {
       if (k === 'plus' || k === 'buy' || k === 'steal') Sound.cash();
       else if (k === 'minus') Sound.bad();
       else if (k === 'card' || k === 'warp' || k === 'oharai') Sound.card();
-      else if (k === 'arrive' || k === 'settle') Sound.fanfare();
+      else if (k === 'arrive' || k === 'settle' || k === 'season') Sound.fanfare();
       else if (k === 'tanuki') Sound.tanuki();
     }
   }
@@ -2165,13 +2527,28 @@ function render(force) {
   if (S.phase === 'gameover' && S.result && (!prev || prev.phase !== 'gameover')) setTimeout(() => showResult(S), 1200);
   UI.prev = { rev: S.rev, dest: S.dest, phase: S.phase, event: S.event, evKey: UI.evKey, turn: S.turn };
 }
+// petals, leaves and snow drifting over the map
+function renderWeather(season) {
+  const w = $('#weather'); if (!w) return;
+  w.innerHTML = '';
+  w.dataset.season = season;
+  if (season === 'summer') return;
+  for (let i = 0; i < 14; i++) {
+    const e = el('i');
+    e.style.left = (Math.random() * 100) + '%';
+    e.style.animationDuration = (6 + Math.random() * 7) + 's';
+    e.style.animationDelay = (-Math.random() * 12) + 's';
+    e.style.setProperty('--sw', (Math.random() * 60 - 30) + 'px');
+    w.appendChild(e);
+  }
+}
 function renderStrip(S) {
   const strip = $('#pstrip');
   if (strip.childElementCount !== S.players.length) {
     strip.innerHTML = '';
     for (const p of S.players) {
       const b = el('button', 'chip'); b.type = 'button'; b.style.setProperty('--c', p.color);
-      b.innerHTML = `<div class="nm"><i></i><span></span></div><div class="money"></div><div class="sub"></div><span class="tk" hidden></span>`;
+      b.innerHTML = `<div class="nm"><i></i><span></span></div><div class="money"></div><div class="sub"></div><div class="dist"></div><span class="tk" hidden></span>`;
       b.addEventListener('click', () => { Sound.click(); openStatusSheet(S, p.id); });
       strip.appendChild(b);
     }
@@ -2181,9 +2558,11 @@ function renderStrip(S) {
     b.classList.toggle('on', i === S.turn && S.phase !== 'gameover');
     b.querySelector('.nm span').textContent = p.name + (p.ctrl === 'cpu' && !/CPU/i.test(p.name) ? '(CPU)' : '') + (p.slow > 0 ? '🐢' : '') + (p.skip > 0 ? '💤' : '');
     const m = b.querySelector('.money'); m.textContent = shortYen(p.money) + '円'; m.classList.toggle('neg', p.money < 0);
-    b.querySelector('.sub').textContent = `物件${countProps(S, p.id)}・カード${p.cards.length}`;
+    b.querySelector('.sub').textContent = `物件${countProps(S, p.id)}・カード${p.cards.length}` + (p.sealed > 0 ? '🔒' : '');
+    const dd = WORLD.dist[S.dest][p.pos];
+    b.querySelector('.dist').textContent = dd === 0 ? '🚩 目的地！' : `🚩 あと${dd}マス`;
     const tk = b.querySelector('.tk'); tk.hidden = S.tanuki.at !== p.id;
-    if (!tk.hidden && !tk.innerHTML) tk.innerHTML = TANUKI_SVG(22);
+    if (!tk.hidden && tk.dataset.form !== String(S.tanuki.form)) { tk.innerHTML = TANUKI_SVG(22, S.tanuki.form); tk.dataset.form = String(S.tanuki.form); }
   });
 }
 function countProps(S, pid) { let n = 0; for (const c in S.own) for (const o of S.own[c]) if (o === pid) n++; return n; }
@@ -2211,11 +2590,11 @@ function renderEvent(S, prev) {
   const who = ev.pid >= 0 ? S.players[ev.pid] : null;
   box.className = 'ev ev-' + (ev.kind || 'info');
   let html = '';
-  if (ev.kind === 'tanuki') html += `<div class="tanuki-art">${TANUKI_SVG(54)}</div>`;
+  if (ev.kind === 'tanuki') html += `<div class="tanuki-art">${TANUKI_SVG(54, ev.form || 0)}</div>`;
   if (who) html += `<div class="ev-who"><i style="background:${who.color}"></i>${esc(who.name)}</div>`;
   html += `<div class="ev-title">${esc(ev.title || '')}</div><div class="ev-text">${esc(ev.text || '')}</div>`;
-  if (ev.rows) html += '<table>' + ev.rows.map(r => `<tr><td><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${S.players[r.pid].color};margin-right:6px"></i>${esc(r.name)}</td><td>収益 ＋${esc(yen(r.inc))}${r.interest ? `<br><span style="color:var(--red)">利息 −${esc(yen(r.interest))}</span>` : ''}</td><td>総資産 ${esc(yen(r.assets))}</td></tr>`).join('') + '</table>';
-  const canSkip = UI.mode === 'guest' ? (ev.pid === UI.myPid || (who && who.ctrl === 'cpu')) : true;
+  if (ev.rows) html += '<table>' + ev.rows.map(r => `<tr><td><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${S.players[r.pid].color};margin-right:6px"></i>${esc(r.name)}</td>` + (r.text !== undefined ? `<td colspan="2">${esc(r.text)}</td>` : `<td>収益 ＋${esc(yen(r.inc))}${r.interest ? `<br><span style="color:var(--red)">利息 −${esc(yen(r.interest))}</span>` : ''}</td><td>総資産 ${esc(yen(r.assets))}</td>`) + '</tr>').join('') + '</table>';
+  const canSkip = UI.mode === 'guest' ? (ev.pid === UI.myPid || (who && (who.ctrl === 'cpu' || who.away))) : true;
   if (canSkip) html += '<div class="ev-skip">タップでとばす ▶</div>';
   box.innerHTML = html;
   box.hidden = false;
@@ -2260,13 +2639,13 @@ function renderActions(S) {
   if (S.phase === 'gameover') { const b = el('button', 'btn btn-main', 'けっかを見る'); b.type = 'button'; b.onclick = () => showResult(S); a.appendChild(b); return; }
   if (S.phase === 'event') {
     const ev = S.event, who = ev && ev.pid >= 0 ? S.players[ev.pid] : null;
-    const canSkip = UI.mode === 'guest' ? (ev && (ev.pid === UI.myPid || (who && who.ctrl === 'cpu'))) : true;
+    const canSkip = UI.mode === 'guest' ? (ev && (ev.pid === UI.myPid || (who && (who.ctrl === 'cpu' || who.away)))) : true;
     if (canSkip) { const b = el('button', 'btn btn-sub', 'つぎへ ▶'); b.type = 'button'; b.onclick = () => { Sound.click(); act({ t: 'ok' }); }; a.appendChild(b); }
     else msg(`${cur.name} の番です…`, true);
     return;
   }
   if (!mine) {
-    if (['choose', 'branch', 'buy', 'shop', 'pick'].includes(S.phase)) msg(cur.ctrl === 'cpu' ? `${cur.name} が考え中…` : `${cur.name} の番です…`, true);
+    if (['choose', 'branch', 'buy', 'shop', 'pick'].includes(S.phase)) msg(cur.ctrl === 'cpu' || cur.away ? `${cur.name} ${cur.away ? '（切断中・CPUが代走）' : ''}が考え中…` : `${cur.name} の番です…`, true);
     else msg(`${cur.name} が移動中…`, true);
     return;
   }
@@ -2275,7 +2654,7 @@ function renderActions(S) {
       const b = el('button', 'btn btn-main btn-big', '🎲 サイコロをふる'); b.type = 'button'; b.style.flex = '2 1 auto';
       b.onclick = () => { Sound.ensure(); Sound.click(); act({ t: 'roll' }); };
       a.appendChild(b);
-      const c = el('button', 'btn btn-sub btn-big', `🃏 カード (${cur.cards.length})`); c.type = 'button'; c.disabled = !cur.cards.length;
+      const c = el('button', 'btn btn-sub btn-big', cur.sealed > 0 ? `🔒 ふういん中` : `🃏 カード (${cur.cards.length})`); c.type = 'button'; c.disabled = !cur.cards.length || cur.sealed > 0;
       c.onclick = () => { Sound.click(); openCardsSheet(S); };
       a.appendChild(c);
       break;
@@ -2343,7 +2722,7 @@ function renderCardsSheet(S) {
     let hint = '';
     if (c.id === 'exact' && dd >= 1 && dd <= 6) hint = ` ✨目的地まで${dd}マス：ぴったり着ける！`;
     row.innerHTML = `<div><b>${esc(cardLabel(c))}</b><small>${esc(d.desc)}${hint}</small></div>`;
-    const b = el('button', 'btn btn-main', '使う'); b.type = 'button'; b.disabled = !(S.phase === 'choose' && iControl(cur));
+    const b = el('button', 'btn btn-main', d.passive ? '持つだけ' : '使う'); b.type = 'button'; b.disabled = !(S.phase === 'choose' && iControl(cur)) || !!d.passive || cur.sealed > 0;
     b.onclick = () => { Sound.click(); closeSheet(); act({ t: 'card', idx: i }); };
     row.appendChild(b); body.appendChild(row);
   });
@@ -2363,7 +2742,7 @@ function renderBuySheet(S) {
     const o = owners[i], free = o < 0;
     const row = el('div', 'prop' + (free ? '' : ' owned') + (UI.buyPick.has(i) ? ' sel' : ''));
     const owner = free ? '' : `<span class="own" style="background:${S.players[o].color}">${esc(S.players[o].name)}</span>`;
-    row.innerHTML = `<div class="chk">${UI.buyPick.has(i) ? '✓' : ''}</div><div class="pn">${esc(pr.name)}<small>${owner || '売り出し中'}</small></div><div class="pr">${esc(yen(pr.price))}<small>収益率 ${pr.rate}%</small></div>`;
+    row.innerHTML = `<div class="chk">${UI.buyPick.has(i) ? '✓' : ''}</div><div class="pn">${PROP_CATS[pr.cat].icon}${esc(pr.name)}<small>${owner || '売り出し中'}</small></div><div class="pr">${esc(yen(pr.price))}<small>収益率 ${pr.rate}%</small></div>`;
     if (free) row.onclick = () => { Sound.click(); if (UI.buyPick.has(i)) UI.buyPick.delete(i); else UI.buyPick.add(i); renderBuySheet(S); };
     body.appendChild(row);
   });
@@ -2437,7 +2816,7 @@ function openCitySheet(S, node) {
   node.props.forEach((pr, i) => {
     const o = S.own[node.id][i];
     const row = el('div', 'prop' + (o >= 0 ? ' owned' : ''));
-    row.innerHTML = `<div></div><div class="pn">${esc(pr.name)}<small>${o >= 0 ? `<span class="own" style="background:${S.players[o].color}">${esc(S.players[o].name)}</span>` : '売り出し中'}</small></div><div class="pr">${esc(yen(pr.price))}<small>収益率 ${pr.rate}%</small></div>`;
+    row.innerHTML = `<div></div><div class="pn">${PROP_CATS[pr.cat].icon}${esc(pr.name)}<small>${o >= 0 ? `<span class="own" style="background:${S.players[o].color}">${esc(S.players[o].name)}</span>` : '売り出し中'}</small></div><div class="pr">${esc(yen(pr.price))}<small>収益率 ${pr.rate}%</small></div>`;
     body.appendChild(row);
   });
 }
@@ -2453,6 +2832,7 @@ function openMenuSheet() {
   const add = (label, fn, cls) => { const b = el('button', 'btn ' + (cls || 'btn-sub'), label); b.type = 'button'; b.onclick = () => { Sound.click(); fn(); }; m.appendChild(b); };
   add('📊 対戦状況・物件（売却もここ）', () => openStatusSheet(UI.state, UI.state.turn));
   add('📜 これまでの出来事', () => openLogSheet(UI.state));
+  if (UI.mode === 'host') add('🔗 再接続・さそい直し（合言葉）', () => openReconnectSheet());
   add('🗺 地図ぜんたいを見る', () => { closeSheet(); camFit(400); });
   add(Sound.on ? '🔊 音：オン（タップでオフ）' : '🔇 音：オフ（タップでオン）', () => { Sound.on = !Sound.on; pref.sound = Sound.on; savePref(); openMenuSheet(); });
   add('📖 あそびかた', () => { closeSheet(); UI.howtoFrom = 'game'; show('howto'); });
@@ -2497,6 +2877,7 @@ function renderSetup() {
   const st = UI.setup;
   $$('#seg-n button').forEach(b => b.classList.toggle('on', +b.dataset.n === st.n));
   $$('#seg-y button').forEach(b => b.classList.toggle('on', +b.dataset.y === st.years));
+  $$('#seg-cpulv button').forEach(b => b.classList.toggle('on', b.dataset.l === (st.cpuLv || 'normal')));
   const box = $('#slots'); box.innerHTML = '';
   st.slots.forEach((s, i) => {
     const d = el('div', 'slot' + (i >= st.n ? ' off' : ''));
@@ -2518,29 +2899,33 @@ function setupStart() {
   if (!players.some(p => p.ctrl === 'local')) { alert('人のプレイヤーを1人以上えらんでください'); return; }
   if (players[0].ctrl === 'local') { pref.name = players[0].name; savePref(); }
   Sound.ensure();
-  startGame(players, st.years, st.mode);
+  startGame(players, st.years, st.mode, st.cpuLv || 'normal');
 }
 
 // ===================================================================
 //  合言葉 session: the host invites friends one at a time
 // ===================================================================
 const Net = {
-  role: '', peers: [], invite: null, link: null, years: 3, cpu: 0, members: [], you: -1,
+  role: '', peers: [], invite: null, link: null, years: 3, cpu: 0, cpuLv: 'normal', members: [], you: -1,
+  seats: [], reconnecting: false,
   myName() { const v = ($('#my-name').value || '').trim(); return v || pref.name || 'あなた'; },
+  // a phone's token survives reloads, so the host can give the same seat back
+  token() { if (!pref.token) { pref.token = Math.random().toString(36).slice(2, 10) + Date.now().toString(36); savePref(); } return pref.token; },
   broadcast(obj) { for (const pr of this.peers) if (pr.link.open) pr.link.send(obj); },
   send(obj) { if (this.link) this.link.send(obj); },
   memberList() { return [{ name: this.myName(), kind: 'host' }, ...this.peers.map(p => ({ name: p.name, kind: 'guest' }))]; },
+  inGame() { return UI.mode === 'host' && !!UI.game; },
   // ----- host -----
   hostBegin() {
-    this.role = 'host'; this.peers = []; this.invite = null;
+    this.role = 'host'; this.peers = []; this.invite = null; this.seats = [];
     this.hostInvite();
     renderP2P();
   },
   hostInvite() {
     if (this.invite) { this.invite.h = {}; this.invite.end(''); }
-    if (this.peers.length >= 3) return;
+    if (!this.inGame() && this.peers.length >= 3) return;
     const link = this.invite = new Link({
-      change: () => renderP2P(),
+      change: () => { renderP2P(); renderReconnectSheet(); },
       open: l => this.hostOnOpen(l),
       msg: (m, l) => this.hostOnMsg(m, l),
       close: (l, why, wasOpen) => this.hostOnClose(l, why, wasOpen),
@@ -2548,26 +2933,49 @@ const Net = {
     link.offer();
   },
   hostOnOpen(link) {
-    if (link === this.invite) { this.invite = null; this.peers.push({ link, name: '…', pid: -1 }); $('#pp-answer-in').value = ''; }
-    renderP2P();
+    if (link === this.invite) { this.invite = null; this.peers.push({ link, name: '…', pid: -1, token: '' }); $('#pp-answer-in').value = ''; const ra = $('#rc-answer-in'); if (ra) ra.value = ''; }
+    renderP2P(); renderReconnectSheet();
   },
   hostOnMsg(m, link) {
     const pr = this.peers.find(p => p.link === link);
     if (!pr) return;
-    if (m.t === 'hello') { pr.name = String(m.name || 'ゲスト').slice(0, 8) || 'ゲスト'; pr.v = m.v; this.hostLobby(); renderP2P(); }
-    else if (m.t === 'act' && UI.mode === 'host' && UI.game && pr.pid >= 0) hostAct(pr.pid, m.a || {});
+    if (m.t === 'hello') {
+      pr.name = String(m.name || 'ゲスト').slice(0, 8) || 'ゲスト'; pr.v = m.v; pr.token = String(m.token || '');
+      if (this.inGame()) {
+        // a friend coming back: same token (or, failing that, same name) gets their seat
+        const seat = this.seats.find(x => x.token && x.token === pr.token && !this.peers.some(q => q !== pr && q.pid === x.pid))
+          || this.seats.find(x => x.name === pr.name && !this.peers.some(q => q !== pr && q.pid === x.pid));
+        if (!seat) { link.send({ t: 'full' }); link.h = {}; link.end(''); this.peers.splice(this.peers.indexOf(pr), 1); renderReconnectSheet(); return; }
+        pr.pid = seat.pid; seat.token = pr.token;
+        const p = UI.game.S.players[seat.pid];
+        p.away = false;
+        UI.game.log(`${p.name} が再接続した`); UI.game.touch();
+        link.send({ t: 'start', s: UI.state, you: pr.pid });
+        if (UI.timer) publish(); else pump();
+        if (!this.peers.some(q => q.pid < 0) && !UI.game.S.players.some(q => q.away)) closeSheet();
+        renderReconnectSheet();
+        return;
+      }
+      this.hostLobby(); renderP2P();
+    }
+    else if (m.t === 'act' && this.inGame() && pr.pid >= 0) hostAct(pr.pid, m.a || {});
   },
   hostOnClose(link, why, wasOpen) {
     const i = this.peers.findIndex(p => p.link === link);
     if (i >= 0) {
       const pr = this.peers[i];
       this.peers.splice(i, 1);
-      if (UI.mode === 'host' && UI.game && pr.pid >= 0) {
+      if (this.inGame() && pr.pid >= 0) {
+        // the seat is kept; the computer drives until they are back
         const p = UI.game.S.players[pr.pid];
-        if (p.ctrl !== 'cpu') { p.ctrl = 'cpu'; UI.game.log(`${p.name} との接続が切れたので、ここからはコンピューターが運転します`); UI.game.touch(); if (UI.timer) publish(); else pump(); }
-      } else { this.hostLobby(); }
+        if (p.ctrl !== 'cpu' && !p.away) {
+          p.away = true;
+          UI.game.log(`${p.name} との接続が切れた。もどるまでコンピューターが代わりに運転します`); UI.game.touch();
+          if (UI.timer) publish(); else pump();
+        }
+      } else if (!this.inGame()) this.hostLobby();
     }
-    renderP2P();
+    renderP2P(); renderReconnectSheet();
   },
   hostLobby() {
     const members = this.memberList();
@@ -2580,48 +2988,135 @@ const Net = {
     peers.forEach((p, i) => { p.pid = i + 1; players.push({ name: p.name, ctrl: 'peer' + p.pid }); });
     const cpus = Math.min(this.cpu, 4 - players.length);
     for (let i = 0; i < cpus; i++) players.push({ name: 'CPU' + (i + 1), ctrl: 'cpu' });
+    this.seats = peers.map(p => ({ token: p.token, name: p.name, pid: p.pid }));
     pref.name = this.myName(); savePref();
     if (this.invite) { this.invite.h = {}; this.invite.end(''); this.invite = null; }
     Sound.ensure();
-    startGame(players, this.years, 'host');
+    startGame(players, this.years, 'host', this.cpuLv);
     for (const p of peers) p.link.send({ t: 'start', s: UI.state, you: p.pid });
     return true;
+  },
+  // give an absent friend's seat to the computer for good
+  hostGiveUp(pid) {
+    if (!this.inGame()) return;
+    const p = UI.game.S.players[pid];
+    p.ctrl = 'cpu'; p.away = false;
+    this.seats = this.seats.filter(x => x.pid !== pid);
+    UI.game.log(`${p.name} の席はコンピューターが引きつぎました`); UI.game.touch();
+    if (UI.timer) publish(); else pump();
+    renderReconnectSheet();
   },
   hostEnd() {
     this.broadcast({ t: 'end' });
     for (const p of this.peers) { p.link.h = {}; p.link.end(''); }
     if (this.invite) { this.invite.h = {}; this.invite.end(''); }
-    this.peers = []; this.invite = null; this.role = '';
+    this.peers = []; this.invite = null; this.role = ''; this.seats = [];
   },
   // ----- guest -----
   guestBegin() { this.role = 'guest'; this.link = null; this.members = []; renderP2P(); },
   guestReply(text) {
     if (this.link) { this.link.h = {}; this.link.end(''); }
     const link = this.link = new Link({
-      change: () => renderP2P(),
-      open: l => { l.send({ t: 'hello', name: this.myName(), v: NET_V }); pref.name = this.myName(); savePref(); renderP2P(); },
+      change: () => { renderP2P(); renderReconnectSheet(); },
+      open: l => { l.send({ t: 'hello', name: this.myName(), v: NET_V, token: this.token() }); pref.name = this.myName(); savePref(); renderP2P(); renderReconnectSheet(); },
       msg: m => this.guestOnMsg(m),
-      close: (l, why, wasOpen) => this.guestOnClose(why, wasOpen),
+      close: (l, why, wasOpen) => this.guestOnClose(l, why, wasOpen),
     });
     link.answer(text);
   },
   guestOnMsg(m) {
     if (m.t === 'lobby') { this.members = m.members || []; this.you = m.you; renderP2P(); }
-    else if (m.t === 'start') { clearTimeout(UI.timer); UI.game = null; UI.mode = 'guest'; UI.myPid = m.you; UI.prev = null; UI.followTurn = -1; closeSheet(); UI.state = m.s; show('game'); render(true); }
+    else if (m.t === 'start') { clearTimeout(UI.timer); UI.game = null; UI.mode = 'guest'; UI.myPid = m.you; UI.prev = null; UI.followTurn = -1; this.reconnecting = false; closeSheet(); UI.state = m.s; show('game'); render(true); }
     else if (m.t === 'st') { if (UI.mode === 'guest' && m.s && (!UI.state || m.s.rev >= UI.state.rev)) { UI.state = m.s; if (UI.screen === 'game') render(); } }
-    else if (m.t === 'end') { this.guestOnClose('end', true); }
+    else if (m.t === 'full') { this.guestOnClose(this.link, 'full', true); }
+    else if (m.t === 'end') { this.guestOnClose(this.link, 'end', true); }
   },
-  guestOnClose(why, wasOpen) {
-    if (UI.mode === 'guest') {
-      UI.mode = ''; UI.state = null; closeSheet();
-      show('title');
-      setTimeout(() => alert(why === 'end' ? '1台目がゲームを終了しました。' : '1台目との接続が切れました。'), 50);
+  guestOnClose(link, why, wasOpen) {
+    if (link && link !== this.link) return;   // an old link closing after a newer one took over
+    this.link = null;
+    if (UI.mode === 'guest' && UI.screen === 'game' && why !== 'end' && why !== 'full') {
+      // the game goes on; this phone waits for a fresh code from the host
+      this.reconnecting = true;
+      renderNetBar(UI.state);
+      if (UI.sheet !== 'reconnect') openReconnectSheet();
+      return;
     }
-    this.link = null; this.members = [];
+    if (UI.mode === 'guest') {
+      UI.mode = ''; UI.state = null; this.reconnecting = false; closeSheet();
+      show('title');
+      setTimeout(() => alert(why === 'end' ? '1台目がゲームを終了しました。' : why === 'full' ? 'このゲームに あなたの席はありませんでした。' : '1台目との接続が切れました。'), 50);
+    }
+    this.members = [];
     if (UI.screen === 'p2p') renderP2P();
+    renderReconnectSheet();
   },
-  guestLeave() { if (this.link) { this.link.h = {}; this.link.end(''); } this.link = null; this.role = ''; this.members = []; },
+  guestLeave() { if (this.link) { this.link.h = {}; this.link.end(''); } this.link = null; this.role = ''; this.members = []; this.reconnecting = false; },
 };
+
+// ---------- the game-screen notice when someone's phone is away ----------
+function renderNetBar(S) {
+  const bar = $('#netbar'); if (!bar) return;
+  let html = '';
+  if (UI.mode === 'host' && S) {
+    const away = S.players.filter(p => p.away);
+    if (away.length) html = `<span>📵 ${esc(away.map(p => p.name).join('、'))} の接続が切れています（CPUが代走中）</span><button class="btn btn-sub" id="nb-rc" type="button">再接続の合言葉</button>`;
+  } else if (UI.mode === 'guest' && Net.reconnecting) {
+    html = `<span>📵 1台目との接続が切れました。ゲームは続いています</span><button class="btn btn-sub" id="nb-rc" type="button">再接続する</button>`;
+  }
+  bar.hidden = !html;
+  if (bar.innerHTML !== html) { bar.innerHTML = html; const b = $('#nb-rc'); if (b) b.onclick = () => { Sound.click(); openReconnectSheet(); }; }
+}
+function openReconnectSheet() {
+  openSheet('reconnect', UI.mode === 'host' ? '再接続（1台目）' : '再接続（1台目の合言葉を貼る）');
+  if (UI.mode === 'host' && !Net.invite) Net.hostInvite();
+  renderReconnectSheet();
+}
+function renderReconnectSheet() {
+  if (UI.sheet !== 'reconnect') return;
+  const body = $('#sheet-body'), foot = $('#sheet-foot');
+  const canShare = typeof navigator.share === 'function';
+  let html = '';
+  if (UI.mode === 'host') {
+    const S = UI.state, away = S ? S.players.filter(p => p.away) : [], inv = Net.invite;
+    html += `<p class="note">相手が切れていても、ゲームは止まりません（席はそのまま、コンピューターが代走）。相手がもどるには、新しい合言葉を送って、返事を貼ります。相手は「再接続する」からこの合言葉を貼れます。ページを閉じてしまった相手は、タイトルの「合言葉で つないで あそぶ」→「2台目以降」からでも大丈夫です。</p>`;
+    if (away.length) html += '<ul class="plist">' + away.map(p => `<li><span class="dot" style="background:${p.color}"></span><span>${esc(p.name)}</span><span class="tag">切断中</span><button class="btn btn-plain" data-giveup="${p.id}" type="button">CPUに任せる</button></li>`).join('') + '</ul>';
+    else html += '<p class="status" data-state="ok">いまは みんな つながっています。</p>';
+    if (inv) {
+      html += `<h3 class="o-label">① この合言葉を相手に送る</h3><textarea class="pp-code" id="rc-offer" readonly rows="4">${esc(inv.code || '')}</textarea>
+        <div class="pp-row"><button class="btn btn-sub" id="rc-copy" type="button" ${inv.code ? '' : 'disabled'}>コピー</button>${canShare && inv.code ? '<button class="btn btn-sub" id="rc-share" type="button">LINE などで送る</button>' : ''}<button class="btn btn-sub" id="rc-new" type="button">作り直す</button></div>
+        <h3 class="o-label">② 相手から届いた返事を貼る</h3><textarea class="pp-code pp-in" id="rc-answer-in" rows="3" placeholder="ここに貼る"></textarea>
+        <div class="pp-row"><button class="btn btn-main" id="rc-link" type="button" ${inv.state === 'offer' || (inv.state === 'error' && inv.pc) ? '' : 'disabled'}>つなぐ</button></div>`;
+      const msg = inv.err && inv.err !== 'nortc' ? (P2P_ERR[inv.err] || P2P_ERR.badcode) : (P2P_MSG[inv.state] || '');
+      if (msg) html += `<p class="status" data-state="${inv.err || inv.state === 'failed' ? 'bad' : ''}">${esc(msg)}</p>`;
+    } else html += '<div class="pp-row"><button class="btn btn-sub btn-wide" id="rc-new" type="button">再接続の合言葉を作る</button></div>';
+  } else {
+    const l = Net.link, st = l ? l.state : 'idle';
+    html += `<p class="note">ゲームは1台目で続いています。1台目に「再接続の合言葉」を作ってもらい、ここに貼って返事を送り返すと、同じ席にもどれます。</p>
+      <h3 class="o-label">① 1台目から届いた合言葉を貼る</h3><textarea class="pp-code pp-in" id="rc-offer-in" rows="3" placeholder="ここに貼る"></textarea>
+      <div class="pp-row"><button class="btn btn-main" id="rc-reply" type="button" ${st === 'making' || st === 'answer' || st === 'open' ? 'disabled' : ''}>返事の合言葉を作る</button></div>`;
+    if (l && l.code && st !== 'open') html += `<h3 class="o-label">② この返事を1台目に送る</h3><textarea class="pp-code" id="rc-answer" readonly rows="4">${esc(l.code)}</textarea>
+      <div class="pp-row"><button class="btn btn-sub" id="rc-copy2" type="button">コピー</button>${canShare ? '<button class="btn btn-sub" id="rc-share2" type="button">LINE などで送る</button>' : ''}</div>`;
+    let msg = l && l.err && l.err !== 'nortc' ? (P2P_ERR[l.err] || P2P_ERR.badcode) : (P2P_MSG[st] || '');
+    if (l && l.open) msg = 'つながりました！ 席にもどります…';
+    if (msg) html += `<p class="status" data-state="${l && (l.err || st === 'failed' || st === 'closed') ? 'bad' : l && l.open ? 'ok' : ''}">${esc(msg)}</p>`;
+  }
+  // keep what the person typed in the paste box while re-rendering
+  const keep = {}; for (const id of ['rc-answer-in', 'rc-offer-in']) { const e = $('#' + id); if (e) keep[id] = e.value; }
+  body.innerHTML = html;
+  for (const id in keep) { const e = $('#' + id); if (e) e.value = keep[id]; }
+  foot.hidden = false; foot.innerHTML = '';
+  const close = el('button', 'btn btn-sub', '閉じる'); close.type = 'button'; close.onclick = () => { Sound.click(); closeSheet(); };
+  foot.appendChild(close);
+  const on = (id, fn) => { const e = $('#' + id); if (e) e.onclick = fn; };
+  on('rc-copy', e => copyCode($('#rc-offer'), e.currentTarget));
+  on('rc-share', () => shareCode($('#rc-offer'), true));
+  on('rc-new', () => { Sound.click(); Net.hostInvite(); renderReconnectSheet(); });
+  on('rc-link', () => { Sound.click(); if (Net.invite) Net.invite.accept($('#rc-answer-in').value); });
+  on('rc-reply', () => { Sound.click(); Net.guestReply($('#rc-offer-in').value); });
+  on('rc-copy2', e => copyCode($('#rc-answer'), e.currentTarget));
+  on('rc-share2', () => shareCode($('#rc-answer'), false));
+  $$('#sheet-body [data-giveup]').forEach(b => { b.onclick = () => { Sound.click(); if (confirm('この席を最後までコンピューターに任せますか？')) Net.hostGiveUp(+b.dataset.giveup); }; });
+}
 
 function openP2P() {
   Net.role = ''; Net.peers = []; Net.invite = null; Net.link = null; Net.members = [];
@@ -2664,6 +3159,7 @@ function renderP2P() {
       msg = `${ready.length + 1}人でつながっています。${full ? '' : '「もう1人さそう」で4人まで増やせます。'}年数とコンピューターをえらんで「ゲーム開始」を押してください。`; state = 'ok';
     }
     $$('#seg-y2 button').forEach(b => b.classList.toggle('on', +b.dataset.y === Net.years));
+    $$('#seg-cpulv2 button').forEach(b => b.classList.toggle('on', b.dataset.l === Net.cpuLv));
     const maxCpu = 4 - 1 - ready.length;
     $$('#seg-cpu button').forEach(b => { const c = +b.dataset.c; b.disabled = c > maxCpu; b.classList.toggle('on', c === Math.min(Net.cpu, maxCpu)); });
     $('#pp-start').disabled = !ready.length;
@@ -2721,6 +3217,7 @@ function init() {
   // setup
   $$('#seg-n button').forEach(b => b.addEventListener('click', () => { Sound.click(); UI.setup.n = +b.dataset.n; renderSetup(); }));
   $$('#seg-y button').forEach(b => b.addEventListener('click', () => { Sound.click(); UI.setup.years = +b.dataset.y; renderSetup(); }));
+  $$('#seg-cpulv button').forEach(b => b.addEventListener('click', () => { Sound.click(); UI.setup.cpuLv = b.dataset.l; renderSetup(); }));
   $('#setup-back').addEventListener('click', () => { Sound.click(); show('title'); });
   $('#setup-go').addEventListener('click', () => { Sound.click(); setupStart(); });
   // game
@@ -2739,10 +3236,11 @@ function init() {
     Sound.click();
     const ls = UI.lastSetup; if (!ls) { quitToTitle(); return; }
     if (ls.mode === 'host') { if (!Net.hostStart()) quitToTitle(); }
-    else startGame(ls.players, ls.years, ls.mode);
+    else startGame(ls.players, ls.years, ls.mode, ls.cpu);
   });
   // 合言葉
   $('#pp-host-go').addEventListener('click', () => { Sound.click(); Net.hostBegin(); });
+  $$('#seg-cpulv2 button').forEach(b => b.addEventListener('click', () => { Sound.click(); Net.cpuLv = b.dataset.l; renderP2P(); }));
   $('#pp-guest-go').addEventListener('click', () => { Sound.click(); Net.guestBegin(); });
   $('#pp-link').addEventListener('click', () => { Sound.click(); if (Net.invite) Net.invite.accept($('#pp-answer-in').value); });
   $('#pp-newcode').addEventListener('click', () => { Sound.click(); $('#pp-answer-in').value = ''; Net.hostInvite(); });
