@@ -330,6 +330,15 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
 .settle .btn { margin-top: 8px; }
 
 .dice-left { position: absolute; left: 50%; top: calc(18% + 70px); transform: translateX(-50%); z-index: 4; pointer-events: none; background: var(--ink); color: #fff; font-size: 14px; font-weight: 800; padding: 4px 12px; border-radius: 999px; box-shadow: 0 3px 8px rgba(0,0,0,.25); white-space: nowrap; }
+
+/* ---------- world happenings ---------- */
+.marker { font-size: 26px; text-anchor: middle; dominant-baseline: central; pointer-events: none; animation: bob 1.2s ease-in-out infinite; }
+#board.air-closed .rail.air { opacity: .15; }
+#board.air-closed g[data-air] { opacity: .35; }
+.wstat { position: absolute; left: 8px; top: 48px; z-index: 2; display: flex; flex-wrap: wrap; gap: 4px; max-width: 70%; pointer-events: none; }
+.wstat span { background: rgba(255,250,240,.95); border: 2px solid var(--line); color: var(--ink); font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 999px; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+.wstat span.bad { background: #fde4e1; border-color: #f3c5c0; color: #a52a22; }
+.wstat span.good { background: #e2f6e7; border-color: #bfe6c9; color: #1d6b35; }
 </style>
 </head>
 <body>
@@ -479,6 +488,7 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
         <button type="button" class="z" id="m-zout">−</button>
       </div>
       <div class="hint-pin" id="hint" hidden></div>
+      <div class="wstat" id="wstat" hidden></div>
       <div class="dice" id="dice" hidden></div>
       <div class="ev" id="ev" hidden></div>
       <div class="settle" id="settle" hidden></div>
@@ -540,7 +550,8 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
         <p>誰かが目的地に着くと、そのとき目的地から<b>いちばん遠かった人</b>に びんぼうタヌキがくっつきます。ターンの終わりに お金を持ち逃げしたり、カードをかじったり、勝手にカードを買ってきたり……。タヌキがついた人と<b>すれ違う（同じマスを通る・止まる）</b>と、タヌキは相手に乗りかえます。わざと相手の列車に突っこんで なすりつけましょう。</p>
         <p>たまに変身します：<b>大タヌキ</b>（3ターン、物件を売り飛ばす）、<b>ハリケーンタヌキ</b>（3ターン、毎回どこかへ吹き飛ばす）、<b>ミニタヌキ</b>（3ターン、ほぼ無害）、そしてごくまれに<b>キングタヌキ</b>（3ターン、物件もカードもお金もめちゃくちゃ）。おはらいカードや2月の節分で追いはらえます。</p>
         <h3>🌏 世界編</h3>
-        <p>日本を真ん中にした世界地図で、44の都市をめぐります。東京からソウル・北京・バンコク・ドバイ・ロンドン・ニューヨーク・リオ・シドニー……。大西洋の路線は<b>地図の端から反対側へ</b>つながっています。サハラ砂漠とナラボー平原はカードマスだらけ。</p>
+        <p>日本を真ん中にした世界地図で、69の都市をめぐります。各大陸に環状ルートがあり、大西洋の路線は<b>地図の端から反対側へ</b>つながっています。サハラ砂漠・ナラボー平原・アマゾンはカードマスだらけ。</p>
+        <p>世界編は日本編より<b>ダイナミック</b>です。目的地は遠く、援助金もマスのお金も大きく、スリの銀次は多めで、タヌキはよく変身します。そして<b>毎月、世界イベント</b>が起きます：🏅オリンピック（開催地に止まると祝儀）、🌋火山噴火で<b>空路が閉鎖</b>、🏴‍☠️海賊（航路のマスに止まるとお金をうばわれる）、🏆ワールドカップで<b>目的地が変更</b>、🗺宝の地図（💰のマスに最初に止まった人が大金）、📉株安・📈好景気・💱為替・🛢原油高騰、🏛世界遺産登録で物件が値上がり、✈格安航空券で全員サイコロ＋1、🤝サミットで全員集合。地図の上に、いま起きていることが表示されます。</p>
         <h3>🔥 がんばれ補正</h3>
         <p>ビリの人の総資産が、次の人の<b>半分以下</b>になると「がんばれ補正」がつきます。援助金とプラスマスが1.5倍、カードのマスでいいカードが出やすくなり、スリの銀次は見逃し、びんぼうタヌキもほかに行ける人がいればそちらへ。追いつくまで続きます。</p>
         <h3>🏪 新しい物件</h3>
@@ -988,77 +999,120 @@ const WORLD_CITY_DEFS = [
   ['デリー', 28.6, 77.2, 'アジア', [['タージマハル観光', 15000, 12], ['ナン工房', 400, 90], ['宝石店', 4000, 25], ['ヨガ道場', 1000, 50]], [790, 520]],
   ['ウラジオストク', 43.1, 131.9, 'アジア', [['カニ市場', 2000, 40], ['港の造船所', 15000, 10], ['ボルシチ店', 600, 65], ['毛皮工房', 2500, 30]], [1180, 350]],
   ['イルクーツク', 52.3, 104.3, 'アジア', [['バイカル湖の観光船', 4000, 20], ['木材工場', 6000, 15], ['ペリメニ店', 500, 75], ['オームリ漁', 1500, 40]], [960, 270]],
+  ['大阪', 34.7, 135.5, 'アジア', [['たこ焼き店', 500, 80], ['お好み焼き店', 700, 70], ['道頓堀ビル', 50000, 8], ['お城の観光', 5000, 18]], [1215, 545]],
+  ['ハノイ', 21.0, 105.8, 'アジア', [['フォーの店', 400, 90], ['ハロン湾クルーズ', 4000, 20], ['コーヒー農園', 1500, 40], ['刺しゅう工房', 800, 50]], [960, 585]],
+  ['クアラルンプール', 3.1, 101.7, 'アジア', [['ツインタワー観光', 20000, 10], ['ナシレマッ店', 400, 90], ['パーム油農園', 4000, 25], ['錫（すず）工房', 1500, 35]], [905, 765]],
+  ['コルカタ', 22.6, 88.4, 'アジア', [['カレー屋台', 300, 100], ['紅茶の問屋', 3000, 30], ['ジュート工場', 5000, 15], ['ガンジス川の渡し船', 1000, 45]], [850, 608]],
+  ['カラチ', 24.9, 67.0, 'アジア', [['ビリヤニ店', 500, 80], ['港の倉庫', 8000, 12], ['綿農園', 2500, 35], ['トラックアート工房', 1200, 40]], [690, 578]],
+  ['ウランバートル', 47.9, 106.9, 'アジア', [['遊牧民のゲル宿', 1500, 40], ['羊の牧場', 4000, 20], ['カシミヤ工房', 3000, 30], ['馬乳酒の店', 400, 90]], [1040, 318]],
+  ['ノボシビルスク', 55.0, 82.9, 'アジア', [['シベリア鉄道の駅弁店', 600, 70], ['木材工場', 8000, 12], ['毛皮工房', 2500, 30], ['オペラ劇場', 6000, 15]], [760, 250]],
   // 中東
   ['ドバイ', 25.2, 55.3, '中東', [['世界一高いタワー', 100000, 5], ['砂漠サファリ', 3000, 30], ['金の市場', 10000, 15], ['ケバブ店', 700, 65], ['人工島リゾート', 60000, 6]], [640, 570]],
-  ['イスタンブール', 41.0, 29.0, '中東', [['ケバブ店', 600, 70], ['グランドバザール', 8000, 15], ['モスクの観光', 6000, 15], ['絨毯工房', 3000, 30], ['ボスポラス観光船', 2500, 30]], [470, 410]],
+  ['イスタンブール', 41.0, 29.0, '中東', [['ケバブ店', 600, 70], ['グランドバザール', 8000, 15], ['モスクの観光', 6000, 15], ['絨毯工房', 3000, 30], ['ボスポラス観光船', 2500, 30]], [520, 420]],
+  ['テヘラン', 35.7, 51.4, '中東', [['ペルシャ絨毯工房', 5000, 20], ['ピスタチオ農園', 2000, 40], ['ケバブ店', 500, 80], ['バザール', 6000, 15]], [600, 480]],
   // ヨーロッパ
-  ['モスクワ', 55.8, 37.6, 'ヨーロッパ', [['赤の広場観光', 10000, 12], ['ボルシチ店', 600, 65], ['バレエ劇場', 12000, 10], ['マトリョーシカ工房', 1200, 45], ['ウォッカ蒸留所', 5000, 18]], [540, 250]],
-  ['ストックホルム', 59.3, 18.1, 'ヨーロッパ', [['ミートボール店', 700, 65], ['家具工場', 20000, 10], ['ノーベル博物館', 6000, 15], ['サーモン燻製工房', 1500, 40]], [400, 180]],
-  ['ベルリン', 52.5, 13.4, 'ヨーロッパ', [['ソーセージ屋台', 400, 90], ['ビール醸造所', 8000, 15], ['自動車工場', 120000, 5], ['クラブ', 3000, 30], ['ブランデンブルク門観光', 5000, 18]], [360, 290]],
-  ['ロンドン', 51.5, -0.1, 'ヨーロッパ', [['フィッシュ＆チップス店', 800, 60], ['ビッグベン観光', 20000, 10], ['紅茶店', 1200, 45], ['サッカースタジアム', 50000, 7], ['パブ', 2000, 40], ['銀行ビル', 100000, 5]], [230, 270]],
-  ['パリ', 48.9, 2.4, 'ヨーロッパ', [['クロワッサン店', 600, 70], ['エッフェル塔観光', 40000, 8], ['ブランド店', 15000, 12], ['ワイン蔵', 6000, 18], ['美術館', 30000, 8], ['カフェ', 1500, 45]], [260, 360]],
-  ['マドリード', 40.4, -3.7, 'ヨーロッパ', [['パエリア店', 800, 60], ['闘牛場', 8000, 14], ['サッカースタジアム', 50000, 7], ['オリーブ農園', 2500, 35], ['ハム工房', 2000, 40]], [190, 450]],
-  ['ローマ', 41.9, 12.5, 'ヨーロッパ', [['ピザ店', 700, 65], ['コロッセオ観光', 25000, 10], ['ジェラート店', 500, 80], ['ワイナリー', 5000, 20], ['革工房', 3000, 30]], [340, 420]],
+  ['モスクワ', 55.8, 37.6, 'ヨーロッパ', [['赤の広場観光', 10000, 12], ['ボルシチ店', 600, 65], ['バレエ劇場', 12000, 10], ['マトリョーシカ工房', 1200, 45], ['ウォッカ蒸留所', 5000, 18]], [560, 230]],
+  ['ストックホルム', 59.3, 18.1, 'ヨーロッパ', [['ミートボール店', 700, 65], ['家具工場', 20000, 10], ['ノーベル博物館', 6000, 15], ['サーモン燻製工房', 1500, 40]], [410, 165]],
+  ['ベルリン', 52.5, 13.4, 'ヨーロッパ', [['ソーセージ屋台', 400, 90], ['ビール醸造所', 8000, 15], ['自動車工場', 120000, 5], ['クラブ', 3000, 30], ['ブランデンブルク門観光', 5000, 18]], [380, 285]],
+  ['ロンドン', 51.5, -0.1, 'ヨーロッパ', [['フィッシュ＆チップス店', 800, 60], ['ビッグベン観光', 20000, 10], ['紅茶店', 1200, 45], ['サッカースタジアム', 50000, 7], ['パブ', 2000, 40], ['銀行ビル', 100000, 5]], [210, 258]],
+  ['パリ', 48.9, 2.4, 'ヨーロッパ', [['クロワッサン店', 600, 70], ['エッフェル塔観光', 40000, 8], ['ブランド店', 15000, 12], ['ワイン蔵', 6000, 18], ['美術館', 30000, 8], ['カフェ', 1500, 45]], [250, 365]],
+  ['マドリード', 40.4, -3.7, 'ヨーロッパ', [['パエリア店', 800, 60], ['闘牛場', 8000, 14], ['サッカースタジアム', 50000, 7], ['オリーブ農園', 2500, 35], ['ハム工房', 2000, 40]], [175, 470]],
+  ['ローマ', 41.9, 12.5, 'ヨーロッパ', [['ピザ店', 700, 65], ['コロッセオ観光', 25000, 10], ['ジェラート店', 500, 80], ['ワイナリー', 5000, 20], ['革工房', 3000, 30]], [340, 440]],
+  ['アムステルダム', 52.4, 4.9, 'ヨーロッパ', [['チューリップ農園', 2000, 40], ['チーズ工房', 1500, 40], ['運河クルーズ', 3000, 30], ['自転車工場', 4000, 20]], [300, 245]],
+  ['ウィーン', 48.2, 16.4, 'ヨーロッパ', [['カフェ', 1000, 55], ['オペラ座', 20000, 10], ['ザッハトルテ店', 800, 60], ['宮殿の観光', 10000, 12]], [420, 370]],
+  ['ワルシャワ', 52.2, 21.0, 'ヨーロッパ', [['ピエロギ店', 400, 90], ['琥珀工房', 2000, 35], ['旧市街の観光', 5000, 18], ['ウォッカ蒸留所', 3000, 25]], [470, 270]],
+  ['アテネ', 38.0, 23.7, 'ヨーロッパ', [['パルテノン神殿観光', 15000, 12], ['ギロピタ店', 400, 90], ['オリーブ農園', 2500, 35], ['エーゲ海クルーズ', 6000, 15]], [455, 458]],
+  ['バルセロナ', 41.4, 2.2, 'ヨーロッパ', [['タパスバル', 800, 60], ['大聖堂の観光', 20000, 10], ['サッカースタジアム', 50000, 7], ['ビーチの海の家', 500, 80]], [255, 455]],
   // アフリカ
   ['カイロ', 30.0, 31.2, 'アフリカ', [['ピラミッド観光', 30000, 10], ['ラクダ乗り場', 800, 60], ['パピルス工房', 1200, 40], ['ナイル川クルーズ', 6000, 15], ['コシャリ店', 300, 100]], [470, 530]],
   ['ラゴス', 6.5, 3.4, 'アフリカ', [['カカオ農園', 2500, 40], ['映画スタジオ', 8000, 15], ['ジョロフライス店', 400, 90], ['港の倉庫', 10000, 12]], [280, 760]],
   ['ナイロビ', -1.3, 36.8, 'アフリカ', [['サファリツアー', 10000, 14], ['コーヒー農園', 3000, 35], ['マサイのビーズ工房', 600, 70], ['紅茶農園', 2500, 35]], [510, 820]],
   ['ケープタウン', -33.9, 18.4, 'アフリカ', [['テーブルマウンテン観光', 12000, 12], ['ワイナリー', 6000, 18], ['ペンギンビーチ', 2000, 35], ['ダイヤモンド鉱山', 80000, 6], ['シーフード店', 1200, 50]], [380, 1130]],
+  ['マラケシュ', 31.6, -8.0, 'アフリカ', [['スーク（市場）', 3000, 30], ['タジン料理店', 500, 80], ['砂漠のキャンプ', 2000, 35], ['アルガンオイル工房', 1500, 40]], [230, 565]],
+  ['アディスアベバ', 9.0, 38.7, 'アフリカ', [['コーヒー農園', 3000, 35], ['インジェラ店', 300, 100], ['岩窟教会の観光', 4000, 20], ['花の農園', 2000, 40]], [560, 690]],
+  ['ヨハネスブルグ', -26.2, 28.0, 'アフリカ', [['金鉱山', 60000, 6], ['サファリロッジ', 8000, 14], ['ブラーイ（BBQ）店', 700, 65], ['サッカースタジアム', 30000, 8]], [470, 1010]],
   // 北アメリカ
   ['アンカレッジ', 61.2, -149.9, '北アメリカ', [['サーモン漁船', 3000, 30], ['オーロラ観光', 5000, 20], ['犬ぞり乗り場', 1000, 50], ['石油会社', 60000, 6]], [1760, 200]],
   ['バンクーバー', 49.3, -123.1, '北アメリカ', [['メープルシロップ工房', 1000, 50], ['スキー場', 15000, 10], ['サーモン料理店', 1200, 50], ['映画スタジオ', 20000, 10]], [1950, 300]],
   ['サンフランシスコ', 37.8, -122.4, '北アメリカ', [['ゴールデンゲート観光', 15000, 12], ['IT企業ビル', 150000, 5], ['クラムチャウダー店', 800, 60], ['ケーブルカー', 4000, 20], ['ワイナリー', 8000, 15]], [1930, 430]],
   ['ロサンゼルス', 34.0, -118.2, '北アメリカ', [['映画スタジオ', 80000, 6], ['ハンバーガー店', 900, 60], ['テーマパーク', 100000, 6], ['ビーチのサーフショップ', 1500, 40], ['バスケットボールアリーナ', 40000, 8]], [2000, 510]],
-  ['シカゴ', 41.9, -87.6, '北アメリカ', [['深皿ピザ店', 800, 60], ['高層ビル', 60000, 6], ['野球場', 30000, 8], ['ジャズクラブ', 2500, 30], ['トウモロコシ農場', 3000, 30]], [2200, 380]],
-  ['ニューヨーク', 40.7, -74.0, '北アメリカ', [['自由の女神観光', 30000, 10], ['ホットドッグ屋台', 300, 100], ['ブロードウェイ劇場', 40000, 8], ['摩天楼ビル', 200000, 5], ['ベーグル店', 800, 60], ['ピザ店', 1000, 55]], [2330, 400]],
+  ['シカゴ', 41.9, -87.6, '北アメリカ', [['深皿ピザ店', 800, 60], ['高層ビル', 60000, 6], ['野球場', 30000, 8], ['ジャズクラブ', 2500, 30], ['トウモロコシ農場', 3000, 30]], [2230, 350]],
+  ['ニューヨーク', 40.7, -74.0, '北アメリカ', [['自由の女神観光', 30000, 10], ['ホットドッグ屋台', 300, 100], ['ブロードウェイ劇場', 40000, 8], ['摩天楼ビル', 200000, 5], ['ベーグル店', 800, 60], ['ピザ店', 1000, 55]], [2360, 380]],
   ['マイアミ', 25.8, -80.2, '北アメリカ', [['ビーチホテル', 30000, 8], ['キーライムパイ店', 500, 80], ['クルーズ船会社', 50000, 7], ['オレンジ農園', 2000, 40]], [2280, 560]],
   ['メキシコシティ', 19.4, -99.1, '北アメリカ', [['タコス屋台', 300, 100], ['ピラミッド観光', 8000, 14], ['テキーラ蒸留所', 5000, 20], ['アボカド農園', 2000, 40], ['ルチャリブレ会場', 4000, 20]], [2110, 640]],
   ['ホノルル', 21.3, -157.8, '北アメリカ', [['ワイキキのホテル', 40000, 8], ['パンケーキ店', 800, 65], ['フラダンス教室', 600, 70], ['パイナップル農園', 2000, 40], ['サーフスクール', 1200, 45]], [1690, 620]],
+  ['ラスベガス', 36.2, -115.1, '北アメリカ', [['カジノホテル', 80000, 6], ['ショー劇場', 20000, 10], ['バフェレストラン', 1500, 45], ['結婚式チャペル', 1000, 50]], [2050, 460]],
+  ['デンバー', 39.7, -105.0, '北アメリカ', [['スキー場', 15000, 10], ['クラフトビール醸造所', 3000, 30], ['牧場', 6000, 18], ['ロッキー山脈ツアー', 4000, 20]], [2120, 405]],
+  ['ダラス', 32.8, -96.8, '北アメリカ', [['ステーキ店', 1500, 45], ['石油会社', 80000, 6], ['ロデオ会場', 5000, 18], ['テキサスBBQ店', 800, 60]], [2160, 525]],
+  ['トロント', 43.7, -79.4, '北アメリカ', [['ナイアガラ観光', 12000, 12], ['アイスホッケー場', 25000, 8], ['メープルシロップ工房', 1000, 50], ['高層タワー', 30000, 8]], [2290, 300]],
+  ['ハバナ', 23.1, -82.4, '北アメリカ', [['葉巻工房', 3000, 30], ['クラシックカー観光', 2000, 35], ['サルサクラブ', 1500, 40], ['サトウキビ農園', 2000, 40]], [2270, 645]],
   // 南アメリカ
   ['リマ', -12.0, -77.0, '南アメリカ', [['セビーチェ店', 600, 70], ['マチュピチュツアー', 15000, 12], ['アルパカ毛織物工房', 1500, 40], ['アンチョビ漁船', 3000, 30]], [2260, 930]],
   ['リオデジャネイロ', -22.9, -43.2, '南アメリカ', [['サンバのカーニバル会場', 20000, 10], ['シュラスコ店', 1200, 50], ['コパカバーナのホテル', 30000, 8], ['コーヒー農園', 3000, 35], ['サッカースタジアム', 50000, 7]], [2480, 1030]],
   ['ブエノスアイレス', -34.6, -58.4, '南アメリカ', [['ステーキ店', 1500, 45], ['タンゴ劇場', 6000, 15], ['牧場', 8000, 15], ['マテ茶店', 500, 80], ['サッカースタジアム', 40000, 8]], [2400, 1170]],
+  ['ボゴタ', 4.7, -74.1, '南アメリカ', [['コーヒー農園', 3000, 35], ['エメラルド店', 6000, 18], ['黄金博物館', 8000, 12], ['アレパ店', 300, 100]], [2280, 785]],
+  ['サンティアゴ', -33.4, -70.6, '南アメリカ', [['ワイナリー', 6000, 18], ['銅鉱山', 60000, 6], ['アンデス展望台', 4000, 20], ['エンパナーダ店', 400, 90]], [2290, 1120]],
   // オセアニア
   ['ケアンズ', -16.9, 145.8, 'オセアニア', [['サンゴ礁のダイビング店', 3000, 30], ['コアラ園', 2000, 35], ['サトウキビ農園', 1500, 40], ['熱帯雨林ツアー', 2500, 30]], [1310, 970]],
   ['シドニー', -33.9, 151.2, 'オセアニア', [['オペラハウス', 50000, 7], ['ミートパイ店', 500, 80], ['ビーチのサーフショップ', 1500, 40], ['ワイナリー', 6000, 18], ['水族館', 12000, 12]], [1360, 1150]],
   ['メルボルン', -37.8, 145.0, 'オセアニア', [['カフェ', 1200, 50], ['テニススタジアム', 30000, 8], ['ペンギンパレード観光', 3000, 30], ['羊牧場', 5000, 20]], [1270, 1210]],
   ['パース', -31.9, 115.9, 'オセアニア', [['クオッカの島ツアー', 2500, 30], ['鉄鉱山', 60000, 6], ['ロブスター漁船', 3000, 30], ['ワイナリー', 5000, 18]], [1070, 1140]],
   ['オークランド', -36.8, 174.8, 'オセアニア', [['羊牧場', 6000, 18], ['キウイ農園', 2000, 40], ['ラグビースタジアム', 20000, 10], ['温泉と間欠泉の観光', 4000, 20], ['ハカのショー', 1000, 50]], [1520, 1210]],
+  ['ブリスベン', -27.5, 153.0, 'オセアニア', [['コアラ保護区', 3000, 30], ['マンゴー農園', 1500, 40], ['サーフィンの海の家', 800, 60], ['テーマパーク', 20000, 10]], [1380, 1060]],
+  ['ダーウィン', -12.5, 130.8, 'オセアニア', [['ワニ園', 2000, 35], ['真珠の養殖場', 5000, 20], ['アボリジニ・アート工房', 1500, 40], ['国立公園ツアー', 3000, 30]], [1130, 930]],
 ];
 
 // ---------- routes ----------
 const WORLD_ROUTE_DEFS = [
-  // 東アジア
-  ['東京', 'ソウル', 2, { sea: true, shop: 1 }], ['東京', '上海', 3, { sea: true, pts: [[1200, 515]] }], ['東京', '台北', 3, { sea: true, pts: [[1262, 560]] }], ['東京', 'ウラジオストク', 2, { sea: true, pts: [[1250, 400]] }],
-  ['ソウル', '北京', 2], ['北京', '上海', 3], ['上海', '香港', 2, { shop: 2 }], ['香港', '台北', 1, { sea: true }], ['香港', 'マニラ', 2, { sea: true }], ['台北', 'マニラ', 1, { sea: true }],
-  ['ウラジオストク', 'イルクーツク', 4], ['北京', 'イルクーツク', 2], ['イルクーツク', 'モスクワ', 6],
+  // 日本・東アジア
+  ['東京', '大阪', 1], ['東京', 'ソウル', 2, { sea: true, shop: 1, pts: [[1180, 420]] }], ['大阪', 'ソウル', 2, { sea: true, pts: [[1150, 490]] }], ['大阪', '上海', 2, { sea: true, pts: [[1150, 578]] }], ['大阪', '台北', 2, { sea: true, pts: [[1200, 610]] }],
+  ['東京', 'ウラジオストク', 2, { sea: true, pts: [[1250, 400]] }],
+  ['ソウル', '北京', 2], ['北京', '上海', 3, { pts: [[1010, 470]] }], ['上海', '香港', 2, { shop: 2 }], ['上海', 'ハノイ', 2, { pts: [[1000, 545]] }], ['香港', '台北', 1, { sea: true }], ['香港', 'マニラ', 2, { sea: true }], ['台北', 'マニラ', 1, { sea: true }],
+  ['ウラジオストク', 'イルクーツク', 4, { pts: [[1120, 250]] }], ['北京', 'ウランバートル', 1], ['ウランバートル', 'イルクーツク', 1, { pts: [[1000, 312]] }],
+  ['イルクーツク', 'ノボシビルスク', 3, { pts: [[860, 215]] }], ['ノボシビルスク', 'モスクワ', 3, { pts: [[660, 215]] }], ['ノボシビルスク', 'デリー', 4, { pts: [[720, 390]] }],
   // 東南アジア・インド
-  ['香港', 'バンコク', 2], ['バンコク', 'シンガポール', 2], ['シンガポール', 'ジャカルタ', 1, { sea: true }], ['マニラ', 'ジャカルタ', 3, { sea: true }],
-  ['バンコク', 'ムンバイ', 4], ['ムンバイ', 'デリー', 2], ['デリー', '北京', 5], ['ムンバイ', 'ドバイ', 2, { sea: true }],
-  // 中東
-  ['ドバイ', 'イスタンブール', 3, { pts: [[560, 465]] }], ['ドバイ', 'カイロ', 2, { shop: 1 }], ['イスタンブール', 'モスクワ', 3], ['イスタンブール', 'ローマ', 2, { sea: true }], ['イスタンブール', 'カイロ', 2, { sea: true }],
+  ['香港', 'ハノイ', 1], ['ハノイ', 'バンコク', 1], ['バンコク', 'クアラルンプール', 1], ['クアラルンプール', 'シンガポール', 1], ['シンガポール', 'ジャカルタ', 1, { sea: true }],
+  ['クアラルンプール', 'ジャカルタ', 2, { sea: true, pts: [[900, 860]] }], ['マニラ', 'ジャカルタ', 3, { sea: true }],
+  ['バンコク', 'コルカタ', 1], ['コルカタ', 'デリー', 1], ['コルカタ', 'ムンバイ', 1, { pts: [[800, 655]] }], ['ムンバイ', 'カラチ', 1], ['カラチ', 'デリー', 1, { pts: [[735, 520]] }],
+  ['ムンバイ', 'ドバイ', 2, { sea: true, pts: [[700, 680], [640, 640]] }], ['カラチ', 'テヘラン', 2, { pts: [[655, 505]] }], ['テヘラン', 'ドバイ', 1, { pts: [[600, 540]] }], ['テヘラン', 'イスタンブール', 2],
+  ['テヘラン', 'モスクワ', 3, { pts: [[660, 380], [640, 290]] }],
+  // 中東・北アフリカ
+  ['ドバイ', 'カイロ', 2, { shop: 1, pts: [[560, 575]] }], ['イスタンブール', 'モスクワ', 3, { pts: [[560, 330]] }], ['イスタンブール', 'アテネ', 1], ['アテネ', 'ローマ', 1, { sea: true }], ['アテネ', 'カイロ', 1, { sea: true }],
+  ['イスタンブール', 'ウィーン', 2, { pts: [[470, 380]] }],
   // ヨーロッパ
-  ['モスクワ', 'ストックホルム', 2, { pts: [[480, 185]] }], ['ストックホルム', 'ベルリン', 2, { sea: true }], ['モスクワ', 'ベルリン', 3, { pts: [[450, 300]] }], ['ベルリン', 'パリ', 2, { shop: 1 }], ['パリ', 'ロンドン', 1, { sea: true }],
-  ['パリ', 'マドリード', 2], ['パリ', 'ローマ', 1], ['ベルリン', 'ローマ', 2, { pts: [[385, 360]] }], ['マドリード', 'ローマ', 2, { sea: true, pts: [[270, 475]] }], ['ロンドン', 'ストックホルム', 2, { sea: true }],
+  ['モスクワ', 'ストックホルム', 2, { pts: [[470, 170]] }], ['モスクワ', 'ワルシャワ', 1], ['ワルシャワ', 'ベルリン', 1], ['ワルシャワ', 'ストックホルム', 1, { sea: true }], ['ワルシャワ', 'ウィーン', 1],
+  ['ストックホルム', 'ベルリン', 1, { sea: true }], ['ベルリン', 'アムステルダム', 1], ['アムステルダム', 'ロンドン', 1, { sea: true }], ['アムステルダム', 'パリ', 1], ['パリ', 'ロンドン', 1, { sea: true }],
+  ['ベルリン', 'パリ', 2, { shop: 1, pts: [[320, 320]] }], ['ベルリン', 'ウィーン', 1], ['ウィーン', 'ローマ', 1], ['パリ', 'ローマ', 1],
+  ['パリ', 'バルセロナ', 1], ['バルセロナ', 'マドリード', 1], ['バルセロナ', 'ローマ', 1, { sea: true }], ['マドリード', 'パリ', 2, { pts: [[190, 400]] }],
+  ['ロンドン', 'ストックホルム', 2, { sea: true, pts: [[300, 150]] }],
   // アフリカ
-  ['カイロ', 'ナイロビ', 3], ['ナイロビ', 'ケープタウン', 4], ['ラゴス', 'ナイロビ', 3], ['カイロ', 'ラゴス', 4, { all: 'card' }],   // サハラ砂漠：カードマスだらけ
-  ['マドリード', 'ラゴス', 4, { sea: true }], ['ケープタウン', 'リオデジャネイロ', 4, { sea: true, wrap: true, pts: [[30, 1090], [2610, 1060]] }],   // 大西洋：地図の端をまたぐ,
+  ['マドリード', 'マラケシュ', 1, { sea: true }], ['マラケシュ', 'カイロ', 3, { pts: [[350, 520]] }], ['マラケシュ', 'ラゴス', 2],
+  ['カイロ', 'ラゴス', 4, { all: 'card', pts: [[360, 640]] }],   // サハラ砂漠：カードマスだらけ
+  ['カイロ', 'アディスアベバ', 2], ['アディスアベバ', 'ドバイ', 2, { sea: true }], ['アディスアベバ', 'ナイロビ', 1], ['ラゴス', 'ナイロビ', 3, { pts: [[400, 820]] }],
+  ['ナイロビ', 'ヨハネスブルグ', 2], ['ヨハネスブルグ', 'ケープタウン', 2], ['ラゴス', 'ヨハネスブルグ', 4, { pts: [[300, 920]] }],
+  ['ケープタウン', 'リオデジャネイロ', 4, { sea: true, wrap: true, pts: [[30, 1090], [2610, 1060]] }],   // 大西洋：地図の端をまたぐ
   // 北アメリカ
-  ['アンカレッジ', 'バンクーバー', 3], ['バンクーバー', 'サンフランシスコ', 2, { shop: 1 }], ['サンフランシスコ', 'ロサンゼルス', 1], ['ロサンゼルス', 'メキシコシティ', 3],
-  ['ロサンゼルス', 'シカゴ', 4], ['バンクーバー', 'シカゴ', 4], ['シカゴ', 'ニューヨーク', 2, { shop: 1 }], ['ニューヨーク', 'マイアミ', 3], ['マイアミ', 'メキシコシティ', 3, { sea: true }],
+  ['アンカレッジ', 'バンクーバー', 3], ['バンクーバー', 'サンフランシスコ', 2, { shop: 1 }], ['サンフランシスコ', 'ロサンゼルス', 1], ['ロサンゼルス', 'メキシコシティ', 3, { pts: [[2040, 600]] }],
+  ['ロサンゼルス', 'ラスベガス', 1], ['サンフランシスコ', 'ラスベガス', 1], ['ラスベガス', 'デンバー', 1], ['デンバー', 'バンクーバー', 3, { pts: [[2050, 330]] }],
+  ['デンバー', 'シカゴ', 1], ['デンバー', 'ダラス', 1], ['ダラス', 'シカゴ', 2, { pts: [[2215, 440]] }], ['ダラス', 'メキシコシティ', 1], ['ダラス', 'マイアミ', 1],
+  ['シカゴ', 'トロント', 1], ['トロント', 'ニューヨーク', 1], ['シカゴ', 'ニューヨーク', 2, { shop: 1, pts: [[2300, 400]] }], ['ニューヨーク', 'マイアミ', 3, { pts: [[2330, 470]] }],
+  ['マイアミ', 'ハバナ', 1, { sea: true }], ['ハバナ', 'メキシコシティ', 2, { sea: true }],
   // 南アメリカ
-  ['メキシコシティ', 'リマ', 4], ['マイアミ', 'リオデジャネイロ', 4, { sea: true }], ['リマ', 'リオデジャネイロ', 3, { shop: 1 }], ['リマ', 'ブエノスアイレス', 3], ['リオデジャネイロ', 'ブエノスアイレス', 2],
+  ['ハバナ', 'ボゴタ', 2, { sea: true }], ['メキシコシティ', 'ボゴタ', 3, { pts: [[2180, 740]] }], ['ボゴタ', 'リマ', 2], ['マイアミ', 'リオデジャネイロ', 4, { sea: true, pts: [[2420, 760]] }],
+  ['ボゴタ', 'リオデジャネイロ', 4, { all: 'card', pts: [[2400, 900]] }],   // アマゾン：カードマスだらけ
+  ['リマ', 'リオデジャネイロ', 3, { shop: 1 }], ['リマ', 'サンティアゴ', 2], ['サンティアゴ', 'ブエノスアイレス', 1], ['リオデジャネイロ', 'ブエノスアイレス', 2],
   // 太平洋
   ['東京', 'ホノルル', 4, { sea: true }], ['ホノルル', 'ロサンゼルス', 4, { sea: true }], ['オークランド', 'ホノルル', 4, { sea: true }],
   // オセアニア
-  ['ジャカルタ', 'パース', 3, { sea: true }], ['ジャカルタ', 'ケアンズ', 3, { sea: true }], ['ケアンズ', 'シドニー', 3], ['シドニー', 'メルボルン', 1, { shop: 1 }],
-  ['メルボルン', 'パース', 4, { all: 'card' }],   // ナラボー平原：カードマスだらけ
-  ['シドニー', 'オークランド', 2, { sea: true }],
+  ['ジャカルタ', 'パース', 3, { sea: true, pts: [[990, 1030]] }], ['ジャカルタ', 'ダーウィン', 1, { sea: true }], ['ダーウィン', 'ケアンズ', 2], ['ダーウィン', 'パース', 3, { pts: [[1130, 1040]] }],
+  ['ケアンズ', 'ブリスベン', 1], ['ブリスベン', 'シドニー', 1], ['シドニー', 'メルボルン', 1, { shop: 1 }],
+  ['メルボルン', 'パース', 4, { all: 'card', pts: [[1150, 1230]] }],   // ナラボー平原：カードマスだらけ
+  ['シドニー', 'オークランド', 2, { sea: true }], ['ブリスベン', 'オークランド', 2, { sea: true, pts: [[1470, 1120]] }],
   // 空路
   ['東京', 'ロンドン', 6, { air: true, pts: [[1300, 200], [1000, 90], [600, 70], [300, 130]] }], ['東京', 'ニューヨーク', 6, { air: true, pts: [[1500, 110], [1950, 70], [2300, 230]] }],
   ['ロンドン', 'ニューヨーク', 4, { air: true, wrap: true, pts: [[30, 230], [2610, 330]] }],   // 大西洋の空路：地図の端をまたぐ
   ['東京', 'シドニー', 4, { air: true, pts: [[1460, 720]] }], ['ロサンゼルス', 'シドニー', 5, { air: true, pts: [[1850, 900], [1600, 1080]] }], ['東京', 'アンカレッジ', 3, { air: true, pts: [[1520, 260]] }],
-  
+  ['ドバイ', 'シンガポール', 3, { air: true, pts: [[640, 760], [850, 860]] }],
 ];
 
 // ---------- continents ([lat, lon], very rough) ----------
@@ -1085,18 +1139,39 @@ const CONTINENTS = {
 // ---------- 地域イベント ----------
 const WORLD_REGION_EVENTS = {
   'アジア': [['夜市で屋台を手伝い、分け前をもらった', 'money', 2], ['旧正月の爆竹で大騒ぎ。この地域の物件が大にぎわい', 'region', 0], ['スコールで靴がだめになった', 'pay', 1], ['パンダの赤ちゃんが生まれて観光客が殺到', 'region', 0], ['占い師にナイスカードをもらった', 'nice', 0], ['辛い料理を食べすぎて 1回休み', 'skip', 0]],
-  '中東': [['砂漠でオアシスを見つけ、水を売って大もうけ', 'money', 3], ['砂嵐で足止め……1回休み', 'skip', 0], ['バザールで値切りに成功！', 'money', 2], ['石油が見つかった！？ この地域の物件が大にぎわい', 'region', 0], ['ラクダレースで優勝！', 'money', 2]],
+  '中東': [['ラクダ市場で大ばくち！', 'gamble', 4], ['砂漠でオアシスを見つけ、水を売って大もうけ', 'money', 3], ['砂嵐で足止め……1回休み', 'skip', 0], ['バザールで値切りに成功！', 'money', 2], ['石油が見つかった！？ この地域の物件が大にぎわい', 'region', 0], ['ラクダレースで優勝！', 'money', 2]],
   'ヨーロッパ': [['サッカーの決勝戦で屋台が大繁盛', 'money', 3], ['美術館で絵を買いすぎた', 'pay', 2], ['オクトーバーフェストで乾杯！ この地域の飲食物件が大にぎわい', 'region', 0], ['ストライキで列車が止まった', 'skip', 0], ['ワインの品評会で金賞', 'money', 2], ['古城でナイスカードを拾った', 'nice', 0]],
   'アフリカ': [['サファリで珍しい動物の写真が高く売れた', 'money', 3], ['ゾウに車を踏まれた……', 'pay', 3], ['ダイヤモンドの原石を拾った！', 'money', 5], ['カカオが豊作！ この地域の物件が大にぎわい', 'region', 0], ['マラリアの予防接種代をはらった', 'pay', 1]],
-  '北アメリカ': [['ハリウッドでエキストラ出演。ギャラをもらった', 'money', 2], ['ラスベガスでカードを手に入れた', 'card', 0], ['ハリケーンで足止め……1回休み', 'skip', 0], ['スーパーボウルの開催でこの地域の物件が大にぎわい', 'region', 0], ['駐車違反の罰金をはらった', 'pay', 1], ['フリーウェイで渋滞。ガソリン代がかさんだ', 'pay', 1]],
+  '北アメリカ': [['ハリウッドでエキストラ出演。ギャラをもらった', 'money', 2], ['ラスベガスでカードを手に入れた', 'card', 0], ['カジノで一発勝負！', 'gamble', 5], ['ハリケーンで足止め……1回休み', 'skip', 0], ['スーパーボウルの開催でこの地域の物件が大にぎわい', 'region', 0], ['駐車違反の罰金をはらった', 'pay', 1], ['フリーウェイで渋滞。ガソリン代がかさんだ', 'pay', 1]],
   '南アメリカ': [['カーニバルの踊り手に選ばれて祝儀をもらった', 'money', 3], ['アマゾンでめずらしい蝶を売った', 'money', 1], ['サッカーのダービーで屋台が大繁盛', 'money', 2], ['コーヒーが豊作！ この地域の物件が大にぎわい', 'region', 0], ['高山病で寝こんだ……1回休み', 'skip', 0]],
   'オセアニア': [['サーフィン大会で優勝！', 'money', 2], ['羊の毛刈り大会で優勝', 'money', 2], ['サンゴ礁のダイビング客が殺到。この地域の物件が大にぎわい', 'region', 0], ['カンガルーに荷物をとられた', 'pay', 1], ['クオッカと記念撮影。写真が雑誌に売れた', 'money', 1]],
 };
+
+// ---------- 世界イベント: one every month, and the world is a rougher place ----------
+// kind decides what happens; w = weight; months = how long a lasting one goes on
+const WORLD_EVENTS = [
+  { kind: 'olympic', w: 10, months: 3, title: '🏅 オリンピック開催！', text: '開催都市の物件を持つ人に 値段の30%の臨時収入。3か月のあいだ、開催都市に止まると祝儀がもらえる！' },
+  { kind: 'volcano', w: 10, months: 2, title: '🌋 火山が大噴火！', text: '火山灰で世界中の空港が閉鎖。2か月のあいだ、空路（白い点線）には入れない！' },
+  { kind: 'pirates', w: 10, months: 3, title: '🏴‍☠️ 海賊が出没！', text: '3か月のあいだ、航路（青い点線）のマスに止まると 海賊に所持金の10%をうばわれる！' },
+  { kind: 'crash', w: 7, title: '📉 世界同時株安！', text: '世界中の株が大暴落。全員の所持金が15%減った……（がんばれ補正の人は無事）' },
+  { kind: 'boom', w: 8, title: '📈 世界的な好景気！', text: '物件の値段の10%が全員に臨時収入！' },
+  { kind: 'oil', w: 8, title: '🛢 原油価格が高騰！', text: '工場・鉱山・石油の物件（🏭工業）の値段の20%が臨時収入！' },
+  { kind: 'worldcup', w: 9, title: '🏆 ワールドカップ開幕！', text: '' },
+  { kind: 'cyclone', w: 8, title: '🌀 巨大サイクロン！', text: '' },
+  { kind: 'forex', w: 8, title: '💱 為替が大変動！', text: '' },
+  { kind: 'heritage', w: 8, title: '🏛 世界遺産に登録！', text: '' },
+  { kind: 'treasure', w: 9, title: '🗺 伝説の宝の地図！', text: '' },
+  { kind: 'turbo', w: 8, months: 2, title: '✈ 格安航空券セール！', text: '2か月のあいだ、全員サイコロが1個ふえる！（ちょうどカードはそのまま）' },
+  { kind: 'summit', w: 6, title: '🤝 世界サミット開催', text: '' },
+];
 
 MAP_DEFS.world = {
   name: '世界編', start: '東京', board: { w: 2640, h: 1440 }, proj: projWorld, seed: 20261102,
   cities: WORLD_CITY_DEFS, routes: WORLD_ROUTE_DEFS, islands: CONTINENTS, regionEvents: WORLD_REGION_EVENTS, regionWord: '地域',
   insets: [], northRegion: null,   // 北へ！ sends you to the five northernmost cities
+  worldEvents: WORLD_EVENTS,
+  // the world is bigger and wilder: longer trips, bigger money swings, a busier 銀次 and a livelier tanuki
+  rules: { destMin: 9, destMax: 24, bonusMul: 1.6, unitMul: 1.4, ginji: 0.05, tanukiChange: 1.6 },
 };
 
 // ===================================================================
@@ -1154,11 +1229,18 @@ function nearestCity(node, except) {
 }
 function cardName(id) { return CARD_DEFS[id] ? CARD_DEFS[id].name : id; }
 function cardLabel(c) { const d = CARD_DEFS[c.id]; return d ? d.name + (d.uses ? `（あと${c.uses}回）` : '') : c.id; }
-// the ways you may leave a square: not straight back the way you came (unless it is a dead end)
+// routes the world has closed for the moment (the volcano); set from the state by host and guests alike
+const ROUTE_BLOCK = { air: false };
+function syncBlock(S) { ROUTE_BLOCK.air = !!(S && S.closed && S.closed.air > 0); }
+// the ways you may leave a square: not straight back the way you came (unless it is a dead end);
+// with the airports shut you cannot step onto an air square from the ground
 function waysOut(node, prev) {
-  const o = WORLD.adj[node].filter(n => n !== prev);
+  let o = WORLD.adj[node].filter(n => n !== prev);
+  if (ROUTE_BLOCK.air && !WORLD.nodes[node].air) o = o.filter(n => !WORLD.nodes[n].air);
+  if (!o.length) o = WORLD.adj[node].filter(n => n !== prev);
   return o.length ? o : [prev];
 }
+function rule(key, dflt) { const r = WORLD.def.rules; return r && r[key] !== undefined ? r[key] : dflt; }
 // can a walk of exactly k steps from `node` (having come from `prev`) end on `dest`?
 function canReachExact(dest, node, prev, k) {
   const dd = WORLD.dist[dest], memo = new Map();
@@ -1192,6 +1274,7 @@ class Game {
       own: {}, dest: -1, destNo: 0,
       tanuki: { at: -1, form: 0, left: 0, total: 0 },
       stock: {},
+      closed: { air: 0 }, pirates: 0, olympic: null, turbo: 0, treasure: -1,
       steps: 0, dice: null, branch: null, buy: null, shop: null, pick: null, event: null, last: null,
       log: [], result: null,
     };
@@ -1230,7 +1313,7 @@ class Game {
     }
     return Math.round(v);
   }
-  unit() { return Math.round(100 * (1 + 0.6 * (this.s.year - 1))); }
+  unit() { return Math.round(100 * rule('unitMul', 1) * (1 + 0.6 * (this.s.year - 1))); }
   distTo(node, target) { return WORLD.dist[target][node]; }
   farthestFrom(node, exceptId) {
     const S = this.s;
@@ -1246,7 +1329,8 @@ class Game {
   }
   newDest(from) {
     const S = this.s;
-    const ok = WORLD.cities.filter(c => c !== S.dest && c !== from && this.distTo(from, c) >= DEST_MIN && this.distTo(from, c) <= DEST_MAX);
+    const lo = rule('destMin', DEST_MIN), hi = rule('destMax', DEST_MAX);
+    const ok = WORLD.cities.filter(c => c !== S.dest && c !== from && this.distTo(from, c) >= lo && this.distTo(from, c) <= hi);
     const pool = ok.length ? ok : WORLD.cities.filter(c => c !== S.dest && c !== from);
     S.dest = pool[Math.floor(this.rng() * pool.length)];
     S.destNo++;
@@ -1273,6 +1357,7 @@ class Game {
   // ---------- the clock: one automatic action per call; returns ms until the next one (0 = waiting for a person) ----------
   tick() {
     const S = this.s;
+    syncBlock(S);
     if (S.phase === 'gameover') { if (!S.result) { this.finish(); this.touch(); } return 0; }
     const p = this.cur();
     const cpu = this.isCpu(p);
@@ -1300,6 +1385,7 @@ class Game {
   // ---------- a person's input. Returns ms until the next tick, or false when it was not their move ----------
   act(pid, a) {
     const S = this.s;
+    syncBlock(S);
     if (S.phase === 'gameover' || !a) return false;
     const p = this.cur();
     let d = false;
@@ -1365,7 +1451,7 @@ class Game {
     let vals, slow = false;
     if (fixed) vals = [fixed];
     else if (p.slow > 0) { p.slow--; vals = [1]; slow = true; }
-    else { vals = []; for (let i = 0; i < n; i++) vals.push(1 + Math.floor(this.rng() * 6)); }
+    else { if (S.turbo > 0) n++; vals = []; for (let i = 0; i < n; i++) vals.push(1 + Math.floor(this.rng() * 6)); }
     S.steps = vals.reduce((a, b) => a + b, 0);
     p.prev = -1;   // free to go any way at the start of a move
     S.dice = { vals, n: vals.length, fixed: !!fixed, slow, exact: this.canReach(p.pos, -1, S.steps) };
@@ -1425,7 +1511,26 @@ class Game {
   }
   landSquare() {
     const S = this.s, p = this.cur(), node = WORLD.nodes[p.pos], cpu = this.isCpu(p);
+    // the world's happenings come first
+    if (S.treasure === node.id) {
+      const amt = this.unit() * 12;
+      p.money += amt; S.treasure = -1;
+      this.log(`${p.name} が伝説の宝を掘り当てた！（＋${yen(amt)}）`);
+      return this.setEvent({ kind: 'plus', title: '💰 宝を掘り当てた！', text: `地図のしるしの場所で、伝説の宝を見つけた！\n＋${yen(amt)}`, next: 'landing2' }, 2800);
+    }
+    if (S.pirates > 0 && node.sea && !node.air) {
+      const amt = Math.max(300, Math.round(Math.max(p.money, 0) * 0.1 / 100) * 100);
+      p.money -= amt;
+      this.log(`${p.name} は海賊に ${yen(amt)} をうばわれた`);
+      return this.setEvent({ kind: 'ginji', title: '🏴‍☠️ 海賊におそわれた！', text: `海賊船が横づけしてきた！ 所持金の10%、${yen(amt)} をうばわれた……`, next: 'turnend' }, 2600);
+    }
     if (node.type === 'city') {
+      if (S.olympic && S.olympic.city === node.id) {
+        const amt = this.unit() * 5;
+        p.money += amt;
+        this.log(`${p.name} はオリンピック開催中の ${node.name} で祝儀 ${yen(amt)} をもらった`);
+        return this.setEvent({ kind: 'plus', title: '🏅 オリンピックの町に到着！', text: `お祭りさわぎの ${node.name}。祝儀 ${yen(amt)} をもらった！`, next: 'city' }, 2400);
+      }
       // the local colour, now and then
       if (this.rng() < 0.13) { const d = this.regionEvent(p, node); if (d) return d; }
       return this.cityBuy();
@@ -1502,6 +1607,7 @@ class Game {
       case 'nice': { if (p.cards.length >= MAX_CARDS) return '（カードがいっぱいでもらえなかった）'; const id = NICE_IDS[Math.floor(this.rng() * NICE_IDS.length)]; p.cards.push(mkCard(id)); return `（${cardName(id)}）`; }
       case 'card2': { const got = []; for (let i = 0; i < 2 && p.cards.length < MAX_CARDS; i++) { const id = randomCardId(this.rng); p.cards.push(mkCard(id)); got.push(cardName(id)); } return got.length ? `（${got.join('、')}）` : '（カードがいっぱいでもらえなかった）'; }
       case 'skip': { p.skip++; return ''; }
+      case 'gamble': { const amt = this.unit() * k; if (this.rng() < 0.5) { p.money += amt; return `（勝った！ ＋${yen(amt)}）`; } p.money -= amt; return `（負けた…… −${yen(amt)}）`; }
       case 'region': {
         const region = WORLD.nodes[p.pos].region, parts = [];
         for (const q of S.players) {
@@ -1560,7 +1666,7 @@ class Game {
   }
   arrive() {
     const S = this.s, p = this.cur(), city = WORLD.nodes[S.dest], T = S.tanuki;
-    const bonus = Math.round((3000 + 1500 * (S.year - 1)) * (0.8 + this.rng() * 0.4) * (p.behind ? 1.5 : 1) / 100) * 100;
+    const bonus = Math.round((3000 + 1500 * (S.year - 1)) * rule('bonusMul', 1) * (0.8 + this.rng() * 0.4) * (p.behind ? 1.5 : 1) / 100) * 100;
     p.money += bonus; p.arrivals++; p.arrY = (p.arrY || 0) + 1;
     const far = this.farthestFrom(S.dest, p.id);
     const old = S.dest;
@@ -1583,6 +1689,7 @@ class Game {
     if (ev.next === 'yearend') {
       S.month = 0; S.year++;
       if (S.year > S.years) { S.phase = 'gameover'; this.finish(); return 0; }
+      if (WORLD.def.worldEvents) { const me = this.worldEvent(); if (me) return me; }
       S.phase = 'turnstart';
       return 400;
     }
@@ -1634,7 +1741,7 @@ class Game {
   turnEnd() {
     const S = this.s, p = this.cur(), T = S.tanuki;
     S.buy = null; S.shop = null; S.branch = null; S.pick = null;
-    if (!S.ginjiSeen && p.money >= 1500 && !p.behind && this.rng() < 0.035) { S.ginjiSeen = true; return this.ginji(p, ''); }
+    if (!S.ginjiSeen && p.money >= 1500 && !p.behind && this.rng() < rule('ginji', 0.035)) { S.ginjiSeen = true; return this.ginji(p, ''); }
     if (T.at === p.id) return this.tanukiAct(p);
     S.phase = 'nextturn';
     return 60;
@@ -1692,9 +1799,9 @@ class Game {
         p.money -= price; p.cards.push(mkCard(id));
         text = `勝手にカード売り場で ${cardName(id)} を買ってきた！（代金 ${yen(price)} はあなた持ち）`;
       } else text = 'カードがいっぱいで、買い物できずにすねている……';
-    } else if (r < 0.78) {
+    } else if (r < 0.78 - 0.08 * (rule('tanukiChange', 1) - 1)) {
       text = 'ぐうぐうとお昼寝をしている……';
-    } else if (r < 0.86) {
+    } else if (r < 0.86 - 0.14 * (rule('tanukiChange', 1) - 1)) {
       const amt = 100 * S.year; p.money += amt; text = `どんぐりを拾ってきてくれた。売ったら ${yen(amt)} になった`;
     } else {
       // a change of form
@@ -1727,9 +1834,89 @@ class Game {
     S.phase = 'turnstart';
     return 250;
   }
+  // 世界編: every month the world throws something at everyone
+  worldEvent() {
+    const S = this.s;
+    // the lasting ones count down first
+    if (S.closed.air > 0) S.closed.air--;
+    if (S.pirates > 0) S.pirates--;
+    if (S.turbo > 0) S.turbo--;
+    if (S.olympic && --S.olympic.left <= 0) S.olympic = null;
+    const pool = WORLD.def.worldEvents.filter(e => !(e.kind === 'volcano' && S.closed.air > 0) && !(e.kind === 'pirates' && S.pirates > 0) && !(e.kind === 'turbo' && S.turbo > 0) && !(e.kind === 'olympic' && S.olympic) && !(e.kind === 'treasure' && S.treasure >= 0));
+    const ev = weightedPick(this.rng, pool, e => e.w);
+    const rows = [];
+    let text = ev.text, title = ev.title;
+    const payCat = (pred, pct, label) => {
+      for (const p of S.players) {
+        let base = 0;
+        for (const c in S.own) S.own[c].forEach((o, i) => { const pr = WORLD.nodes[c].props[i]; if (o === p.id && pred(+c, pr)) base += pr.price; });
+        const amt = Math.round(base * pct / 100 / 10) * 10;
+        p.money += amt;
+        rows.push({ pid: p.id, name: p.name, text: amt ? `＋${yen(amt)}` : `（${label}なし）` });
+      }
+    };
+    const randomCity = () => WORLD.cities[Math.floor(this.rng() * WORLD.cities.length)];
+    switch (ev.kind) {
+      case 'olympic': { const c = randomCity(); S.olympic = { city: c, left: ev.months + 1 }; title += ` 開催地：${WORLD.nodes[c].name}`; payCat(cc => cc === c, 30, '開催都市の物件'); break; }
+      case 'volcano': S.closed.air = ev.months + 1; break;
+      case 'pirates': S.pirates = ev.months + 1; break;
+      case 'turbo': S.turbo = ev.months + 1; break;
+      case 'crash': for (const p of S.players) { if (p.behind || p.money <= 0) { rows.push({ pid: p.id, name: p.name, text: '無事' }); continue; } const amt = Math.round(p.money * 0.15 / 10) * 10; p.money -= amt; rows.push({ pid: p.id, name: p.name, text: `−${yen(amt)}` }); } break;
+      case 'boom': payCat(() => true, 10, '物件'); break;
+      case 'oil': payCat((c, pr) => pr.cat === 'factory', 20, '工業の物件'); break;
+      case 'worldcup': {
+        const c = randomCity();
+        S.dest = c; S.destNo++;
+        text = `開催地は ${WORLD.nodes[c].name}！ 目的地が ${WORLD.nodes[c].name} に変わった！ スタジアムを持つ人には観客料が入る。`;
+        payCat((cc, pr) => /スタジアム|アリーナ|球場|競技場/.test(pr.name), 50, 'スタジアム');
+        break;
+      }
+      case 'cyclone': {
+        const regions = [...new Set(WORLD.cities.map(c => WORLD.nodes[c].region))];
+        const region = regions[Math.floor(this.rng() * regions.length)];
+        text = `${region}を巨大サイクロンが直撃！ ${region}の物件を持つ人は修理代（値段の8%）をはらった。`;
+        for (const p of S.players) { let base = 0; for (const c in S.own) if (WORLD.nodes[c].region === region) S.own[c].forEach((o, i) => { if (o === p.id) base += WORLD.nodes[c].props[i].price; }); const amt = Math.round(base * 0.08 / 10) * 10; p.money -= amt; rows.push({ pid: p.id, name: p.name, text: amt ? `−${yen(amt)}` : '被害なし' }); }
+        break;
+      }
+      case 'forex': {
+        const up = this.rng() < 0.5;
+        text = up ? '円高で海外の物件収入が目減り……ではなく、手持ちの外貨が値上がり！ 全員の所持金が15%ふえた！' : '手持ちの外貨が大暴落……全員の所持金が15%減った！（借金の人はそのまま）';
+        for (const p of S.players) { if (p.money <= 0) { rows.push({ pid: p.id, name: p.name, text: 'そのまま' }); continue; } const amt = Math.round(p.money * 0.15 / 10) * 10; p.money += up ? amt : -amt; rows.push({ pid: p.id, name: p.name, text: (up ? '＋' : '−') + yen(amt) }); }
+        break;
+      }
+      case 'heritage': {
+        const c = randomCity(), node = WORLD.nodes[c];
+        S.priceMods = S.priceMods || {};
+        S.priceMods[c] = (S.priceMods[c] || 1) * 1.5;
+        for (const pr of node.props) pr.price = Math.round(pr.price * 1.5 / 10) * 10;
+        text = `${node.name} が世界遺産に登録された！ ${node.name} の物件の値段が1.5倍になった（持っている人の総資産アップ、これから買う人は高くなる）。`;
+        for (const p of S.players) { const n = S.own[c].filter(o => o === p.id).length; if (n) rows.push({ pid: p.id, name: p.name, text: `${node.name}の物件${n}件が値上がり` }); }
+        break;
+      }
+      case 'treasure': {
+        const pool = WORLD.nodes.filter(n => n.type !== 'city' && !n.air && !S.players.some(p => p.pos === n.id));
+        const n = pool[Math.floor(this.rng() * pool.length)];
+        S.treasure = n.id;
+        const near = nearestCity(n.id, -1);
+        text = `${WORLD.nodes[near].name} の近く（地図の💰のマス）に伝説の宝がうまっているらしい！ 最初に止まった人のもの。`;
+        break;
+      }
+      case 'summit': {
+        const c = randomCity();
+        for (const p of S.players) { p.pos = c; p.prev = -1; }
+        S.last = null;
+        text = `各国の首脳が ${WORLD.nodes[c].name} に集まった。全員 ${WORLD.nodes[c].name} へ移動！`;
+        break;
+      }
+    }
+    this.log(`${MONTHS[S.month]}：${title}` + (rows.length ? ' ' + rows.map(r => `${r.name} ${r.text}`).join('、') : ''));
+    return this.setEvent({ kind: 'season', title, text, rows: rows.length ? rows : null, next: 'monthstart', pid: -1, season: SEASON_OF[S.month] }, rows.length ? 4200 : 3400);
+  }
   // the seasons: a little something at the start of certain months
   monthEvent() {
-    const S = this.s, ev = MONTH_EVENTS[S.month];
+    const S = this.s;
+    if (WORLD.def.worldEvents) return this.worldEvent();
+    const ev = MONTH_EVENTS[S.month];
     if (!ev) return null;
     const rows = [];
     let text = ev.text;
@@ -1820,17 +2007,17 @@ class Game {
   }
   // a fresh game starts from the map's own shops
   static resetProps() {
-    for (const c of WORLD.cities) { const n = WORLD.nodes[c]; const base = WORLD.def.cities.find(d => d[0] === n.name)[4].length; if (n.props.length > base) n.props.length = base; }
-  }
-  // after a save or a network sync, the opened shops have to be put back on the board
-  static restoreProps(S) {
-    if (!S) return;
-    if (!S.extraProps) { Game.resetProps(); return; }
-    for (const c in S.extraProps) {
-      const node = WORLD.nodes[c]; if (!node) continue;
-      const base = WORLD.def.cities.find(d => d[0] === node.name)[4].length;
-      node.props = node.props.slice(0, base).concat(S.extraProps[c]);
+    for (const c of WORLD.cities) {
+      const n = WORLD.nodes[c], def = WORLD.def.cities.find(d => d[0] === n.name)[4];
+      n.props = def.map(([name, price, rate, cat]) => ({ name, price, rate, cat }));
     }
+  }
+  // after a save or a network sync: base shops, then price changes, then the shops that opened later
+  static restoreProps(S) {
+    Game.resetProps();
+    if (!S) return;
+    for (const c in S.priceMods || {}) { const node = WORLD.nodes[c]; if (node) for (const pr of node.props) pr.price = Math.round(pr.price * S.priceMods[c] / 10) * 10; }
+    for (const c in S.extraProps || {}) { const node = WORLD.nodes[c]; if (node) node.props = node.props.concat(S.extraProps[c]); }
   }
   finish() {
     const S = this.s;
@@ -2046,6 +2233,9 @@ class Game {
     }
     const T = S.tanuki;
     if (T.at >= 0 && T.at !== p.id && S.players[T.at].pos === node) v -= 400;
+    if (S.pirates > 0 && n.sea && !n.air) v -= 180;
+    if (S.treasure === node) v += 350;
+    if (S.olympic && S.olympic.city === node) v += 120;
     if (hard) {
       // a square from which many rolls land exactly next turn is worth a lot
       let hits = 0;
@@ -2545,7 +2735,7 @@ function buildBoard() {
   L.nodes = svgEl('g', {}, cam);
   Board.nodeEls = [];
   for (const n of WORLD.nodes) {
-    const g = svgEl('g', { 'data-id': n.id }, L.nodes);
+    const g = svgEl('g', { 'data-id': n.id, 'data-air': n.air ? 1 : null }, L.nodes);
     if (n.type === 'city') {
       svgEl('rect', { class: 'nd city', x: n.x - 13, y: n.y - 13, width: 26, height: 26, rx: 7 }, g);
       // a tiny station building
@@ -2682,6 +2872,10 @@ function placeHints(S, pid) {
       svgEl('circle', { class: 'pick-ring', cx: n.x, cy: n.y, r: 19, stroke: p.color }, L.pick);
     }
   }
+  // the world's markers: buried treasure, the olympic city
+  if (S.treasure >= 0) { const n = WORLD.nodes[S.treasure]; const t = svgEl('text', { class: 'marker', x: n.x, y: n.y - 22 }, L.pick); t.textContent = '💰'; }
+  if (S.olympic && S.olympic.city >= 0) { const n = WORLD.nodes[S.olympic.city]; const t = svgEl('text', { class: 'marker', x: n.x + 22, y: n.y - 18 }, L.pick); t.textContent = '🏅'; }
+  Board.svg.classList.toggle('air-closed', !!(S.closed && S.closed.air > 0));
 }
 function placeOwners(S) {
   const L = Board.layers;
@@ -3029,6 +3223,7 @@ function quitToTitle() {
 // ===================================================================
 function render(force) {
   const S = UI.state; if (!S || UI.screen !== 'game') return;
+  syncBlock(S);
   const prev = UI.prev;
   const cur = S.players[S.turn];
   // top bar
@@ -3049,6 +3244,7 @@ function render(force) {
   renderEvent(S, prev);
   renderActions(S);
   renderHint(S);
+  renderWorldStatus(S);
   const last = S.log[S.log.length - 1];
   $('#logline').textContent = last ? last.t : '';
   renderNetBar(S);
@@ -3203,6 +3399,19 @@ function renderHint(S) {
   else t = `${cur.name} の番`;
   h.textContent = t; h.hidden = !t;
   h.classList.toggle('exact', exact);
+}
+// what the world is doing right now (世界編)
+function renderWorldStatus(S) {
+  const w = $('#wstat'); if (!w) return;
+  const items = [];
+  if (S.closed && S.closed.air > 0) items.push(['bad', `🌋 空路閉鎖 あと${S.closed.air}か月`]);
+  if (S.pirates > 0) items.push(['bad', `🏴‍☠️ 海賊出没 あと${S.pirates}か月`]);
+  if (S.olympic) items.push(['good', `🏅 五輪：${WORLD.nodes[S.olympic.city].name} あと${S.olympic.left}か月`]);
+  if (S.turbo > 0) items.push(['good', `✈ サイコロ＋1 あと${S.turbo}か月`]);
+  if (S.treasure >= 0) items.push(['good', `💰 宝：${WORLD.nodes[nearestCity(S.treasure, -1)].name}の近く`]);
+  const html = items.map(([c, t]) => `<span class="${c}">${esc(t)}</span>`).join('');
+  w.hidden = !html;
+  if (w.innerHTML !== html) w.innerHTML = html;
 }
 function branchLabel(S, from, to) {
   // the first station you would reach going that way, and whether it is closer to the goal
