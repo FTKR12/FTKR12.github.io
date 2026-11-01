@@ -335,10 +335,44 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
 .marker { font-size: 26px; text-anchor: middle; dominant-baseline: central; pointer-events: none; animation: bob 1.2s ease-in-out infinite; }
 #board.air-closed .rail.air { opacity: .15; }
 #board.air-closed g[data-air] { opacity: .35; }
-.wstat { position: absolute; left: 8px; top: 48px; z-index: 2; display: flex; flex-wrap: wrap; gap: 4px; max-width: 70%; pointer-events: none; }
+.wstat { position: absolute; left: 8px; top: 48px; z-index: 2; display: flex; flex-wrap: wrap; gap: 4px; max-width: 70%; cursor: pointer; }
 .wstat span { background: rgba(255,250,240,.95); border: 2px solid var(--line); color: var(--ink); font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 999px; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
 .wstat span.bad { background: #fde4e1; border-color: #f3c5c0; color: #a52a22; }
 .wstat span.good { background: #e2f6e7; border-color: #bfe6c9; color: #1d6b35; }
+
+/* ---------- history, glossary, chart ---------- */
+.wstat span.ask { background: var(--ink); color: #fff; border-color: var(--ink); }
+.hist { display: grid; gap: 8px; margin-top: 8px; }
+.hist-item { background: #fff; border: 2px solid var(--line); border-left-width: 6px; border-radius: 12px; padding: 8px 10px; }
+.hist-item.hist-plus, .hist-item.hist-buy, .hist-item.hist-arrive { border-left-color: var(--blue); }
+.hist-item.hist-minus, .hist-item.hist-ginji, .hist-item.hist-itazura { border-left-color: var(--red); }
+.hist-item.hist-tanuki { border-left-color: #8d6e3f; } .hist-item.hist-season { border-left-color: var(--purple); } .hist-item.hist-settle { border-left-color: var(--green); }
+.hist-item.hist-card, .hist-item.hist-warp, .hist-item.hist-oharai, .hist-item.hist-steal { border-left-color: var(--gold); }
+.hist-when { font-size: 11px; color: var(--sub); font-weight: 700; display: flex; align-items: center; gap: 4px; }
+.hist-when i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.hist-title { font-size: 15px; font-weight: 800; margin-top: 2px; }
+.hist-text { font-size: 13px; font-weight: 600; color: #4a4656; line-height: 1.55; white-space: pre-line; margin-top: 2px; }
+.hist-rows { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; font-weight: 700; margin-top: 4px; }
+.hist-rows i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 3px; }
+.gl-h { font-size: 14px; color: var(--sub); margin: 14px 0 6px; }
+.gl-list { display: grid; gap: 6px; }
+.gl-item { background: #fff; border: 2px solid var(--line); border-radius: 12px; padding: 8px 10px; }
+.gl-item b { font-size: 14px; display: block; }
+.gl-item small { font-size: 12.5px; font-weight: 600; color: #4a4656; line-height: 1.5; display: block; margin-top: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; font-weight: 700; margin: 6px 0; }
+.legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.achart { background: #fff; border: 2px solid var(--line); border-radius: 12px; }
+.ac-grid { stroke: #ebe4d4; stroke-width: 1; } .ac-zero { stroke: var(--red); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.ac-lbl { font-size: 10px; fill: var(--sub); font-weight: 700; font-family: var(--font); }
+.swings { display: grid; gap: 6px; }
+.sw { display: grid; grid-template-columns: auto 10px auto auto 1fr; gap: 6px; align-items: center; background: #fff; border: 2px solid var(--line); border-radius: 12px; padding: 7px 10px; font-size: 13px; }
+.sw i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.sw b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sw.up b { color: var(--blue); } .sw.down b { color: var(--red); }
+.sw-when { font-size: 11px; color: var(--sub); font-weight: 700; white-space: nowrap; }
+.sw-who { font-weight: 800; white-space: nowrap; }
+.sw-why { font-size: 12px; font-weight: 600; color: #4a4656; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 420px) { .sw { grid-template-columns: auto 10px auto auto; } .sw-why { grid-column: 1 / -1; white-space: normal; } }
 </style>
 </head>
 <body>
@@ -514,6 +548,8 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
         <h2 class="result-title">けっか発表</h2>
         <p class="note" id="result-sub" style="text-align:center"></p>
         <div class="rank" id="result-rank"></div>
+        <div id="result-chart"></div>
+        <div class="hist" id="result-hist" hidden></div>
         <div class="actions-row">
           <button class="btn btn-sub" id="res-title" type="button">タイトルへ</button>
           <button class="btn btn-main" id="res-again" type="button">もう一度</button>
@@ -545,7 +581,7 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
           <li><span class="sq" style="background:#fff;color:var(--ink);border:2px solid var(--ink)">駅</span> 駅：物件を買えます。1つの駅の物件をぜんぶ買うと「独占」で収益が2倍！</li>
         </ul>
         <h3>🃏 カード（24種類）</h3>
-        <p>1ターンに1枚使えます。急行などの<b>移動するカード</b>はサイコロのかわりに、スリや福袋などの<b>移動しないカード</b>は使ったあとにサイコロをふれます。<b>急行・特急・新幹線・のぞみ</b>はサイコロの数がふえ、<b>急行周遊・特急周遊</b>は3回使えます。<b>ちょうど</b>は1〜6の好きな数だけ進めるので、ぴったり到着のきりふだ。<b>まぢか・最寄り駅・ぶっとび・場所がえ・集合</b>で位置を変え、<b>牛歩・いたずら・ふういん・北へ！・ぶんどり・刀狩り・スリ</b>でライバルをじゃま。<b>おまもり</b>は持っているだけで、いじわるカードを1回はねかえします。<b>おはらい</b>でタヌキを追いはらい、<b>たからくじ・福袋・徳政令</b>は困ったときに。千葉の先の<b>房総半島</b>と金沢の先の<b>能登半島</b>はカードマスだらけ！</p>
+        <p>1ターンに1枚使えます。急行などの<b>移動するカード</b>はサイコロのかわりに、スリや福袋などの<b>移動しないカード</b>は使ったあとにサイコロをふれます。<b>急行・特急・新幹線・のぞみ</b>はサイコロの数がふえ、<b>急行周遊・特急周遊</b>は3回使えます。<b>ちょうど</b>は1〜6の好きな数だけ進めるので、ぴったり到着のきりふだ。<b>まぢか・最寄り駅（目的地の手前の駅へ）・ぶっとび・場所がえ・集合</b>で位置を変え、<b>牛歩・いたずら・ふういん・北へ！・ぶんどり・刀狩り・スリ</b>でライバルをじゃま。<b>おまもり</b>は持っているだけで、いじわるカードを1回はねかえします。<b>おはらい</b>でタヌキを追いはらい、<b>たからくじ・福袋・徳政令</b>は困ったときに。千葉の先の<b>房総半島</b>と金沢の先の<b>能登半島</b>はカードマスだらけ！</p>
         <h3>🦝 びんぼうタヌキ</h3>
         <p>誰かが目的地に着くと、そのとき目的地から<b>いちばん遠かった人</b>に びんぼうタヌキがくっつきます。ターンの終わりに お金を持ち逃げしたり、カードをかじったり、勝手にカードを買ってきたり……。タヌキがついた人と<b>すれ違う（同じマスを通る・止まる）</b>と、タヌキは相手に乗りかえます。わざと相手の列車に突っこんで なすりつけましょう。</p>
         <p>たまに変身します：<b>大タヌキ</b>（3ターン、物件を売り飛ばす）、<b>ハリケーンタヌキ</b>（3ターン、毎回どこかへ吹き飛ばす）、<b>ミニタヌキ</b>（3ターン、ほぼ無害）、そしてごくまれに<b>キングタヌキ</b>（3ターン、物件もカードもお金もめちゃくちゃ）。おはらいカードや2月の節分で追いはらえます。</p>
@@ -735,7 +771,7 @@ const CARD_DEFS = {
   expx:    { name: '急行周遊カード', desc: 'サイコロを2個ふって進む。3回使える', dice: 2, uses: 3, w: 5, price: 2800 },
   exact:   { name: 'ちょうどカード', desc: '1〜6の好きな数だけ進める。ぴったり到着のきりふだ', needs: 'number', w: 6, price: 3000 },
   near:    { name: 'まぢかカード',   desc: '目的地の1〜3マス手前へ移動する', w: 5, price: 2500 },
-  warp:    { name: 'ぶっとびカード', desc: '日本のどこかの駅へランダムにとぶ。目的地に当たればゴール！', w: 7, price: 800 },
+  warp:    { name: 'ぶっとびカード', desc: '{area}のどこかの駅へランダムにとぶ。目的地に当たればゴール！', w: 7, price: 800 },
   swap:    { name: '場所がえカード', desc: 'ほかの人1人と、今いる場所を入れかえる', needs: 'target', w: 4, price: 2000 },
   gather:  { name: '集合カード',     desc: 'ほかの全員を自分のマスに呼びよせる', w: 3, price: 2500 },
   gyuho:   { name: '牛歩カード',     desc: 'ほかの人1人を3ターンのあいだ、1マスしか進めなくする', needs: 'target', w: 5, price: 1500 },
@@ -748,8 +784,8 @@ const CARD_DEFS = {
   tokusei: { name: '徳政令カード',   desc: '自分の借金がぜんぶ帳消しになる', w: 3, price: 0 },
   nozomi:  { name: 'のぞみカード',   desc: 'サイコロを5個ふって進む', dice: 5, w: 2, price: 6000 },
   ltdx:    { name: '特急周遊カード', desc: 'サイコロを3個ふって進む。3回使える', dice: 3, uses: 3, w: 3, price: 4500 },
-  station: { name: '最寄り駅カード', desc: 'いちばん近い駅へ移動する', w: 5, price: 600 },
-  north:   { name: '北へ！カード',   desc: 'ほかの人1人を北海道のどこかの駅へ飛ばす', needs: 'target', w: 3, price: 2000 },
+  station: { name: '最寄り駅カード', desc: '目的地にいちばん近い駅（目的地の手前の駅）へ移動する', w: 4, price: 2200 },
+  north:   { name: '北へ！カード',   desc: 'ほかの人1人を{north}へ飛ばす', needs: 'target', w: 3, price: 2000 },
   grab:    { name: 'ぶんどりカード', desc: 'ほかの人1人の物件を1件うばう', needs: 'target', w: 2, price: 5000 },
   seal:    { name: 'ふういんカード', desc: 'ほかの人1人を3ターンのあいだ、カードを使えなくする', needs: 'target', w: 4, price: 1800 },
   omamori: { name: 'おまもりカード', desc: '持っているだけで、ほかの人のいじわるカードを1回はねかえす', passive: true, w: 5, price: 1500 },
@@ -757,6 +793,12 @@ const CARD_DEFS = {
 // cards that do something TO another player; おまもり bounces these
 const ATTACK_CARDS = ['swap', 'gyuho', 'itazura', 'north', 'grab', 'seal', 'katana'];
 const CARD_IDS = Object.keys(CARD_DEFS);
+// a card's description, worded for the map being played
+function cardDesc(id) {
+  const d = CARD_DEFS[id]; if (!d) return '';
+  const w = (WORLD && WORLD.def && WORLD.def.words) || { area: '日本', north: '北海道のどこかの駅' };
+  return d.desc.replace('{area}', w.area).replace('{north}', w.north);
+}
 const SHOP_IDS = CARD_IDS.filter(id => CARD_DEFS[id].price > 0);
 const NICE_IDS = ['ltd', 'skn', 'nozomi', 'expx', 'ltdx', 'exact', 'near', 'omamori', 'swap', 'grab'];
 const MAX_CARDS = 8;
@@ -955,6 +997,7 @@ const MAP_DEFS = {
   japan: {
     name: '日本編', start: '東京', board: { w: 1800, h: 2130 }, proj: projJapan, seed: 20261101,
     cities: CITY_DEFS, routes: ROUTE_DEFS, islands: ISLANDS, regionEvents: REGION_EVENTS, regionWord: '地方',
+    words: { area: '日本', north: '北海道のどこかの駅' },
     insets: [{ city: '那覇', box: [-70, -88, 160, 150], label: '沖縄（本当はもっと南）' }],
   },
 };
@@ -1169,6 +1212,7 @@ MAP_DEFS.world = {
   name: '世界編', start: '東京', board: { w: 2640, h: 1440 }, proj: projWorld, seed: 20261102,
   cities: WORLD_CITY_DEFS, routes: WORLD_ROUTE_DEFS, islands: CONTINENTS, regionEvents: WORLD_REGION_EVENTS, regionWord: '地域',
   insets: [], northRegion: null,   // 北へ！ sends you to the five northernmost cities
+  words: { area: '世界', north: '世界の北のはて（いちばん北にある5都市のどれか）' },
   worldEvents: WORLD_EVENTS,
   // the world is bigger and wilder: longer trips, bigger money swings, a busier 銀次 and a livelier tanuki
   rules: { destMin: 9, destMax: 24, bonusMul: 1.6, unitMul: 1.4, ginji: 0.05, tanukiChange: 1.6 },
@@ -1276,8 +1320,10 @@ class Game {
       stock: {},
       closed: { air: 0 }, pirates: 0, olympic: null, turbo: 0, treasure: -1,
       steps: 0, dice: null, branch: null, buy: null, shop: null, pick: null, event: null, last: null,
-      log: [], result: null,
+      log: [], hist: [], series: [], swings: [], lastAssets: [], result: null,
     };
+    S.series.push(S.players.map(() => START_MONEY));
+    S.lastAssets = S.players.map(() => START_MONEY);
     for (const c of WORLD.cities) S.own[c] = WORLD.nodes[c].props.map(() => -1);
     for (const n of WORLD.nodes) if (n.type === 'shop') S.stock[n.id] = [0, 1, 2, 3].map(() => randomShopId(this.rng));
     this.newDest(start);
@@ -1339,7 +1385,27 @@ class Game {
     const S = this.s;
     S.event = Object.assign({ pid: S.turn, next: 'turnend' }, ev);
     S.phase = 'event';
-    return ms;
+    // the full story, kept so it can be read later; and big jumps in anyone's fortune, with their cause
+    const e = S.event;
+    if (e.kind !== 'skip' && e.kind !== 'info') {
+      S.hist.push({ y: S.year, m: S.month, pid: e.pid, kind: e.kind, title: e.title || '', text: e.text || '', rows: e.rows ? e.rows.map(r => ({ pid: r.pid, name: r.name, text: r.text !== undefined ? r.text : `収益 ＋${yen(r.inc)}` + (r.interest ? `・利息 −${yen(r.interest)}` : '') })) : null });
+      if (S.hist.length > 160) S.hist.splice(0, S.hist.length - 160);
+    }
+    this.trackSwings(e.title || '');
+    // a card's or an event's text deserves a moment longer on screen
+    return e.kind === 'season' || e.kind === 'settle' ? Math.round(ms * 1.4) : ms;
+  }
+  // notes anyone whose assets just jumped, and what did it
+  trackSwings(cause) {
+    const S = this.s;
+    S.players.forEach((p, i) => {
+      const a = this.assets(p), prev = S.lastAssets[i] === undefined ? a : S.lastAssets[i], d = a - prev;
+      if (Math.abs(d) >= Math.max(1500, 0.12 * Math.max(Math.abs(prev), 3000))) {
+        S.swings.push({ y: S.year, m: S.month, pid: p.id, delta: d, cause: cause.replace(/^[^\p{L}\p{N}]+/u, '').slice(0, 40) });
+        if (S.swings.length > 120) S.swings.splice(0, S.swings.length - 120);
+      }
+      S.lastAssets[i] = a;
+    });
   }
   canReach(node, prev, k) { return canReachExact(this.s.dest, node, prev, k); }
   // a player the computer moves for: a CPU, or a person whose phone is away (the seat stays theirs)
@@ -1543,7 +1609,7 @@ class Game {
       const id = NICE_IDS[Math.floor(this.rng() * NICE_IDS.length)];
       p.cards.push(mkCard(id));
       this.log(`${p.name} はナイスカードのマスで ${cardName(id)} を手に入れた`);
-      return this.setEvent({ kind: 'card', title: `ナイス！ ${cardName(id)}`, text: CARD_DEFS[id].desc, card: id }, 2300);
+      return this.setEvent({ kind: 'card', title: `ナイス！ ${cardName(id)}`, text: cardDesc(id), card: id }, 2300);
     }
     if (node.type === 'warp') {
       const pool = WORLD.cities.filter(x => x !== p.pos);
@@ -1583,7 +1649,7 @@ class Game {
       const id = p.behind && this.rng() < 0.5 ? NICE_IDS[Math.floor(this.rng() * NICE_IDS.length)] : randomCardId(this.rng);
       p.cards.push(mkCard(id));
       this.log(`${p.name} は ${cardName(id)} を手に入れた`);
-      return this.setEvent({ kind: 'card', title: `${cardName(id)} を手に入れた！`, text: CARD_DEFS[id].desc, card: id }, 2300);
+      return this.setEvent({ kind: 'card', title: `${cardName(id)} を手に入れた！`, text: cardDesc(id), card: id }, 2300);
     }
     S.phase = 'turnend';
     return 300;
@@ -1722,6 +1788,7 @@ class Game {
     p.money += got;
     S.last = null;
     this.log(`${p.name} は ${WORLD.nodes[node].name} の ${pr.name} を ${yen(got)} で売った`);
+    this.trackSwings('物件の売却');
     return 0;
   }
   shopBuy(p, idx) {
@@ -1827,6 +1894,7 @@ class Game {
     if (S.turn >= S.players.length) {
       S.turn = 0;
       S.month++;
+      S.series.push(S.players.map(p => this.assets(p)));   // one point a month for the chart
       if (S.month >= 12) { S.month = 11; return this.settlement(); }   // stay on 3月 while the books are shown
       const me = this.monthEvent();
       if (me) return me;
@@ -2026,6 +2094,7 @@ class Game {
     rows.sort((a, b) => b.assets - a.assets);
     rows.forEach((r, i) => { r.rank = i + 1; });
     S.result = rows;
+    S.series.push(S.players.map(p => this.assets(p)));
     S.phase = 'gameover';
     this.log(`ゲーム終了！ 優勝は ${rows[0].name}（総資産 ${yen(rows[0].assets)}）`);
   }
@@ -2165,12 +2234,19 @@ class Game {
         return this.setEvent({ kind: 'card', title: '福袋！', text: got.length ? `${got.join('、')} が入っていた！` : 'カードがいっぱいで、何も入らなかった……' }, 2200);
       }
       case 'station': {
-        const to = nearestCity(p.pos, p.pos);
-        if (to < 0 || to === p.pos) return this.setEvent({ kind: 'info', title: '最寄り駅', text: 'ここが駅だった……' }, 1500);
+        // the station nearest the goal (not the goal itself); ties go to the one nearer to you
+        const dd = WORLD.dist[S.dest];
+        let to = -1, best = 1e9;
+        for (const c of WORLD.cities) {
+          if (c === S.dest || c === p.pos) continue;
+          const score = dd[c] * 1000 + WORLD.dist[c][p.pos];
+          if (score < best) { best = score; to = c; }
+        }
+        if (to < 0) return this.setEvent({ kind: 'info', title: '最寄り駅', text: '移動できる駅がなかった……' }, 1500);
         S.last = { kind: 'warp', pid: p.id, from: p.pos, to };
         p.prev = -1; p.pos = to;
-        this.log(`${p.name} は最寄り駅の ${WORLD.nodes[to].name} へ移動した`);
-        return this.setEvent({ kind: 'warp', title: '最寄り駅へ', text: `${WORLD.nodes[to].name}駅に移動した！`, next: to === S.dest ? 'arriving' : 'landing' }, 1800);
+        this.log(`${p.name} は目的地の最寄り駅 ${WORLD.nodes[to].name} へ移動した`);
+        return this.setEvent({ kind: 'warp', title: '目的地の最寄り駅へ', text: `${WORLD.nodes[to].name}駅に移動した！ 目的地「${WORLD.nodes[S.dest].name}」まで あと${dd[to]}マス。`, next: 'landing' }, 2000);
       }
       case 'north': {
         if (!target) return this.setEvent({ kind: 'info', title: '北へ！', text: '相手がいなかった……' }, 1500);
@@ -2311,10 +2387,7 @@ class Game {
     if (has('expx') >= 0 && d >= 6) return use('expx');
     if (has('exp') >= 0 && d >= 6) return use('exp');
     if (has('warp') >= 0 && d >= 16) return use('warp');
-    if (has('station') >= 0 && d >= 8 && p.money > 3000) {
-      const c = nearestCity(p.pos, p.pos);
-      if (c >= 0 && S.own[c].some((o, i) => o < 0 && WORLD.nodes[c].props[i].price <= p.money - 1500)) return use('station');
-    }
+    if (has('station') >= 0 && d >= 6) return use('station');
     if (d >= 7) {
       if (has('grab') >= 0 && leader.id !== p.id && this.ownedProps(leader).length && !guarded(leader)) return use('grab', leader.id);
       if (has('seal') >= 0 && leader.id !== p.id && leader.cards.length >= 3 && leader.sealed === 0 && !guarded(leader)) return use('seal', leader.id);
@@ -2951,7 +3024,7 @@ function setupMapGestures(onTap) {
   const ptrs = new Map();
   let moved = false, down = null;
   map.addEventListener('pointerdown', e => {
-    if (e.target.closest('.map-ctl, .ev, .settle, .sheet, .sheet-bg')) return;
+    if (e.target.closest('.map-ctl, .ev, .settle, .sheet, .sheet-bg, .wstat')) return;
     camStop();
     ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
     try { map.setPointerCapture(e.pointerId); } catch (er) {}
@@ -3409,9 +3482,9 @@ function renderWorldStatus(S) {
   if (S.olympic) items.push(['good', `🏅 五輪：${WORLD.nodes[S.olympic.city].name} あと${S.olympic.left}か月`]);
   if (S.turbo > 0) items.push(['good', `✈ サイコロ＋1 あと${S.turbo}か月`]);
   if (S.treasure >= 0) items.push(['good', `💰 宝：${WORLD.nodes[nearestCity(S.treasure, -1)].name}の近く`]);
-  const html = items.map(([c, t]) => `<span class="${c}">${esc(t)}</span>`).join('');
+  const html = items.map(([c, t]) => `<span class="${c}">${esc(t)}</span>`).join('') + (items.length ? '<span class="ask">？ 説明</span>' : '');
   w.hidden = !html;
-  if (w.innerHTML !== html) w.innerHTML = html;
+  if (w.innerHTML !== html) { w.innerHTML = html; w.onclick = () => { Sound.click(); openGlossarySheet(S, 'world'); }; }
 }
 function branchLabel(S, from, to) {
   // the first station you would reach going that way, and whether it is closer to the goal
@@ -3519,7 +3592,7 @@ function renderCardsSheet(S) {
     const d = CARD_DEFS[c.id], row = el('div', 'card-item');
     let hint = '';
     if (c.id === 'exact' && dd >= 1 && dd <= 6) hint = ` ✨目的地まで${dd}マス：ぴったり着ける！`;
-    row.innerHTML = `<div><b>${esc(cardLabel(c))}</b><small>${esc(d.desc)}${hint}</small></div>`;
+    row.innerHTML = `<div><b>${esc(cardLabel(c))}</b><small>${esc(cardDesc(c.id))}${hint}</small></div>`;
     const b = el('button', 'btn btn-main', d.passive ? '持つだけ' : '使う'); b.type = 'button'; b.disabled = !(S.phase === 'choose' && iControl(cur)) || !!d.passive || cur.sealed > 0 || !!S.cardUsed;
     b.onclick = () => { Sound.click(); closeSheet(); act({ t: 'card', idx: i }); };
     row.appendChild(b); body.appendChild(row);
@@ -3563,7 +3636,7 @@ function renderShopSheet(S) {
   const dd = WORLD.dist[S.dest][cur.pos];
   items.forEach((id, i) => {
     const d = CARD_DEFS[id], row = el('div', 'card-item');
-    row.innerHTML = `<div><b>${esc(d.name)}</b><small>${esc(d.desc)}${id === 'exact' && dd <= 6 ? ' ✨いま使えばぴったり！' : ''}</small></div>`;
+    row.innerHTML = `<div><b>${esc(d.name)}</b><small>${esc(cardDesc(id))}${id === 'exact' && dd <= 6 ? ' ✨いま使えばぴったり！' : ''}</small></div>`;
     const right = el('div'); right.style.textAlign = 'right';
     right.appendChild(el('div', 'price', yen(d.price)));
     const b = el('button', 'btn btn-main', '買う'); b.type = 'button'; b.disabled = cur.money < d.price || cur.cards.length >= MAX_CARDS || !iControl(cur);
@@ -3620,16 +3693,96 @@ function openCitySheet(S, node) {
 }
 function openLogSheet(S) {
   openSheet('log', 'これまでの出来事');
-  const body = $('#sheet-body'), box = el('div', 'logs');
-  for (const l of S.log.slice().reverse()) { const d = el('div'); d.innerHTML = `<span class="lm">${l.y}年目${esc(MONTHS[l.m])}</span>${esc(l.t)}`; box.appendChild(d); }
+  const body = $('#sheet-body');
+  body.appendChild(el('p', 'note', 'イベントの説明をあとから読み返せます（新しい順）。ルールの説明は「イベント図鑑」へ。'));
+  const box = el('div', 'hist');
+  const hist = (S.hist || []).slice().reverse();
+  if (!hist.length) body.appendChild(el('p', 'note', 'まだ出来事はありません。'));
+  for (const h of hist) {
+    const who = h.pid >= 0 ? S.players[h.pid] : null;
+    const d = el('div', 'hist-item hist-' + (h.kind || 'info'));
+    d.innerHTML = `<div class="hist-when">${h.y}年目 ${esc(MONTHS[h.m])}${who ? ` <i style="background:${who.color}"></i>${esc(who.name)}` : ''}</div><div class="hist-title">${esc(h.title)}</div>${h.text ? `<div class="hist-text">${esc(h.text)}</div>` : ''}` +
+      (h.rows ? `<div class="hist-rows">${h.rows.map(r => `<span><i style="background:${S.players[r.pid].color}"></i>${esc(r.name)} ${esc(r.text)}</span>`).join('')}</div>` : '');
+    box.appendChild(d);
+  }
   body.appendChild(box);
+  // the older one-line log, for anything before the full history began
+  if (S.log && S.log.length && !hist.length) { const lg = el('div', 'logs'); for (const l of S.log.slice().reverse()) { const d = el('div'); d.innerHTML = `<span class="lm">${l.y}年目${esc(MONTHS[l.m])}</span>${esc(l.t)}`; lg.appendChild(d); } body.appendChild(lg); }
+}
+// everything the game can throw at you, explained
+function openGlossarySheet(S, focus) {
+  openSheet('gloss', 'イベント図鑑');
+  const body = $('#sheet-body');
+  const sec = (title, items) => { const h = el('h4', 'gl-h', title); body.appendChild(h); const box = el('div', 'gl-list'); for (const [t, x] of items) { const d = el('div', 'gl-item'); d.innerHTML = `<b>${esc(t)}</b><small>${esc(x)}</small>`; box.appendChild(d); } body.appendChild(box); return h; };
+  let focusEl = null;
+  if (WORLD.def.worldEvents) {
+    const live = [];
+    if (S && S.closed && S.closed.air > 0) live.push(['🌋 空路閉鎖中', `あと${S.closed.air}か月、地上から空路（白い点線）のマスには入れません。空のマスにいる人は進めます。`]);
+    if (S && S.pirates > 0) live.push(['🏴‍☠️ 海賊出没中', `あと${S.pirates}か月、航路（青い点線）のマスに止まると所持金の10%（最低300万円）をうばわれます。通過は大丈夫。`]);
+    if (S && S.olympic) live.push(['🏅 オリンピック開催中', `${WORLD.nodes[S.olympic.city].name} で開催中（あと${S.olympic.left}か月）。そこに止まると祝儀がもらえます。`]);
+    if (S && S.turbo > 0) live.push(['✈ 格安航空券セール中', `あと${S.turbo}か月、サイコロが1個ふえます（急行なら3個）。ちょうどカードはそのまま。`]);
+    if (S && S.treasure >= 0) live.push(['💰 宝の地図', `${WORLD.nodes[nearestCity(S.treasure, -1)].name} の近くの💰のマスに最初に止まった人が、伝説の宝（お金の単位×12）を手に入れます。`]);
+    if (live.length) focusEl = sec('いま起きていること', live);
+    const h = sec('世界イベント（毎月のはじめに1つ）', WORLD.def.worldEvents.map(e => [e.title, e.text || ({ worldcup: '開催都市がランダムに決まり、目的地がそこに変わります。スタジアムを持つ人に値段の50%の観客料。', cyclone: 'どこかの地域をサイクロンが直撃。その地域の物件を持つ人は値段の8%の修理代。', forex: '全員の所持金が15%ふえるか減るか、半々。借金の人はそのまま。', heritage: 'どこかの都市が世界遺産に。その都市の物件の値段が1.5倍（持っている人は総資産アップ、これから買う人は高くなる）。', treasure: 'どこかのマスに💰が現れます。最初に止まった人が大金をゲット。', summit: '全員がランダムな都市に集められます。' })[e.kind] || '']));
+    if (!focusEl) focusEl = h;
+  } else {
+    sec('季節のイベント（月のはじめ）', Object.keys(MONTH_EVENTS).map(m => [`${MONTHS[m]} ${MONTH_EVENTS[m].title}`, MONTH_EVENTS[m].text || ({ typhoon: 'どこかの地方に台風。その地方の物件を持つ人は値段の5%の修理代。', otoshidama: '全員にお年玉（300万円×年）。', setsubun: 'びんぼうタヌキがついている人は、半分の確率でタヌキが逃げ出します。' })[MONTH_EVENTS[m].kind] || '']));
+  }
+  sec('びんぼうタヌキ', [['びんぼうタヌキ', '目的地に誰かが着くと、いちばん遠かった人にくっつきます。ターンの終わりにお金を持ち逃げ・カードをかじる・勝手に買い物など。すれ違うと相手に乗りかえます。'], ['大タヌキ（3ターン）', '物件をただ同然で売り飛ばす、所持金の25%を持ち逃げ。'], ['キングタヌキ（3ターン）', '物件を2件海に投げすてる、所持金の40%、カードを全部燃やす。ごくまれ。'], ['ミニタヌキ（3ターン）', 'ほぼ無害。どんぐりをくれることも。'], ['ハリケーンタヌキ（3ターン）', '毎ターン、どこかの駅へ吹き飛ばされます。'], ['追いはらう', WORLD.def.worldEvents ? 'おはらいカード。' : 'おはらいカード、2月の節分。']]);
+  sec('マスの種類', [['＋ / −', 'お金がもらえる / はらう（年がすすむと額が大きくなる）。'], ['C カード', 'カードを1枚（8枚まで）。'], ['N ナイスカード', '強いカード（新幹線・ちょうど・まぢか・おまもり…）。'], ['✦ ワープ', 'どこかの駅へ飛ばされる。目的地に当たればゴール。'], ['? はてな', '宝箱・落とし穴・銀次・タヌキ・タダの物件・ワープ…何が起きるかわからない。'], ['店 カード売り場', 'お金でカードを買える。'], ['駅', '物件を買える。全部買うと独占で収益2倍。']]);
+  sec('ほかの出来事', [['スリの銀次', 'ターンの終わりにときどき現れて所持金の15〜30%をすっていきます。がんばれ補正の人は見逃してもらえます。'], ['地域のできごと', '駅に止まると13%の確率で、その地方ならではの出来事。'], ['がんばれ補正🔥', 'ビリの総資産が次の人の半分以下だと発動。援助金・プラスマス1.5倍、いいカードが出やすい、銀次とタヌキが手加減。'], ['決算', '毎年3月。物件の収益率ぶんのお金、借金には10%の利息。売り切れた駅に新しい物件がオープン。']]);
+  sec('カード', CARD_IDS.map(id => [CARD_DEFS[id].name + (CARD_DEFS[id].price ? `（売り場 ${yen(CARD_DEFS[id].price)}）` : ''), cardDesc(id) + (MOVE_CARDS.includes(id) ? '' : '　※使ったあとにサイコロをふれる')]));
+  if (focus === 'world' && focusEl) focusEl.scrollIntoView();
+}
+// the chart of everyone's fortune, month by month, with the big jumps marked
+function assetChartSVG(S, w, h) {
+  const ser = S.series || [];
+  if (ser.length < 2) return '<p class="note">まだグラフにできるほど進んでいません。</p>';
+  const n = ser.length, P = S.players.length;
+  let lo = 0, hi = 0;
+  for (const row of ser) for (const v of row) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+  if (hi === lo) hi = lo + 1;
+  const padL = 58, padR = 10, padT = 12, padB = 26;
+  const X = i => padL + (w - padL - padR) * i / (n - 1), Y = v => padT + (h - padT - padB) * (1 - (v - lo) / (hi - lo));
+  let svg = `<svg viewBox="0 0 ${w} ${h}" width="100%" class="achart" xmlns="http://www.w3.org/2000/svg">`;
+  // horizontal guides
+  const steps = 4;
+  for (let k = 0; k <= steps; k++) { const v = lo + (hi - lo) * k / steps, y = Y(v); svg += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w - padR}" y2="${y.toFixed(1)}" class="ac-grid"/><text x="${padL - 6}" y="${(y + 4).toFixed(1)}" class="ac-lbl" text-anchor="end">${esc(shortYen(Math.round(v / 100) * 100))}</text>`; }
+  if (lo < 0) svg += `<line x1="${padL}" y1="${Y(0)}" x2="${w - padR}" y2="${Y(0)}" class="ac-zero"/>`;
+  // years along the bottom (12 points a year)
+  for (let yr = 0; yr * 12 < n - 1 && yr < (S.years || 99); yr++) { const x = X(yr * 12); svg += `<line x1="${x.toFixed(1)}" y1="${padT}" x2="${x.toFixed(1)}" y2="${h - padB}" class="ac-grid"/><text x="${(x + 3).toFixed(1)}" y="${h - 8}" class="ac-lbl">${yr + 1}年目</text>`; }
+  for (let p = 0; p < P; p++) {
+    const pts = ser.map((row, i) => `${X(i).toFixed(1)},${Y(row[p]).toFixed(1)}`).join(' ');
+    svg += `<polyline points="${pts}" fill="none" stroke="${S.players[p].color}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }
+  // the big swings: a dot at the month it happened
+  const marks = (S.swings || []).slice().sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta)).slice(0, 12);
+  for (const sw of marks) {
+    const i = Math.min(n - 1, (sw.y - 1) * 12 + sw.m + 1);
+    const v = ser[i] ? ser[i][sw.pid] : null; if (v === null) continue;
+    svg += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="5.5" fill="${sw.delta > 0 ? '#fff' : '#2b2a33'}" stroke="${S.players[sw.pid].color}" stroke-width="2.5"><title>${esc(`${sw.y}年目${MONTHS[sw.m]} ${S.players[sw.pid].name} ${sw.delta > 0 ? '＋' : '−'}${yen(Math.abs(sw.delta))}：${sw.cause}`)}</title></circle>`;
+  }
+  svg += '</svg>';
+  return svg;
+}
+function swingsListHTML(S, limit) {
+  const list = (S.swings || []).slice().sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta)).slice(0, limit || 10).sort((a, b) => (a.y - b.y) || (a.m - b.m));
+  if (!list.length) return '<p class="note">大きな変動はありませんでした。</p>';
+  return '<div class="swings">' + list.map(sw => { const p = S.players[sw.pid]; return `<div class="sw ${sw.delta > 0 ? 'up' : 'down'}"><span class="sw-when">${sw.y}年目${esc(MONTHS[sw.m])}</span><i style="background:${p.color}"></i><span class="sw-who">${esc(p.name)}</span><b>${sw.delta > 0 ? '＋' : '−'}${esc(yen(Math.abs(sw.delta)))}</b><span class="sw-why">${esc(sw.cause)}</span></div>`; }).join('') + '</div>';
+}
+function openChartSheet(S) {
+  openSheet('chart', '資産の推移');
+  const body = $('#sheet-body');
+  body.innerHTML = `<div class="legend">${S.players.map(p => `<span><i style="background:${p.color}"></i>${esc(p.name)}</span>`).join('')}</div>` + assetChartSVG(S, 360, 220) + '<h4 class="gl-h">大きく動いたとき（上位10）</h4>' + swingsListHTML(S, 10);
 }
 function openMenuSheet() {
   openSheet('menu', 'メニュー');
   const body = $('#sheet-body'), m = el('div', 'menu-items');
   const add = (label, fn, cls) => { const b = el('button', 'btn ' + (cls || 'btn-sub'), label); b.type = 'button'; b.onclick = () => { Sound.click(); fn(); }; m.appendChild(b); };
   add('📊 対戦状況・物件（売却もここ）', () => openStatusSheet(UI.state, UI.state.turn));
-  add('📜 これまでの出来事', () => openLogSheet(UI.state));
+  add('📜 これまでの出来事（説明を読み返す）', () => openLogSheet(UI.state));
+  add('📖 イベント図鑑（ルール説明）', () => openGlossarySheet(UI.state));
+  add('📈 資産の推移', () => openChartSheet(UI.state));
   if (UI.mode === 'host') add('🔗 再接続・さそい直し（合言葉）', () => openReconnectSheet());
   add('🗺 地図ぜんたいを見る', () => { closeSheet(); camFit(400); });
   add(Sound.on ? '🔊 効果音：オン（タップでオフ）' : '🔇 効果音：オフ（タップでオン）', () => { Sound.on = !Sound.on; pref.sound = Sound.on; savePref(); openMenuSheet(); });
@@ -3653,6 +3806,9 @@ function showResult(S) {
     d.innerHTML = `<div class="no">${r.rank}</div><div><b><i style="background:${p.color}"></i>${esc(r.name)}${p.ctrl === 'cpu' ? ' (CPU)' : ''}</b><small>所持金 ${esc(yen(r.money))}・物件 ${r.props}件・到着 ${r.arrivals}回</small></div><div class="as">${esc(shortYen(r.assets))}円<small>総資産</small></div>`;
     box.appendChild(d);
   });
+  const ch = $('#result-chart');
+  ch.innerHTML = `<h3 class="o-label">資産の推移</h3><div class="legend">${S.players.map(p => `<span><i style="background:${p.color}"></i>${esc(p.name)}</span>`).join('')}</div>` + assetChartSVG(S, 360, 230) + `<h3 class="o-label">大きく動いたとき（上位10・グラフの○は上がった点、●は下がった点）</h3>` + swingsListHTML(S, 10) + `<div class="pp-row"><button class="btn btn-sub" id="res-hist" type="button">📜 出来事をぜんぶ読む</button></div>`;
+  $('#res-hist').onclick = () => { Sound.click(); openResultHist(S); };
   $('#res-again').hidden = UI.mode === 'guest';
   const conf = $('#confetti'); conf.innerHTML = '';
   for (let i = 0; i < 40; i++) { const c = el('i'); c.style.left = Math.random() * 100 + '%'; c.style.background = PLAYER_COLORS[i % 4]; c.style.animationDuration = (2.5 + Math.random() * 2.5) + 's'; c.style.animationDelay = (Math.random() * 1.5) + 's'; conf.appendChild(c); }
@@ -3660,6 +3816,18 @@ function showResult(S) {
   show('result');
 }
 
+function openResultHist(S) {
+  const box = $('#result-hist');
+  if (!box.hidden) { box.hidden = true; box.innerHTML = ''; return; }
+  box.hidden = false; box.innerHTML = '';
+  const hist = (S.hist || []).slice().reverse();
+  for (const h of hist) {
+    const who = h.pid >= 0 ? S.players[h.pid] : null;
+    const d = el('div', 'hist-item hist-' + (h.kind || 'info'));
+    d.innerHTML = `<div class="hist-when">${h.y}年目 ${esc(MONTHS[h.m])}${who ? ` <i style="background:${who.color}"></i>${esc(who.name)}` : ''}</div><div class="hist-title">${esc(h.title)}</div>${h.text ? `<div class="hist-text">${esc(h.text)}</div>` : ''}`;
+    box.appendChild(d);
+  }
+}
 // ===================================================================
 //  setup screen (solo / one phone)
 // ===================================================================
