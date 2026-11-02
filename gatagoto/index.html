@@ -191,13 +191,13 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
 /* sheets */
 .sheet-bg { position: absolute; inset: 0; background: rgba(30,20,10,.45); z-index: 20; animation: fade .2s ease-out; }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-.sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86%; display: flex; flex-direction: column; background: var(--paper); border-radius: 20px 20px 0 0; z-index: 21; box-shadow: 0 -8px 30px rgba(0,0,0,.3); animation: up .22s ease-out; padding-bottom: var(--sab); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86%; overflow: hidden; display: flex; flex-direction: column; background: var(--paper); border-radius: 20px 20px 0 0; z-index: 21; box-shadow: 0 -8px 30px rgba(0,0,0,.3); animation: up .22s ease-out; padding-bottom: var(--sab); }
 @keyframes up { from { transform: translateY(40px); opacity: .5; } to { transform: none; opacity: 1; } }
 .sheet-h { display: flex; align-items: center; gap: 10px; padding: 14px 16px 8px; }
 .sheet-h h3 { font-size: 17px; flex: 1; }
 .sheet-h .x { width: 36px; height: 36px; border-radius: 50%; border: 0; background: #efe6d3; font-size: 18px; }
-.sheet-b { overflow: auto; padding: 4px 14px 14px; -webkit-overflow-scrolling: touch; }
-.sheet-f { padding: 10px 14px 12px; border-top: 2px solid var(--line); display: flex; gap: 8px; }
+.sheet-b { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 4px 14px 14px; -webkit-overflow-scrolling: touch; }
+.sheet-f { flex: none; padding: 10px 14px 12px; border-top: 2px solid var(--line); display: flex; gap: 8px; }
 .sheet-f .btn { flex: 1; }
 .prop { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center; padding: 9px 6px; border-bottom: 1px dashed var(--line2); font-size: 15px; }
 .prop .chk { width: 24px; height: 24px; border-radius: 7px; border: 2px solid var(--ink); background: #fff; display: grid; place-items: center; font-size: 15px; color: #fff; }
@@ -373,6 +373,9 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
 .sw-who { font-weight: 800; white-space: nowrap; }
 .sw-why { font-size: 12px; font-weight: 600; color: #4a4656; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 420px) { .sw { grid-template-columns: auto 10px auto auto; } .sw-why { grid-column: 1 / -1; white-space: normal; } }
+
+.ev .ev-skip.wait { color: var(--ink); font-size: 13px; font-weight: 800; animation: blink 1.4s ease-in-out infinite; }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
 </style>
 </head>
 <body>
@@ -583,13 +586,20 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
         <h3>🃏 カード（24種類）</h3>
         <p>1ターンに1枚使えます。急行などの<b>移動するカード</b>はサイコロのかわりに、スリや福袋などの<b>移動しないカード</b>は使ったあとにサイコロをふれます。<b>急行・特急・新幹線・のぞみ</b>はサイコロの数がふえ、<b>急行周遊・特急周遊</b>は3回使えます。<b>ちょうど</b>は1〜6の好きな数だけ進めるので、ぴったり到着のきりふだ。<b>まぢか・最寄り駅（目的地の手前の駅へ）・ぶっとび・場所がえ・集合</b>で位置を変え、<b>牛歩・いたずら・ふういん・北へ！・ぶんどり・刀狩り・スリ</b>でライバルをじゃま。<b>おまもり</b>は持っているだけで、いじわるカードを1回はねかえします。<b>おはらい</b>でタヌキを追いはらい、<b>たからくじ・福袋・徳政令</b>は困ったときに。千葉の先の<b>房総半島</b>と金沢の先の<b>能登半島</b>はカードマスだらけ！</p>
         <h3>🦝 びんぼうタヌキ</h3>
-        <p>誰かが目的地に着くと、そのとき目的地から<b>いちばん遠かった人</b>に びんぼうタヌキがくっつきます。ターンの終わりに お金を持ち逃げしたり、カードをかじったり、勝手にカードを買ってきたり……。タヌキがついた人と<b>すれ違う（同じマスを通る・止まる）</b>と、タヌキは相手に乗りかえます。わざと相手の列車に突っこんで なすりつけましょう。</p>
-        <p>たまに変身します：<b>大タヌキ</b>（3ターン、物件を売り飛ばす）、<b>ハリケーンタヌキ</b>（3ターン、毎回どこかへ吹き飛ばす）、<b>ミニタヌキ</b>（3ターン、ほぼ無害）、そしてごくまれに<b>キングタヌキ</b>（3ターン、物件もカードもお金もめちゃくちゃ）。おはらいカードや2月の節分で追いはらえます。</p>
+        <p>誰かが目的地に着くと、そのとき目的地から<b>いちばん遠かった人</b>にくっつきます。ターンの終わりに毎回、所持金の15%を持ち逃げ・カードを捨てる・カードを倍の値段で買ってくる・物件を勝手に半額で売る・お金をほかの人に配る・あなたの名前で借金してくる……と大暴れ。お金がなくても借金にされます。タヌキがついた人と<b>すれ違う（同じマスを通る・止まる）</b>と、タヌキは相手に乗りかえるので、わざと突っこんで なすりつけましょう。</p>
+        <p>長くくっついているほど<b>変身しやすく</b>なります：<b>大タヌキ</b>（3ターン、物件をただで売り飛ばす・所持金の30%）、<b>ハリケーンタヌキ</b>（3ターン、毎回どこかへ吹き飛ばす）、<b>ミニタヌキ</b>（3ターン、ほぼ無害）、そして<b>キングタヌキ</b>（3ターン、毎回物件2件を海に捨てて所持金の40%を奪い、カードも燃やす）。おはらいカードや2月の節分で追いはらえます。</p>
         <h3>🌏 世界編</h3>
         <p>日本を真ん中にした世界地図で、69の都市をめぐります。各大陸に環状ルートがあり、大西洋の路線は<b>地図の端から反対側へ</b>つながっています。サハラ砂漠・ナラボー平原・アマゾンはカードマスだらけ。</p>
         <p>世界編は日本編より<b>ダイナミック</b>です。目的地は遠く、援助金もマスのお金も大きく、スリの銀次は多めで、タヌキはよく変身します。そして<b>毎月、世界イベント</b>が起きます：🏅オリンピック（開催地に止まると祝儀）、🌋火山噴火で<b>空路が閉鎖</b>、🏴‍☠️海賊（航路のマスに止まるとお金をうばわれる）、🏆ワールドカップで<b>目的地が変更</b>、🗺宝の地図（💰のマスに最初に止まった人が大金）、📉株安・📈好景気・💱為替・🛢原油高騰、🏛世界遺産登録で物件が値上がり、✈格安航空券で全員サイコロ＋1、🤝サミットで全員集合。地図の上に、いま起きていることが表示されます。</p>
-        <h3>🔥 がんばれ補正</h3>
-        <p>ビリの人の総資産が、次の人の<b>半分以下</b>になると「がんばれ補正」がつきます。援助金とプラスマスが1.5倍、カードのマスでいいカードが出やすくなり、スリの銀次は見逃し、びんぼうタヌキもほかに行ける人がいればそちらへ。追いつくまで続きます。</p>
+        <h3>🔥 がんばれ補正（逆転のチャンス）</h3>
+        <p>ビリの人の総資産が<b>トップの半分以下</b>になると「がんばれ補正」がつき、差が開くほど強くなります（🔥レベル1：半分以下、🔥🔥レベル2：3割以下、🔥🔥🔥レベル3：15%以下）。</p>
+        <ul>
+          <li>目的地に着くと援助金が<b>2〜4倍</b>、さらに<b>トップの所持金の10〜25%</b>をもらえる（下剋上）</li>
+          <li>物件が<b>20〜50%引き</b>（総資産には元の値段で入る）、決算の収益が<b>1.5〜3倍</b></li>
+          <li>プラスマス1.5〜3倍、マイナスマスは半分〜なし、レベル2からはサイコロ＋1個</li>
+          <li>いいカードが出やすい、次の目的地が近くに決まりやすい、スリの銀次は見逃し、タヌキは離れていく</li>
+        </ul>
+        <p>トップの人はスリの銀次に狙われやすくなります。追いつくと補正はなくなります。</p>
         <h3>🏪 新しい物件</h3>
         <p>決算のとき、物件がぜんぶ売れた駅（ひとりが独占している駅は除く）には<b>新しい物件がオープン</b>します。長い対戦でも買うものがなくなりません。</p>
         <h3>🚢 海と空</h3>
@@ -602,6 +612,8 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
         <p>「よわい」は気ままに走ります。「ふつう」はぴったり着ける道を探し、「つよい」は次のターンに着きやすいマスまで考えて止まり、独占をねらい、ゴール目前の相手にいじわるカードを使ってきます。</p>
         <h3>💴 お金・決算</h3>
         <p>1ターンで1か月が進みます。毎年3月のおわりに<b>決算</b>があり、持っている物件の「収益率」ぶんのお金が入ります（種類ごとの内訳、独占した駅、順位の変動も発表されます）。所持金はマイナス（借金）にもなり、決算で<b>10%の利息</b>がつきます。自分の番のあいだは、「対戦状況」から物件を<b>値段の70%で売る</b>こともできます。</p>
+        <h3>⏱ 説明の表示</h3>
+        <p>自分のイベントや、みんなに関係するイベント・決算は、<b>読み終わってタップするまで</b>待ちます。コンピューターのイベントは文章の長さに合わせて表示します。メニューの「説明の表示」で「ゆっくり／ふつう／はやい（自動）」にも変えられます。読み逃した説明は「これまでの出来事」でいつでも読み返せます。</p>
         <h3>🔗 合言葉であそぶ</h3>
         <p>1台目が合言葉を作って LINE などで送り、2台目が返事の合言葉を作って送り返すと、スマホどうしが<b>じかに</b>つながります。1台目は ひとりずつ順番に さそえます（最大4人）。ゲームは1台目が進行します。</p>
         <p>スマホがスリープしたり LINE を開いたりしても切れません。それでも切れてしまったら、<b>席はそのまま</b>でコンピューターが代走します。1台目がメニューの「再接続」から新しい合言葉を作って送れば、同じ席にもどれます（ページを閉じてしまっても、タイトルから「2台目以降」で貼ればOK）。1台目は「つづきから」で再開できます。</p>
@@ -915,15 +927,26 @@ function alongPolyline(pts, f) {
   return pts[pts.length - 1];
 }
 
+// the board is drawn `scale` times bigger than the hand-made coordinates, and every route is filled
+// with squares until they sit about `spacing` apart (ferries get a few more, flights keep their count)
+function scaledProj(def) { const sc = def.scale || 1; return (la, lo) => { const [x, y] = def.proj(la, lo); return [Math.round(x * sc), Math.round(y * sc)]; }; }
+function fillCount(n, len, opt, spacing) {
+  if (!spacing || opt.air) return n;
+  const want = Math.round(len / spacing) - 1;
+  if (opt.sea) return Math.max(n, Math.min(n + 2, want));
+  return Math.max(n, Math.min(2 * n + 2, want));
+}
+function polyLen(pts) { let L = 0; for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); return L; }
 function buildWorld(def) {
   const rng = mulberry32(def.seed || 20261101);
-  const CITY_DEFS = def.cities, ROUTE_DEFS = def.routes, proj = def.proj;
+  const CITY_DEFS = def.cities, ROUTE_DEFS = def.routes, proj = scaledProj(def), sc = def.scale || 1;
+  const S2 = pt => [Math.round(pt[0] * sc), Math.round(pt[1] * sc)];
   const nodes = [], adj = [], edges = [], cityIdx = {};
   const link = (a, b, sea, air) => { adj[a].push(b); adj[b].push(a); edges.push({ a, b, sea: !!sea, air: !!air }); };
   for (const [name, lat, lon, region, props, at] of CITY_DEFS) {
     for (const pr of props) if (pr.length < 4) pr.push(propCat(pr[0]));
     // crowded areas are spread out by hand, like a subway map: `at` overrides the projected spot
-    const [x, y] = at || proj(lat, lon);
+    const [x, y] = at ? S2(at) : proj(lat, lon);
     cityIdx[name] = nodes.length;
     nodes.push({ id: nodes.length, type: 'city', name, region, x, y, props: props.map(([n, price, rate, cat]) => ({ name: n, price, rate, cat })) });
     adj.push([]);
@@ -931,10 +954,15 @@ function buildWorld(def) {
   // squares in between: the type is drawn from a fixed seed so every device builds the same board
   // plus, minus, card, and a few rarer ones: ナイスカード (a good card), ワープ, and ？ (anything can happen)
   const pick = () => { const r = rng(); return r < 0.43 ? 'plus' : r < 0.73 ? 'minus' : r < 0.90 ? 'card' : r < 0.94 ? 'nice' : r < 0.97 ? 'warp' : 'bonus'; };
-  for (const [a, b, n, opt = {}] of ROUTE_DEFS) {
+  for (const [a, b, n0, opt0 = {}] of ROUTE_DEFS) {
+    let opt = opt0;
     const A = nodes[cityIdx[a]], B = nodes[cityIdx[b]];
     if (!A || !B) throw new Error('unknown city in route ' + a + '-' + b);
-    const mid = opt.pts || (opt.via || []).map(([la, lo]) => proj(la, lo));
+    const mid = opt.pts ? opt.pts.map(S2) : (opt.via || []).map(([la, lo]) => proj(la, lo));
+    const len = opt.wrap ? polyLen([[A.x, A.y], mid[0]]) + polyLen([mid[1], [B.x, B.y]]) : polyLen([[A.x, A.y], ...mid, [B.x, B.y]]);
+    const n = fillCount(n0, len, opt, def.spacing);
+    // a shop keeps its place along the route when squares are added
+    if (opt.shop) opt = Object.assign({}, opt, { shop: Math.max(1, Math.min(n, Math.round(opt.shop * (n + 1) / (n0 + 1)))) });
     let prev = A.id;
     if (opt.wrap) {
       // a route that leaves one edge of the map and comes back in from the other (the Atlantic)
@@ -995,7 +1023,8 @@ function yen(man) {
 // ---------- the maps ----------
 const MAP_DEFS = {
   japan: {
-    name: '日本編', start: '東京', board: { w: 1800, h: 2130 }, proj: projJapan, seed: 20261101,
+    name: '日本編', start: '東京', board: { w: 1800, h: 2130 }, proj: projJapan, seed: 20261101, scale: 1.3, spacing: 42,
+    rules: { destMin: 9, destMax: 24 },
     cities: CITY_DEFS, routes: ROUTE_DEFS, islands: ISLANDS, regionEvents: REGION_EVENTS, regionWord: '地方',
     words: { area: '日本', north: '北海道のどこかの駅' },
     insets: [{ city: '那覇', box: [-70, -88, 160, 150], label: '沖縄（本当はもっと南）' }],
@@ -1009,7 +1038,8 @@ function setWorld(name) {
   const key = def === MAP_DEFS.japan ? 'japan' : name;
   if (!MAPS[key]) MAPS[key] = buildWorld(def);
   WORLD = MAPS[key];
-  proj = def.proj; BOARD = def.board;
+  const sc = def.scale || 1;
+  proj = scaledProj(def); BOARD = { w: Math.round(def.board.w * sc), h: Math.round(def.board.h * sc) };
   return WORLD;
 }
 setWorld('japan');
@@ -1209,13 +1239,13 @@ const WORLD_EVENTS = [
 ];
 
 MAP_DEFS.world = {
-  name: '世界編', start: '東京', board: { w: 2640, h: 1440 }, proj: projWorld, seed: 20261102,
+  name: '世界編', start: '東京', board: { w: 2640, h: 1440 }, proj: projWorld, seed: 20261102, scale: 1.25, spacing: 42,
   cities: WORLD_CITY_DEFS, routes: WORLD_ROUTE_DEFS, islands: CONTINENTS, regionEvents: WORLD_REGION_EVENTS, regionWord: '地域',
   insets: [], northRegion: null,   // 北へ！ sends you to the five northernmost cities
   words: { area: '世界', north: '世界の北のはて（いちばん北にある5都市のどれか）' },
   worldEvents: WORLD_EVENTS,
   // the world is bigger and wilder: longer trips, bigger money swings, a busier 銀次 and a livelier tanuki
-  rules: { destMin: 9, destMax: 24, bonusMul: 1.6, unitMul: 1.4, ginji: 0.05, tanukiChange: 1.6 },
+  rules: { destMin: 11, destMax: 30, bonusMul: 1.6, unitMul: 1.4, ginji: 0.05, tanukiChange: 1.6 },
 };
 
 // ===================================================================
@@ -1285,6 +1315,22 @@ function waysOut(node, prev) {
   return o.length ? o : [prev];
 }
 function rule(key, dflt) { const r = WORLD.def.rules; return r && r[key] !== undefined ? r[key] : dflt; }
+// がんばれ補正: what each level does for the player far behind
+//  plus/minus: square money ×, arrive: arrival bonus ×, take: share of the leader's cash on arrival,
+//  discount: off property prices, income: yearly income ×, dice: extra dice, nice: chance a card square gives a good card,
+//  dest: chance a new destination is drawn near them
+const BEHIND_FX = {
+  1: { plus: 1.5, minus: 0.5, arrive: 2, take: 0.10, discount: 0.2, income: 1.5, dice: 0, nice: 0.5, dest: 0.2 },
+  2: { plus: 2, minus: 0.25, arrive: 3, take: 0.15, discount: 0.35, income: 2, dice: 1, nice: 0.8, dest: 0.35 },
+  3: { plus: 3, minus: 0, arrive: 4, take: 0.25, discount: 0.5, income: 3, dice: 1, nice: 1, dest: 0.5 },
+};
+function behindFx(p) { return (p && BEHIND_FX[p.behind]) || null; }
+// what a property costs this player (the one far behind gets a discount)
+function buyPrice(p, pr) { const fx = behindFx(p); return fx ? Math.round(pr.price * (1 - fx.discount) / 10) * 10 : pr.price; }
+function behindText(lv) {
+  const fx = BEHIND_FX[lv];
+  return `援助金${fx.arrive}倍・目的地に着くとトップの所持金の${Math.round(fx.take * 100)}%をもらえる・物件${Math.round(fx.discount * 100)}%引き・決算の収益${fx.income}倍・プラスマス${fx.plus}倍・マイナスマス${fx.minus ? fx.minus + '倍' : 'なし'}` + (fx.dice ? '・サイコロ＋1個' : '') + '・いいカードが出やすい・スリの銀次とタヌキが手加減';
+}
 // can a walk of exactly k steps from `node` (having come from `prev`) end on `dest`?
 function canReachExact(dest, node, prev, k) {
   const dd = WORLD.dist[dest], memo = new Map();
@@ -1310,7 +1356,7 @@ class Game {
     const start = WORLD.start;
     const S = this.s = {
       v: GAME_VER, map: opts.map || 'japan', rev: 0, years: opts.years || 3, year: 1, month: 0, turn: 0, phase: 'turnstart',
-      cpu: opts.cpu || 'normal',
+      cpu: opts.cpu || 'normal', speed: opts.speed || 'tap',
       players: opts.players.map((p, i) => ({
         id: i, name: p.name || PLAYER_NAMES[i], ctrl: p.ctrl || 'local', color: PLAYER_COLORS[i],
         money: START_MONEY, pos: start, prev: -1, cards: [], skip: 0, slow: 0, sealed: 0, arrivals: 0,
@@ -1341,12 +1387,12 @@ class Game {
   touch() { this.s.rev++; }
   assets(p) {
     let v = p.money;
-    for (const c in this.s.own) this.s.own[c].forEach((o, i) => { if (o === p.id) v += WORLD.nodes[c].props[i].price; });
+    for (const c in this.s.own) this.s.own[c].forEach((o, i) => { const pr = WORLD.nodes[c].props[i]; if (o === p.id && pr) v += pr.price; });
     return v;
   }
   ownedProps(p) {
     const out = [];
-    for (const c in this.s.own) this.s.own[c].forEach((o, i) => { if (o === p.id) out.push({ node: +c, idx: i, ...WORLD.nodes[c].props[i] }); });
+    for (const c in this.s.own) this.s.own[c].forEach((o, i) => { const pr = WORLD.nodes[c].props[i]; if (o === p.id && pr) out.push({ node: +c, idx: i, ...pr }); });
     return out;
   }
   // yearly income of one player: price × yield, doubled when they own the whole station
@@ -1355,7 +1401,7 @@ class Game {
     for (const c in this.s.own) {
       const owners = this.s.own[c];
       const mono = owners.every(o => o === p.id);
-      owners.forEach((o, i) => { if (o === p.id) { const pr = WORLD.nodes[c].props[i]; v += pr.price * pr.rate / 100 * (mono ? 2 : 1); } });
+      owners.forEach((o, i) => { const pr = WORLD.nodes[c].props[i]; if (o === p.id && pr) v += pr.price * pr.rate / 100 * (mono ? 2 : 1); });
     }
     return Math.round(v);
   }
@@ -1378,6 +1424,11 @@ class Game {
     const lo = rule('destMin', DEST_MIN), hi = rule('destMax', DEST_MAX);
     const ok = WORLD.cities.filter(c => c !== S.dest && c !== from && this.distTo(from, c) >= lo && this.distTo(from, c) <= hi);
     const pool = ok.length ? ok : WORLD.cities.filter(c => c !== S.dest && c !== from);
+    const far = S.players.find(q => q.behind && q.pos !== undefined);
+    if (far && this.rng() < BEHIND_FX[far.behind].dest) {
+      const near = pool.filter(c => this.distTo(far.pos, c) >= 3 && this.distTo(far.pos, c) <= 10);
+      if (near.length) { S.dest = near[Math.floor(this.rng() * near.length)]; S.destNo++; return; }
+    }
     S.dest = pool[Math.floor(this.rng() * pool.length)];
     S.destNo++;
   }
@@ -1392,8 +1443,24 @@ class Game {
       if (S.hist.length > 160) S.hist.splice(0, S.hist.length - 160);
     }
     this.trackSwings(e.title || '');
-    // a card's or an event's text deserves a moment longer on screen
-    return e.kind === 'season' || e.kind === 'settle' ? Math.round(ms * 1.4) : ms;
+    return this.eventDelay(e, ms);
+  }
+  // how long an event stays up before the game moves on by itself; 0 = until someone taps
+  //  S.speed: 'tap' (your own and everyone's events wait for a tap; the computer's are timed to the text),
+  //           'slow' / 'normal' / 'fast' (everything is timed)
+  eventDelay(e, ms) {
+    const S = this.s, speed = S.speed || 'tap';
+    const humanHere = S.players.some(q => q.ctrl === 'local' && !q.away);
+    if (speed === 'tap') {
+      const owner = e.pid >= 0 ? S.players[e.pid] : null;
+      if (owner ? !this.isCpu(owner) : humanHere) return 0;
+    }
+    if (e.kind === 'settle' && speed !== 'fast' && humanHere) return 0;
+    const chars = (e.title || '').length + (e.text || '').length + (e.rows ? e.rows.length * 16 : 0);
+    let t = Math.max(ms, 1400 + chars * 95);
+    if (e.kind === 'settle') t = Math.max(t, 10000);
+    t = Math.min(t, 16000);
+    return Math.round(t * ({ slow: 1.7, normal: 1.15, fast: 0.65, tap: 1.25 }[speed] || 1));
   }
   // notes anyone whose assets just jumped, and what did it
   trackSwings(cause) {
@@ -1410,14 +1477,24 @@ class Game {
   canReach(node, prev, k) { return canReachExact(this.s.dest, node, prev, k); }
   // a player the computer moves for: a CPU, or a person whose phone is away (the seat stays theirs)
   isCpu(p) { return p.ctrl === 'cpu' || !!p.away; }
-  // がんばれ補正: dead last AND less than half of the next one up gets a helping hand
+  // がんばれ補正: whoever is clearly last and far below the leader gets a level (1–3) of help
   updateBehind() {
     const S = this.s;
-    if (S.players.length < 3) { for (const p of S.players) p.behind = false; return; }
+    if (S.players.length < 2) return;
     const rows = S.players.map(p => ({ p, a: this.assets(p) })).sort((a, b) => a.a - b.a);
-    const last = rows[0], next = rows[1];
-    for (const p of S.players) p.behind = false;
-    if (last.a < next.a * 0.5 && next.a > 0) last.p.behind = true;
+    const last = rows[0], next = rows[1], lead = rows[rows.length - 1];
+    for (const r of rows) if (r !== last) r.p.behind = 0;
+    if (lead.a <= 0 || last.a >= next.a * 0.75) { last.p.behind = 0; return; }   // not clearly last
+    const ratio = last.a / lead.a, cur = last.p.behind || 0;
+    const lv = ratio < 0.15 ? 3 : ratio < 0.3 ? 2 : ratio < 0.5 ? 1 : 0;
+    const keep = cur && ratio < [0, 0.6, 0.36, 0.2][cur] ? cur : 0;   // a little stickiness so it does not flicker
+    last.p.behind = Math.max(lv, keep);
+  }
+  leaderOf(exceptId) {
+    const S = this.s;
+    let best = null, ba = -Infinity;
+    for (const q of S.players) { if (q.id === exceptId) continue; const a = this.assets(q); if (a > ba) { ba = a; best = q; } }
+    return best;
   }
 
   // ---------- the clock: one automatic action per call; returns ms until the next one (0 = waiting for a person) ----------
@@ -1457,7 +1534,12 @@ class Game {
     let d = false;
     if (a.t === 'ok') {
       if (S.phase !== 'event') return false;
-      if (pid !== p.id && !this.isCpu(p) && S.event && S.event.pid >= 0) return false;
+      // a person's own event is theirs to close (on a shared screen, any player at it may);
+      // the computer's events and everyone's events are closed from the main device
+      const ev = S.event, owner = ev && ev.pid >= 0 ? S.players[ev.pid] : null, actor = S.players[pid];
+      if (!actor) return false;
+      const allowed = owner && !this.isCpu(owner) ? (pid === owner.id || (owner.ctrl === 'local' && actor.ctrl === 'local')) : actor.ctrl === 'local';
+      if (!allowed) return false;
       d = this.eventOk();
     } else {
       if (p.id !== pid) return false;
@@ -1490,15 +1572,18 @@ class Game {
   // ---------- turns ----------
   turnStart() {
     const S = this.s, p = this.cur();
-    S.dice = null; S.branch = null; S.buy = null; S.shop = null; S.pick = null; S.last = null; S.steps = 0; S.ginjiSeen = false; S.cardUsed = false;
+    S.dice = null; S.branch = null; S.buy = null; S.shop = null; S.pick = null; S.last = null; S.steps = 0; S.ginjiSeen = false; S.cardUsed = false; S.pirateHit = false;
     if (p.sealed > 0) p.sealed--;
     this.updateBehind();
-    if (p.behind && !p.behindTold) {
-      p.behindTold = true;
-      this.log(`${p.name} に「がんばれ補正」がついた`);
-      return this.setEvent({ kind: 'plus', title: '🔥 がんばれ補正！', text: `${p.name} はみんなに大きく引きはなされている……\nこれから しばらく、援助金もプラスマスも1.5倍、カードのマスではいいカードが出やすくなり、スリの銀次は見逃してくれる！`, next: 'turnstart2' }, 3200);
+    const lv = p.behind || 0;
+    if (lv > (p.behindTold || 0)) {
+      p.behindTold = lv;
+      let extra = '';
+      if (lv >= 2 && S.tanuki.at === p.id) { S.tanuki.at = -1; S.tanuki.form = 0; S.tanuki.left = 0; extra = '\nくっついていたびんぼうタヌキも、気の毒がって離れていった。'; }
+      this.log(`${p.name} に「がんばれ補正 レベル${lv}」がついた`);
+      return this.setEvent({ kind: 'plus', title: `${'🔥'.repeat(lv)} がんばれ補正 レベル${lv}！`, text: `${p.name} はトップに大きく引きはなされている……ここから逆転だ！\n${behindText(lv)}。` + extra, next: 'turnstart2' }, 4500);
     }
-    if (!p.behind) p.behindTold = false;
+    if (lv < (p.behindTold || 0)) p.behindTold = lv;
     return this.turnStart2();
   }
   turnStart2() {
@@ -1517,7 +1602,7 @@ class Game {
     let vals, slow = false;
     if (fixed) vals = [fixed];
     else if (p.slow > 0) { p.slow--; vals = [1]; slow = true; }
-    else { if (S.turbo > 0) n++; vals = []; for (let i = 0; i < n; i++) vals.push(1 + Math.floor(this.rng() * 6)); }
+    else { if (S.turbo > 0) n++; const fx = behindFx(p); if (fx) n += fx.dice; vals = []; for (let i = 0; i < n; i++) vals.push(1 + Math.floor(this.rng() * 6)); }
     S.steps = vals.reduce((a, b) => a + b, 0);
     p.prev = -1;   // free to go any way at the start of a move
     S.dice = { vals, n: vals.length, fixed: !!fixed, slow, exact: this.canReach(p.pos, -1, S.steps) };
@@ -1584,11 +1669,12 @@ class Game {
       this.log(`${p.name} が伝説の宝を掘り当てた！（＋${yen(amt)}）`);
       return this.setEvent({ kind: 'plus', title: '💰 宝を掘り当てた！', text: `地図のしるしの場所で、伝説の宝を見つけた！\n＋${yen(amt)}`, next: 'landing2' }, 2800);
     }
-    if (S.pirates > 0 && node.sea && !node.air) {
+    if (S.pirates > 0 && node.sea && !node.air && !S.pirateHit) {
+      S.pirateHit = true;   // then the square does its own thing as usual
       const amt = Math.max(300, Math.round(Math.max(p.money, 0) * 0.1 / 100) * 100);
       p.money -= amt;
       this.log(`${p.name} は海賊に ${yen(amt)} をうばわれた`);
-      return this.setEvent({ kind: 'ginji', title: '🏴‍☠️ 海賊におそわれた！', text: `海賊船が横づけしてきた！ 所持金の10%、${yen(amt)} をうばわれた……`, next: 'turnend' }, 2600);
+      return this.setEvent({ kind: 'ginji', title: '🏴‍☠️ 海賊におそわれた！', text: `海賊船が横づけしてきた！ 所持金の10%、${yen(amt)} をうばわれた……\n（このあと、マスの効果はいつもどおり）`, next: 'landing2' }, 2600);
     }
     if (node.type === 'city') {
       if (S.olympic && S.olympic.city === node.id) {
@@ -1635,8 +1721,13 @@ class Game {
       const table = plus ? PLUS_EVENTS : MINUS_EVENTS;
       const [text, base] = table[Math.floor(this.rng() * table.length)];
       let amt = this.unit() * base;
-      if (plus && p.behind) amt = Math.round(amt * 1.5 / 10) * 10;
-      if (!plus) amt = Math.min(amt, Math.max(100, Math.round(Math.max(p.money, 0) * 0.3 / 100) * 100));
+      const fx = behindFx(p);
+      if (plus && fx) amt = Math.round(amt * fx.plus / 10) * 10;
+      if (!plus) {
+        amt = Math.min(amt, Math.max(100, Math.round(Math.max(p.money, 0) * 0.3 / 100) * 100));
+        if (fx) amt = Math.round(amt * fx.minus / 10) * 10;
+        if (amt <= 0) { this.log(`${p.name}：${text}（がんばれ補正でセーフ）`); return this.setEvent({ kind: 'plus', title: '🔥 セーフ！', text: text + '\n……でも、がんばれ補正のおかげで はらわずにすんだ！' }, 2300); }
+      }
       p.money += plus ? amt : -amt;
       this.log(`${p.name}：${text}（${plus ? '＋' : '−'}${yen(amt)}）`);
       return this.setEvent({ kind: plus ? 'plus' : 'minus', title: (plus ? '＋' : '−') + yen(amt), text }, 2300);
@@ -1646,7 +1737,8 @@ class Game {
         this.log(`${p.name} はカードがいっぱいで もらえなかった`);
         return this.setEvent({ kind: 'card', title: 'カードのマス', text: `カードがいっぱいで、もらえなかった……（${MAX_CARDS}枚まで）` }, 2000);
       }
-      const id = p.behind && this.rng() < 0.5 ? NICE_IDS[Math.floor(this.rng() * NICE_IDS.length)] : randomCardId(this.rng);
+      const fx = behindFx(p);
+      const id = fx && this.rng() < fx.nice ? NICE_IDS[Math.floor(this.rng() * NICE_IDS.length)] : randomCardId(this.rng);
       p.cards.push(mkCard(id));
       this.log(`${p.name} は ${cardName(id)} を手に入れた`);
       return this.setEvent({ kind: 'card', title: `${cardName(id)} を手に入れた！`, text: cardDesc(id), card: id }, 2300);
@@ -1732,12 +1824,19 @@ class Game {
   }
   arrive() {
     const S = this.s, p = this.cur(), city = WORLD.nodes[S.dest], T = S.tanuki;
-    const bonus = Math.round((3000 + 1500 * (S.year - 1)) * rule('bonusMul', 1) * (0.8 + this.rng() * 0.4) * (p.behind ? 1.5 : 1) / 100) * 100;
+    const fx = behindFx(p);
+    const bonus = Math.round((3000 + 1500 * (S.year - 1)) * rule('bonusMul', 1) * (0.8 + this.rng() * 0.4) * (fx ? fx.arrive : 1) / 100) * 100;
     p.money += bonus; p.arrivals++; p.arrY = (p.arrY || 0) + 1;
+    let gekoku = '';
+    if (fx) {
+      const lead = this.leaderOf(p.id);
+      const amt = lead && lead.money > 0 ? Math.round(lead.money * fx.take / 100) * 100 : 0;
+      if (amt > 0) { lead.money -= amt; p.money += amt; gekoku = `\n🔥 下剋上！ トップの ${lead.name} から ${yen(amt)} をもらった！`; }
+    }
     const far = this.farthestFrom(S.dest, p.id);
     const old = S.dest;
     this.newDest(p.pos);
-    let text = `援助金 ${yen(bonus)} を受け取った！\n次の目的地は「${WORLD.nodes[S.dest].name}」（${this.distTo(p.pos, S.dest)}マス先）。`;
+    let text = `援助金 ${yen(bonus)} を受け取った！` + (fx ? `（がんばれ補正で${fx.arrive}倍）` : '') + gekoku + `\n次の目的地は「${WORLD.nodes[S.dest].name}」（${this.distTo(p.pos, S.dest)}マス先）。`;
     if (far) {
       T.at = far.id; T.form = 0; T.left = 0;
       text += `\n目的地からいちばん遠かった ${far.name}（${this.distTo(far.pos, old)}マス）に、びんぼうタヌキがくっついた！`;
@@ -1770,7 +1869,7 @@ class Game {
     const node = WORLD.nodes[S.buy.node], owners = S.own[node.id];
     const picks = [...new Set(idx.map(Number))].filter(i => i >= 0 && i < node.props.length && owners[i] < 0);
     if (!picks.length) return false;
-    const total = picks.reduce((a, i) => a + node.props[i].price, 0);
+    const total = picks.reduce((a, i) => a + buyPrice(p, node.props[i]), 0);
     if (total > p.money) return false;
     p.money -= total;
     for (const i of picks) owners[i] = p.id;
@@ -1808,7 +1907,8 @@ class Game {
   turnEnd() {
     const S = this.s, p = this.cur(), T = S.tanuki;
     S.buy = null; S.shop = null; S.branch = null; S.pick = null;
-    if (!S.ginjiSeen && p.money >= 1500 && !p.behind && this.rng() < rule('ginji', 0.035)) { S.ginjiSeen = true; return this.ginji(p, ''); }
+    const isLead = this.leaderOf(-1) === p;
+    if (!S.ginjiSeen && p.money >= 1500 && !p.behind && this.rng() < rule('ginji', 0.035) * (isLead ? 2 : 1)) { S.ginjiSeen = true; return this.ginji(p, isLead ? 'トップを走るあなたを、スリの銀次がつけ回していた！' : ''); }
     if (T.at === p.id) return this.tanukiAct(p);
     S.phase = 'nextturn';
     return 60;
@@ -1816,33 +1916,45 @@ class Game {
   tanukiAct(p) {
     const S = this.s, T = S.tanuki;
     T.total++;
-    const r = this.rng();
-    let title = TANUKI_FORMS[T.form].name, text = '', ms = 2300;
-    const grab = (share, floor) => { const amt = Math.max(floor, Math.round(Math.max(p.money, 0) * share / 100) * 100); p.money -= amt; return amt; };
-    const loseProp = () => { const mine = this.ownedProps(p); if (!mine.length) return ''; const pr = mine[Math.floor(this.rng() * mine.length)]; S.own[pr.node][pr.idx] = -1; return `${WORLD.nodes[pr.node].name}の「${pr.name}」`; };
+    // the longer it stays with the same person, the likelier it turns into something worse
+    if (T.heldBy !== p.id) { T.heldBy = p.id; T.held = 0; }
+    T.held++;
+    const u = this.unit();
+    let title = TANUKI_FORMS[T.form].name, text = '', ms = 2600;
+    // takes money; the purse may go into the red
+    const take = (share, minUnits) => { const amt = Math.max(u * minUnits, Math.round(Math.max(p.money, 0) * share / 100) * 100); p.money -= amt; return amt; };
+    // a property gone: `back` = share of its price you get back; returns its name (and what came back)
+    const loseProp = (back) => {
+      const mine = this.ownedProps(p); if (!mine.length) return null;
+      const pr = mine.sort((a, b) => b.price - a.price)[Math.floor(this.rng() * Math.min(3, mine.length))];   // likes the expensive ones
+      S.own[pr.node][pr.idx] = -1;
+      const got = Math.round(pr.price * back / 10) * 10; p.money += got;
+      return { name: `${WORLD.nodes[pr.node].name}の「${pr.name}」（${yen(pr.price)}）`, got };
+    };
     if (T.form === 1) {
       // 大タヌキ: three turns of real damage
       T.left--; title = '大タヌキのいたずら！';
-      const gone = this.rng() < 0.45 ? loseProp() : '';
-      text = gone ? `${gone}を ただ同然で売り飛ばされた！` : `所持金から ${yen(grab(0.25, 300))} を持ち逃げされた！`;
-      ms = 2800;
+      const k = this.rng();
+      if (k < 0.5) { const g = loseProp(0); text = g ? `${g.name}を ただで売り飛ばした！` : `所持金から ${yen(take(0.3, 5))} を持ち逃げした！`; }
+      else if (k < 0.8) text = `所持金から ${yen(take(0.3, 5))} を持ち逃げした！`;
+      else { const amt = take(0.2, 4); const c = p.cards.length ? p.cards.splice(Math.floor(this.rng() * p.cards.length), 1)[0] : null; text = `${yen(amt)} を持ち逃げして、` + (c ? `${cardName(c.id)} もやぶいた！` : 'ゴミ箱をひっくり返していった！'); }
+      ms = 3000;
     } else if (T.form === 2) {
       // キングタヌキ: the worst thing that can happen to you
       T.left--; title = 'キングタヌキの大あばれ！！';
-      const k = this.rng();
-      if (k < 0.4) { const g = [loseProp(), loseProp()].filter(Boolean); text = g.length ? `${g.join('と')}を 海に投げすてた！！` : `所持金から ${yen(grab(0.4, 500))} をうばって豪遊した！！`; }
-      else if (k < 0.7) text = `所持金から ${yen(grab(0.4, 500))} をうばって豪遊した！！`;
-      else if (p.cards.length) { const n = p.cards.length; p.cards = []; text = `カードを${n}枚ぜんぶ 燃やしてしまった！！`; }
-      else text = `所持金から ${yen(grab(0.4, 500))} をうばって豪遊した！！`;
-      ms = 3000;
+      const g = [loseProp(0), loseProp(0)].filter(Boolean);
+      const amt = take(0.4, 8);
+      text = (g.length ? `${g.map(x => x.name).join('と')}を 海に投げすてた！！\nさらに` : '') + `所持金から ${yen(amt)} をうばって豪遊した！！`;
+      if (p.cards.length && this.rng() < 0.4) { text += p.cards.length > 1 ? `\n持っていたカード${p.cards.length}枚を ぜんぶ燃やした！！` : `\n持っていたカードを燃やした！！`; p.cards = []; }
+      ms = 3600;
     } else if (T.form === 3) {
       // ミニタヌキ: mostly harmless, sometimes even nice
       T.left--; title = 'ミニタヌキ';
       const k = this.rng();
-      if (k < 0.45) { const amt = 100 * S.year; p.money += amt; text = `どんぐりを拾ってきてくれた。売ったら ${yen(amt)} になった`; }
-      else if (k < 0.75) { const amt = Math.min(100 * S.year, Math.max(0, p.money)); p.money -= amt; text = amt ? `おやつ代に ${yen(amt)} をつまみ食い` : 'おなかをすかせている……'; }
+      if (k < 0.4) { const amt = 100 * S.year; p.money += amt; text = `どんぐりを拾ってきてくれた。売ったら ${yen(amt)} になった`; }
+      else if (k < 0.8) { const amt = Math.min(u, Math.max(0, p.money)); p.money -= amt; text = amt ? `おやつ代に ${yen(amt)} をつまみ食い` : 'おなかをすかせている……'; }
       else text = 'つぶらな瞳で見つめてくる……（何もしなかった）';
-      ms = 2000;
+      ms = 2200;
     } else if (T.form === 4) {
       // ハリケーンタヌキ: blows you somewhere else every turn
       T.left--; title = 'ハリケーンタヌキ！';
@@ -1850,38 +1962,45 @@ class Game {
       const to = pool[Math.floor(this.rng() * pool.length)];
       S.last = { kind: 'warp', pid: p.id, from: p.pos, to };
       p.pos = to; p.prev = -1;
-      const amt = Math.min(200 * S.year, Math.max(0, p.money)); p.money -= amt;
-      text = `大風をおこして ${WORLD.nodes[to].name} まで吹き飛ばされた！` + (amt ? `（修理代 ${yen(amt)}）` : '');
-      ms = 2600;
-    } else if (r < 0.42) {
-      const amt = p.money > 0 ? Math.min(Math.max(100, Math.round(p.money * 0.08 / 100) * 100), 1500 * S.year) : 0;
-      if (amt > 0) { p.money -= amt; text = `財布から ${yen(amt)} を持ち逃げした！`; }
-      else text = '財布をのぞいたが、からっぽだった……';
-    } else if (r < 0.55) {
-      if (p.cards.length) { const i = Math.floor(this.rng() * p.cards.length); const c = p.cards.splice(i, 1)[0]; text = `${cardName(c.id)} を かじってダメにした！`; }
-      else { const amt = Math.min(300, Math.max(0, p.money)); p.money -= amt; text = amt ? `おやつ代に ${yen(amt)} を使いこんだ` : 'お昼寝をしている……'; }
-    } else if (r < 0.67) {
-      if (p.cards.length < MAX_CARDS) {
-        const id = randomShopId(this.rng), price = CARD_DEFS[id].price;
-        p.money -= price; p.cards.push(mkCard(id));
-        text = `勝手にカード売り場で ${cardName(id)} を買ってきた！（代金 ${yen(price)} はあなた持ち）`;
-      } else text = 'カードがいっぱいで、買い物できずにすねている……';
-    } else if (r < 0.78 - 0.08 * (rule('tanukiChange', 1) - 1)) {
-      text = 'ぐうぐうとお昼寝をしている……';
-    } else if (r < 0.86 - 0.14 * (rule('tanukiChange', 1) - 1)) {
-      const amt = 100 * S.year; p.money += amt; text = `どんぐりを拾ってきてくれた。売ったら ${yen(amt)} になった`;
+      const amt = take(0.1, 3);
+      text = `大風をおこして ${WORLD.nodes[to].name} まで吹き飛ばした！ 修理代 ${yen(amt)}。`;
+      ms = 2800;
     } else {
-      // a change of form
-      const k = this.rng();
-      if (k < 0.3) { T.form = 3; title = 'タヌキが小さくなった？'; text = 'びんぼうタヌキがちぢんで…… ミニタヌキになった！\nしばらくはおとなしい。'; }
-      else if (k < 0.55) { T.form = 4; title = 'びんぼうタヌキが変身！？'; text = 'タヌキがぐるぐる回りだして…… ハリケーンタヌキになった！\n3ターンのあいだ、毎回どこかへ吹き飛ばされる！'; }
-      else if (k < 0.92 || T.total < 6) { T.form = 1; title = 'びんぼうタヌキが変身！？'; text = 'タヌキがムクムクふくらんで…… 大タヌキになった！\n3ターンのあいだ、大あばれする！'; }
-      else if (p.behind) { T.form = 3; title = 'タヌキが小さくなった？'; text = 'びんぼうタヌキがちぢんで…… ミニタヌキになった！\nしばらくはおとなしい。'; }
-      else { T.form = 2; title = '！！！'; text = 'タヌキが金色にかがやいて…… キングタヌキになった！！\n3ターンのあいだ、物件もカードもお金もめちゃくちゃにされる！'; }
-      T.left = TANUKI_FORMS[T.form].turns;
-      ms = 3200;
-      this.log(`${p.name} のタヌキは ${TANUKI_FORMS[T.form].name} になった`);
-      return this.setEvent({ kind: 'tanuki', title, text, next: 'nextturn', form: T.form }, ms);
+      const changeP = Math.min(0.42, (0.12 + 0.03 * T.held) * rule('tanukiChange', 1) * (p.behind ? 0.4 : 1));
+      if (this.rng() < changeP) {
+        // a change of form; the king gets likelier the longer it has stayed
+        const k = this.rng(), kingP = p.behind ? 0 : Math.min(0.35, 0.04 + 0.03 * T.held);
+        if (k < kingP) { T.form = 2; title = '！！！'; text = 'タヌキが金色にかがやいて…… キングタヌキになった！！\n3ターンのあいだ、物件もカードもお金もめちゃくちゃにされる！'; }
+        else if (k < kingP + 0.15) { T.form = 3; title = 'タヌキが小さくなった？'; text = 'びんぼうタヌキがちぢんで…… ミニタヌキになった！\nしばらくはおとなしい。'; }
+        else if (k < kingP + 0.4) { T.form = 4; title = 'びんぼうタヌキが変身！？'; text = 'タヌキがぐるぐる回りだして…… ハリケーンタヌキになった！\n3ターンのあいだ、毎回どこかへ吹き飛ばされる！'; }
+        else { T.form = 1; title = 'びんぼうタヌキが変身！？'; text = 'タヌキがムクムクふくらんで…… 大タヌキになった！\n3ターンのあいだ、物件を売り飛ばしたり大金を持ち逃げしたりする！'; }
+        T.left = TANUKI_FORMS[T.form].turns;
+        this.log(`${p.name} のタヌキは ${TANUKI_FORMS[T.form].name} になった`);
+        return this.setEvent({ kind: 'tanuki', title, text, next: 'nextturn', form: T.form }, 3400);
+      }
+      const r = this.rng();
+      if (r < 0.32) text = `財布から ${yen(take(0.15, 2))} を持ち逃げした！`;
+      else if (r < 0.46) {
+        if (p.cards.length) { const n = Math.min(p.cards.length, this.rng() < 0.4 ? 2 : 1); const gone = p.cards.splice(0, n).map(c => cardName(c.id)); text = `${gone.join('と')} を捨ててしまった！`; }
+        else text = `カードがないので、かわりに ${yen(take(0.1, 2))} を捨ててきた！`;
+      }
+      else if (r < 0.57) {
+        if (p.cards.length < MAX_CARDS) {
+          const pricey = SHOP_IDS.slice().sort((a, b) => CARD_DEFS[b].price - CARD_DEFS[a].price).slice(0, 8);
+          const id = pricey[Math.floor(this.rng() * pricey.length)], price = CARD_DEFS[id].price * 2;
+          p.money -= price; p.cards.push(mkCard(id));
+          text = `勝手にカード売り場で ${cardName(id)} を倍の値段で買ってきた！（代金 ${yen(price)} はあなた持ち）`;
+        } else text = `カードがいっぱいなので、かわりに ${yen(take(0.1, 2))} を使いこんだ！`;
+      }
+      else if (r < 0.70) { const g = loseProp(0.5); text = g ? `${g.name}を 勝手に半額の ${yen(g.got)} で売ってしまった！` : `売る物件がないので、${yen(take(0.12, 3))} を持ち逃げした！`; }
+      else if (r < 0.80) {
+        const others = S.players.filter(q => q.id !== p.id);
+        const amt = take(0.12, 2), each = Math.round(amt / Math.max(1, others.length) / 10) * 10;
+        for (const q of others) q.money += each;
+        text = `「みんなでなかよく」と、${yen(amt)} をほかの人たちに配ってしまった！（ひとり ${yen(each)}）`;
+      }
+      else if (r < 0.90) { const amt = u * 5; p.money -= amt; text = `あなたの名前で ${yen(amt)} の借金をしてきた！`; }
+      else text = 'ぐうぐうとお昼寝をしている……（今月は何もしなかった）';
     }
     if (T.form !== 0 && T.left <= 0) { text += `\n……${TANUKI_FORMS[T.form].name}は ふつうのタヌキにもどった。`; T.form = 0; }
     this.log(`${p.name} の${title}：${text.replace(/\n/g, ' ')}`);
@@ -1954,9 +2073,8 @@ class Game {
       }
       case 'heritage': {
         const c = randomCity(), node = WORLD.nodes[c];
-        S.priceMods = S.priceMods || {};
-        S.priceMods[c] = (S.priceMods[c] || 1) * 1.5;
         for (const pr of node.props) pr.price = Math.round(pr.price * 1.5 / 10) * 10;
+        this.saveProps(c);
         text = `${node.name} が世界遺産に登録された！ ${node.name} の物件の値段が1.5倍になった（持っている人の総資産アップ、これから買う人は高くなる）。`;
         for (const p of S.players) { const n = S.own[c].filter(o => o === p.id).length; if (n) rows.push({ pid: p.id, name: p.name, text: `${node.name}の物件${n}件が値上がり` }); }
         break;
@@ -2035,7 +2153,9 @@ class Game {
     const before = S.players.map(p => ({ pid: p.id, assets: this.assets(p) })).sort((a, b) => b.assets - a.assets);
     const prevRank = {}; before.forEach((r, i) => { prevRank[r.pid] = i + 1; });
     const rows = S.players.map(p => {
-      const inc = this.income(p), cats = this.incomeByCat(p);
+      const fx = behindFx(p);
+      const inc = Math.round(this.income(p) * (fx ? fx.income : 1)), cats = this.incomeByCat(p);
+      if (fx) for (const k in cats) cats[k] = Math.round(cats[k] * fx.income);
       const interest = p.money < 0 ? Math.round(-p.money * 0.1 / 100) * 100 : 0;
       const moneyBefore = p.money;
       p.money += inc - interest;
@@ -2068,10 +2188,17 @@ class Game {
       node.props.push({ name, price, rate, cat });
       owners.push(-1);
       opened.push(`${node.name}の${name}`);
+      this.saveProps(c);
     }
-    if (opened.length) S.extraProps = S.extraProps || [];
-    for (const c of WORLD.cities) { const n = WORLD.nodes[c]; const base = WORLD.def.cities.find(d => d[0] === n.name)[4].length; if (n.props.length > base) S.extraProps[c] = n.props.slice(base); }
     return opened;
+  }
+  // a station whose shops differ from the map's own list is kept in the state in full,
+  // so a reloaded game and every friend's phone see exactly the same shops and prices
+  saveProps(c) {
+    const S = this.s;
+    S.props = S.props || {};
+    S.props[c] = WORLD.nodes[c].props.map(pr => ({ name: pr.name, price: pr.price, rate: pr.rate, cat: pr.cat }));
+    S.propsRev = (S.propsRev || 0) + 1;
   }
   // a fresh game starts from the map's own shops
   static resetProps() {
@@ -2080,12 +2207,18 @@ class Game {
       n.props = def.map(([name, price, rate, cat]) => ({ name, price, rate, cat }));
     }
   }
-  // after a save or a network sync: base shops, then price changes, then the shops that opened later
+  // after a save or a network sync: the map's own shops, then every station the game has changed
   static restoreProps(S) {
     Game.resetProps();
-    if (!S) return;
-    for (const c in S.priceMods || {}) { const node = WORLD.nodes[c]; if (node) for (const pr of node.props) pr.price = Math.round(pr.price * S.priceMods[c] / 10) * 10; }
-    for (const c in S.extraProps || {}) { const node = WORLD.nodes[c]; if (node) node.props = node.props.concat(S.extraProps[c]); }
+    if (!S || !S.props || typeof S.props !== 'object') return;
+    for (const c of Object.keys(S.props)) {
+      const node = WORLD.nodes[c], list = S.props[c];
+      if (!node || node.type !== 'city' || !Array.isArray(list)) continue;
+      const good = list.filter(pr => pr && typeof pr.name === 'string' && pr.price > 0);
+      if (good.length) node.props = good.map(pr => ({ name: pr.name, price: pr.price, rate: pr.rate, cat: pr.cat || propCat(pr.name) }));
+    }
+    // owners and shops always line up
+    if (S.own) for (const c of WORLD.cities) { const o = S.own[c], n = WORLD.nodes[c]; if (o && o.length < n.props.length) while (o.length < n.props.length) o.push(-1); }
   }
   finish() {
     const S = this.s;
@@ -2303,9 +2436,9 @@ class Game {
     else if (n.type === 'warp') v -= this.distTo(node, S.dest) <= 8 ? 150 : -30;   // a gamble, welcome only when far away
     else if (n.type === 'shop') v += p.money > 2500 && p.cards.length < MAX_CARDS ? 40 : 0;
     else if (n.type === 'city') {
-      const free = S.own[node].filter((o, i) => o < 0 && n.props[i].price <= p.money).length;
+      const free = S.own[node].filter((o, i) => o < 0 && n.props[i] && buyPrice(p, n.props[i]) <= p.money).length;
       if (free) v += 40;
-      if (hard && free && S.own[node].every((o, i) => o === p.id || (o < 0 && n.props[i].price <= p.money))) v += 120;   // could take the whole station
+      if (hard && free && S.own[node].every((o, i) => o === p.id || (o < 0 && n.props[i] && buyPrice(p, n.props[i]) <= p.money))) v += 120;   // could take the whole station
     }
     const T = S.tanuki;
     if (T.at >= 0 && T.at !== p.id && S.players[T.at].pos === node) v -= 400;
@@ -2414,20 +2547,21 @@ class Game {
   }
   cpuBuy() {
     const S = this.s, p = this.cur(), node = WORLD.nodes[S.buy.node], owners = S.own[node.id], lv = S.cpu;
-    const free = owners.map((o, i) => o < 0 ? i : -1).filter(i => i >= 0);
+    const free = owners.map((o, i) => o < 0 && node.props[i] ? i : -1).filter(i => i >= 0);
+    const cost = i => buyPrice(p, node.props[i]);
     let picks = [];
     if (lv === 'easy') {
       let money = p.money;
-      for (const i of free) { const pr = node.props[i]; if (this.rng() < 0.5 && money - pr.price >= 500) { picks.push(i); money -= pr.price; } }
+      for (const i of free) { if (this.rng() < 0.5 && money - cost(i) >= 500) { picks.push(i); money -= cost(i); } }
     } else {
       const reserve = (lv === 'hard' ? 500 : 800) + 400 * S.year;
-      const allCost = free.reduce((a, i) => a + node.props[i].price, 0);
+      const allCost = free.reduce((a, i) => a + cost(i), 0);
       if (p.money - allCost >= reserve * 0.5) picks = free;   // the whole station: twice the income
       else {
         let money = p.money;
         for (const i of free.slice().sort((a, b) => node.props[b].rate - node.props[a].rate)) {
           const pr = node.props[i];
-          if (money - pr.price >= reserve && pr.rate >= (lv === 'hard' ? 8 : 10)) { picks.push(i); money -= pr.price; }
+          if (money - cost(i) >= reserve && pr.rate >= (lv === 'hard' ? 8 : 10)) { picks.push(i); money -= cost(i); }
         }
       }
     }
@@ -2785,8 +2919,9 @@ function buildBoard() {
   // inset frames (沖縄 etc.)
   for (const ins of WORLD.def.insets || []) {
     const c = WORLD.nodes[WORLD.cityIdx[ins.city]]; if (!c) continue;
-    svgEl('rect', { class: 'ins', x: c.x + ins.box[0], y: c.y + ins.box[1], width: ins.box[2], height: ins.box[3], rx: 14 }, L.land);
-    svgEl('text', { class: 'ins-lbl', x: c.x + ins.box[0] + 10, y: c.y + ins.box[1] + 18 }, L.land).textContent = ins.label;
+    const sc = WORLD.def.scale || 1, bx = ins.box.map(v => v * sc);
+    svgEl('rect', { class: 'ins', x: c.x + bx[0], y: c.y + bx[1], width: bx[2], height: bx[3], rx: 14 }, L.land);
+    svgEl('text', { class: 'ins-lbl', x: c.x + bx[0] + 10, y: c.y + bx[1] + 18 }, L.land).textContent = ins.label;
   }
   // rails
   L.rail = svgEl('g', {}, cam);
@@ -3228,7 +3363,24 @@ function renderTitle() {
 // ===================================================================
 //  the game loop (the host runs it; local games are "host" too)
 // ===================================================================
-function schedule(d) { clearTimeout(UI.timer); UI.timer = 0; if (d > 0) UI.timer = setTimeout(pump, d); }
+function schedule(d) {
+  clearTimeout(UI.timer); UI.timer = 0;
+  UI.waiting = !(d > 0);
+  if (d > 0) { UI.timer = setTimeout(pump, d); return; }
+  // an event left open on a friend's phone (or by everyone) moves on by itself after a while
+  const S = UI.game && UI.game.S;
+  if (UI.mode === 'host' && S && S.phase === 'event' && S.event) {
+    const owner = S.event.pid >= 0 ? S.players[S.event.pid] : null;
+    if (owner && /^peer/.test(owner.ctrl) && !owner.away) UI.timer = setTimeout(pump, 45000);
+  }
+}
+// after a seat changes hands: only move the game on when it was waiting for that seat
+function nudge(pid) {
+  if (UI.timer) { publish(); return; }
+  const S = UI.game.S, p = S.players[S.turn];
+  const waitsOn = S.phase === 'event' ? (S.event && S.event.pid === pid) : S.turn === pid;
+  if (!UI.waiting || waitsOn || (p && p.id === pid)) pump(); else publish();
+}
 function pump() { if (!UI.game) return; const d = UI.game.tick(); publish(); schedule(d); }
 function publish() {
   UI.state = UI.game.S;
@@ -3255,7 +3407,7 @@ function act(a) {
 function startGame(players, years, mode, cpu, map) {
   clearTimeout(UI.timer);
   UI.mode = mode; UI.prev = null; UI.followTurn = -1; UI.buyPick = new Set(); closeSheet();
-  UI.game = new Game({ players, years, cpu: cpu || 'normal', map: map || 'japan' });
+  UI.game = new Game({ players, years, cpu: cpu || 'normal', map: map || 'japan', speed: pref.speed || 'tap' });
   UI.state = UI.game.S;
   UI.lastSetup = { players: players.map(p => ({ ...p })), years, mode, cpu: cpu || 'normal', map: map || 'japan' };
   show('game');
@@ -3379,7 +3531,7 @@ function renderStrip(S) {
   S.players.forEach((p, i) => {
     const b = strip.children[i];
     b.classList.toggle('on', i === S.turn && S.phase !== 'gameover');
-    b.querySelector('.nm span').textContent = p.name + (p.ctrl === 'cpu' && !/CPU/i.test(p.name) ? '(CPU)' : '') + (p.slow > 0 ? '🐢' : '') + (p.skip > 0 ? '💤' : '') + (p.behind ? '🔥' : '');
+    b.querySelector('.nm span').textContent = p.name + (p.ctrl === 'cpu' && !/CPU/i.test(p.name) ? '(CPU)' : '') + (p.slow > 0 ? '🐢' : '') + (p.skip > 0 ? '💤' : '') + (p.behind ? '🔥'.repeat(p.behind) : '');
     const m = b.querySelector('.money'); m.textContent = shortYen(p.money) + '円'; m.classList.toggle('neg', p.money < 0);
     b.querySelector('.sub').textContent = `物件${countProps(S, p.id)}・カード${p.cards.length}` + (p.sealed > 0 ? '🔒' : '');
     const dd = WORLD.dist[S.dest][p.pos];
@@ -3407,6 +3559,22 @@ function renderDice(S, prev) {
     Array.from(d.children).forEach((e, i) => { if (e.classList.contains('rolling') || e.textContent !== String(S.dice.vals[i])) { e.classList.remove('rolling'); e.classList.add('pop'); e.textContent = S.dice.vals[i]; } });
   }
 }
+// does the event on screen wait for a tap? (the same rule as the engine's eventDelay)
+function evWaits(S) {
+  const e = S.event; if (!e) return false;
+  const speed = S.speed || 'tap', cpuish = q => q.ctrl === 'cpu' || q.away;
+  const humanHere = S.players.some(q => q.ctrl === 'local' && !q.away) || UI.mode === 'guest';
+  if (speed === 'tap') { const owner = e.pid >= 0 ? S.players[e.pid] : null; if (owner ? !cpuish(owner) : humanHere) return true; }
+  return e.kind === 'settle' && speed !== 'fast' && humanHere;
+}
+// can this device close the event on screen? (the same rule the engine checks)
+function canCloseEvent(S) {
+  const ev = S.event; if (!ev) return false;
+  const owner = ev.pid >= 0 ? S.players[ev.pid] : null;
+  const cpuish = q => q.ctrl === 'cpu' || q.away;
+  if (UI.mode === 'guest') return !!owner && !cpuish(owner) && owner.id === UI.myPid;
+  return owner && !cpuish(owner) ? owner.ctrl === 'local' : true;
+}
 function renderSettle(S, ev) {
   const box = $('#settle');
   if (!ev) { if (!box.hidden) { box.hidden = true; box.innerHTML = ''; } return; }
@@ -3430,8 +3598,9 @@ function renderSettle(S, ev) {
   html += '</div>';
   const tail = ev.last ? 'おつかれさまでした！ けっか発表へ…' : `${ev.year + 1}年目、4月へ。`;
   html += `<div class="tail" style="animation-delay:${0.5 + rows.length * 0.75}s">${esc(tail)}</div>`;
-  const canSkip = UI.mode !== 'guest';
+  const canSkip = canCloseEvent(S);
   if (canSkip) html += `<button class="btn btn-main btn-wide" id="settle-ok" type="button">${ev.last ? 'けっかを見る' : 'つぎの年へ'}</button>`;
+  else html += `<div class="tail" style="opacity:1;animation:none">1台目が すすめるのを待っています…</div>`;
   box.innerHTML = html;
   box.hidden = false;
   const b = $('#settle-ok'); if (b) b.onclick = () => { Sound.click(); act({ t: 'ok' }); };
@@ -3452,8 +3621,8 @@ function renderEvent(S, prev) {
   if (who) html += `<div class="ev-who"><i style="background:${who.color}"></i>${esc(who.name)}</div>`;
   html += `<div class="ev-title">${esc(ev.title || '')}</div><div class="ev-text">${esc(ev.text || '')}</div>`;
   if (ev.rows) html += '<table>' + ev.rows.map(r => `<tr><td><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${S.players[r.pid].color};margin-right:6px"></i>${esc(r.name)}</td>` + (r.text !== undefined ? `<td colspan="2">${esc(r.text)}</td>` : `<td>収益 ＋${esc(yen(r.inc))}${r.interest ? `<br><span style="color:var(--red)">利息 −${esc(yen(r.interest))}</span>` : ''}</td><td>総資産 ${esc(yen(r.assets))}</td>`) + '</tr>').join('') + '</table>';
-  const canSkip = UI.mode === 'guest' ? (ev.pid === UI.myPid || (who && (who.ctrl === 'cpu' || who.away))) : true;
-  if (canSkip) html += '<div class="ev-skip">タップでとばす ▶</div>';
+  const canSkip = canCloseEvent(S);
+  if (canSkip) html += evWaits(S) ? '<div class="ev-skip wait">読んだら タップで つぎへ ▶</div>' : '<div class="ev-skip">タップでとばす ▶</div>';
   box.innerHTML = html;
   box.hidden = false;
   box.onclick = canSkip ? () => { Sound.click(); act({ t: 'ok' }); } : null;
@@ -3510,9 +3679,9 @@ function renderActions(S) {
   if (S.phase === 'gameover') { const b = el('button', 'btn btn-main', 'けっかを見る'); b.type = 'button'; b.onclick = () => showResult(S); a.appendChild(b); return; }
   if (S.phase === 'event') {
     const ev = S.event, who = ev && ev.pid >= 0 ? S.players[ev.pid] : null;
-    const canSkip = UI.mode === 'guest' ? (ev && (ev.pid === UI.myPid || (who && (who.ctrl === 'cpu' || who.away)))) : true;
-    if (canSkip) { const b = el('button', 'btn btn-sub', 'つぎへ ▶'); b.type = 'button'; b.onclick = () => { Sound.click(); act({ t: 'ok' }); }; a.appendChild(b); }
-    else msg(`${cur.name} の番です…`, true);
+    const canSkip = canCloseEvent(S);
+    if (canSkip) { const b = el('button', evWaits(S) ? 'btn btn-main' : 'btn btn-sub', 'つぎへ ▶'); b.type = 'button'; b.onclick = () => { Sound.click(); act({ t: 'ok' }); }; a.appendChild(b); }
+    else msg(who ? `${who.name} が読んでいます…` : '1台目が すすめるのを待っています…', true);
     return;
   }
   if (!mine) {
@@ -3609,15 +3778,20 @@ function renderBuySheet(S) {
   body.innerHTML = '';
   const mineAll = owners.filter(o => o === cur.id).length;
   body.appendChild(el('p', 'note', `所持金 ${yen(cur.money)}。ぜんぶ自分のものにすると「独占」で収益2倍！` + (mineAll ? `（${mineAll}件は すでにあなたの物件）` : '')));
+  const fx = behindFx(cur);
+  if (fx) body.appendChild(el('p', 'note', `🔥 がんばれ補正で 物件が${Math.round(fx.discount * 100)}%引き！（総資産には元の値段で入ります）`));
   node.props.forEach((pr, i) => {
-    const o = owners[i], free = o < 0;
+    if (!pr) return;
+    const o = owners[i], free = !(o >= 0), op = o >= 0 ? S.players[o] : null;
     const row = el('div', 'prop' + (free ? '' : ' owned') + (UI.buyPick.has(i) ? ' sel' : ''));
-    const owner = free ? '' : `<span class="own" style="background:${S.players[o].color}">${esc(S.players[o].name)}</span>`;
-    row.innerHTML = `<div class="chk">${UI.buyPick.has(i) ? '✓' : ''}</div><div class="pn">${PROP_CATS[pr.cat].icon}${esc(pr.name)}<small>${owner || '売り出し中'}</small></div><div class="pr">${esc(yen(pr.price))}<small>収益率 ${pr.rate}%</small></div>`;
+    const owner = op ? `<span class="own" style="background:${op.color}">${esc(op.name)}</span>` : '';
+    const cost = buyPrice(cur, pr);
+    const priceHtml = cost !== pr.price ? `<s style="color:var(--sub);font-size:12px">${esc(yen(pr.price))}</s> ${esc(yen(cost))}` : esc(yen(pr.price));
+    row.innerHTML = `<div class="chk">${UI.buyPick.has(i) ? '✓' : ''}</div><div class="pn">${(PROP_CATS[pr.cat] || PROP_CATS.other).icon}${esc(pr.name)}<small>${owner || '売り出し中'}</small></div><div class="pr">${priceHtml}<small>収益率 ${pr.rate}%</small></div>`;
     if (free) row.onclick = () => { Sound.click(); if (UI.buyPick.has(i)) UI.buyPick.delete(i); else UI.buyPick.add(i); renderBuySheet(S); };
     body.appendChild(row);
   });
-  const total = [...UI.buyPick].reduce((a, i) => a + node.props[i].price, 0);
+  const total = [...UI.buyPick].reduce((a, i) => a + (node.props[i] ? buyPrice(cur, node.props[i]) : 0), 0);
   const over = total > cur.money;
   const t = el('div', 'total' + (over ? ' over' : '')); t.innerHTML = `<span>合計</span><b>${esc(yen(total))}${over ? '（お金が足りません）' : ''}</b>`;
   body.appendChild(t);
@@ -3728,9 +3902,9 @@ function openGlossarySheet(S, focus) {
   } else {
     sec('季節のイベント（月のはじめ）', Object.keys(MONTH_EVENTS).map(m => [`${MONTHS[m]} ${MONTH_EVENTS[m].title}`, MONTH_EVENTS[m].text || ({ typhoon: 'どこかの地方に台風。その地方の物件を持つ人は値段の5%の修理代。', otoshidama: '全員にお年玉（300万円×年）。', setsubun: 'びんぼうタヌキがついている人は、半分の確率でタヌキが逃げ出します。' })[MONTH_EVENTS[m].kind] || '']));
   }
-  sec('びんぼうタヌキ', [['びんぼうタヌキ', '目的地に誰かが着くと、いちばん遠かった人にくっつきます。ターンの終わりにお金を持ち逃げ・カードをかじる・勝手に買い物など。すれ違うと相手に乗りかえます。'], ['大タヌキ（3ターン）', '物件をただ同然で売り飛ばす、所持金の25%を持ち逃げ。'], ['キングタヌキ（3ターン）', '物件を2件海に投げすてる、所持金の40%、カードを全部燃やす。ごくまれ。'], ['ミニタヌキ（3ターン）', 'ほぼ無害。どんぐりをくれることも。'], ['ハリケーンタヌキ（3ターン）', '毎ターン、どこかの駅へ吹き飛ばされます。'], ['追いはらう', WORLD.def.worldEvents ? 'おはらいカード。' : 'おはらいカード、2月の節分。']]);
+  sec('びんぼうタヌキ', [['びんぼうタヌキ', '目的地に誰かが着くと、いちばん遠かった人にくっつきます。ターンの終わりに毎回：所持金の15%を持ち逃げ／カードを1〜2枚捨てる／カードを倍の値段で買ってくる／物件を勝手に半額で売る／お金をほかの人に配る／あなたの名前で借金してくる。すれ違うと相手に乗りかえます。長くくっついているほど変身しやすい。'], ['大タヌキ（3ターン）', '物件をただで売り飛ばす、所持金の30%を持ち逃げ、カードをやぶる。'], ['キングタヌキ（3ターン）', '毎ターン物件を2件海に投げすて、所持金の40%を奪い、カードを全部燃やすことも。長くくっついているほど出やすい。'], ['ミニタヌキ（3ターン）', 'ほぼ無害。どんぐりをくれることも。'], ['ハリケーンタヌキ（3ターン）', '毎ターン、どこかの駅へ吹き飛ばし、修理代も取る。'], ['追いはらう', WORLD.def.worldEvents ? 'おはらいカード。' : 'おはらいカード、2月の節分。']]);
   sec('マスの種類', [['＋ / −', 'お金がもらえる / はらう（年がすすむと額が大きくなる）。'], ['C カード', 'カードを1枚（8枚まで）。'], ['N ナイスカード', '強いカード（新幹線・ちょうど・まぢか・おまもり…）。'], ['✦ ワープ', 'どこかの駅へ飛ばされる。目的地に当たればゴール。'], ['? はてな', '宝箱・落とし穴・銀次・タヌキ・タダの物件・ワープ…何が起きるかわからない。'], ['店 カード売り場', 'お金でカードを買える。'], ['駅', '物件を買える。全部買うと独占で収益2倍。']]);
-  sec('ほかの出来事', [['スリの銀次', 'ターンの終わりにときどき現れて所持金の15〜30%をすっていきます。がんばれ補正の人は見逃してもらえます。'], ['地域のできごと', '駅に止まると13%の確率で、その地方ならではの出来事。'], ['がんばれ補正🔥', 'ビリの総資産が次の人の半分以下だと発動。援助金・プラスマス1.5倍、いいカードが出やすい、銀次とタヌキが手加減。'], ['決算', '毎年3月。物件の収益率ぶんのお金、借金には10%の利息。売り切れた駅に新しい物件がオープン。']]);
+  sec('ほかの出来事', [['スリの銀次', 'ターンの終わりにときどき現れて所持金の15〜30%をすっていきます。トップの人は2倍狙われやすく、がんばれ補正の人は見逃してもらえます。'], ['地域のできごと', '駅に止まると13%の確率で、その地方ならではの出来事。'], ['がんばれ補正🔥', 'ビリの総資産がトップの半分以下で発動し、差が開くほど強くなる（レベル1〜3）。' + [1, 2, 3].map(l => `レベル${l}：${behindText(l)}`).join('／') + '。'], ['決算', '毎年3月。物件の収益率ぶんのお金、借金には10%の利息。売り切れた駅に新しい物件がオープン。']]);
   sec('カード', CARD_IDS.map(id => [CARD_DEFS[id].name + (CARD_DEFS[id].price ? `（売り場 ${yen(CARD_DEFS[id].price)}）` : ''), cardDesc(id) + (MOVE_CARDS.includes(id) ? '' : '　※使ったあとにサイコロをふれる')]));
   if (focus === 'world' && focusEl) focusEl.scrollIntoView();
 }
@@ -3787,6 +3961,17 @@ function openMenuSheet() {
   add('🗺 地図ぜんたいを見る', () => { closeSheet(); camFit(400); });
   add(Sound.on ? '🔊 効果音：オン（タップでオフ）' : '🔇 効果音：オフ（タップでオン）', () => { Sound.on = !Sound.on; pref.sound = Sound.on; savePref(); openMenuSheet(); });
   add(BGM.on ? '🎵 BGM：オン（タップでオフ）' : '🎵 BGM：オフ（タップでオン）', () => { BGM.on = !BGM.on; pref.bgm = BGM.on; savePref(); if (BGM.on) { Sound.ensure(); BGM.start(); } else BGM.stop(); openMenuSheet(); });
+  if (UI.mode !== 'guest' && UI.game) {
+    const names = { tap: 'タップで進む（自分のイベントは読むまで待つ）', slow: 'ゆっくり（自動）', normal: 'ふつう（自動）', fast: 'はやい（自動）' }, order = ['tap', 'slow', 'normal', 'fast'];
+    const cur = UI.game.S.speed || 'tap';
+    add(`⏱ 説明の表示：${names[cur]}`, () => {
+      const nx = order[(order.indexOf(cur) + 1) % order.length];
+      UI.game.S.speed = nx; pref.speed = nx; savePref(); UI.game.touch();
+      // an event left waiting moves on by itself from now on
+      if (UI.waiting && UI.game.S.phase === 'event' && nx !== 'tap') schedule(UI.game.eventDelay(UI.game.S.event, 2000) || 3000);
+      publish(); openMenuSheet();
+    });
+  }
   add('📖 あそびかた', () => { closeSheet(); UI.howtoFrom = 'game'; show('howto'); });
   add(UI.mode === 'guest' ? '🚪 部屋を出る（タイトルへ）' : '🏠 タイトルにもどる' + (UI.mode === 'solo' || UI.mode === 'local' ? '（つづきは保存されます）' : '（ゲーム終了）'), () => {
     if (UI.mode === 'host' && !confirm('ゲームを終了して、みんなとの接続を切ります。よろしいですか？')) return;
@@ -3919,7 +4104,7 @@ const Net = {
         p.away = false;
         UI.game.log(`${p.name} が再接続した`); UI.game.touch();
         link.send({ t: 'start', s: UI.state, you: pr.pid });
-        if (UI.timer) publish(); else pump();
+        if (UI.timer) publish(); else nudge(pr.pid);
         if (!this.peers.some(q => q.pid < 0) && !UI.game.S.players.some(q => q.away)) closeSheet();
         renderReconnectSheet();
         return;
@@ -3939,7 +4124,7 @@ const Net = {
         if (p.ctrl !== 'cpu' && !p.away) {
           p.away = true;
           UI.game.log(`${p.name} との接続が切れた。もどるまでコンピューターが代わりに運転します`); UI.game.touch();
-          if (UI.timer) publish(); else pump();
+          nudge(pr.pid);
         }
       } else if (!this.inGame()) this.hostLobby();
     }
@@ -3971,7 +4156,7 @@ const Net = {
     p.ctrl = 'cpu'; p.away = false;
     this.seats = this.seats.filter(x => x.pid !== pid);
     UI.game.log(`${p.name} の席はコンピューターが引きつぎました`); UI.game.touch();
-    if (UI.timer) publish(); else pump();
+    nudge(pid);
     renderReconnectSheet();
   },
   hostEnd() {
@@ -3995,7 +4180,7 @@ const Net = {
   guestOnMsg(m) {
     if (m.t === 'lobby') { this.members = m.members || []; this.you = m.you; renderP2P(); }
     else if (m.t === 'start') { clearTimeout(UI.timer); UI.game = null; UI.mode = 'guest'; UI.myPid = m.you; UI.prev = null; UI.followTurn = -1; this.reconnecting = false; closeSheet(); UI.state = m.s; setWorld(m.s.map); Game.restoreProps(m.s); show('game'); render(true); }
-    else if (m.t === 'st') { if (UI.mode === 'guest' && m.s && (!UI.state || m.s.rev >= UI.state.rev)) { UI.state = m.s; if (m.s.extraProps) Game.restoreProps(m.s); if (UI.screen === 'game') render(); } }
+    else if (m.t === 'st') { if (UI.mode === 'guest' && m.s && (!UI.state || m.s.rev >= UI.state.rev)) { const pr = UI.state ? UI.state.propsRev : -1; UI.state = m.s; if ((m.s.propsRev || 0) !== (pr || 0)) Game.restoreProps(m.s); if (UI.screen === 'game') render(); } }
     else if (m.t === 'full') { this.guestOnClose(this.link, 'full', true); }
     else if (m.t === 'end') { this.guestOnClose(this.link, 'end', true); }
   },
@@ -4230,7 +4415,7 @@ function init() {
   $$('#seg-cpu button').forEach(b => b.addEventListener('click', () => { Sound.click(); Net.cpu = +b.dataset.c; renderP2P(); }));
   $('#pp-start').addEventListener('click', () => { Sound.click(); Net.hostStart(); });
   // a phone that comes back from the background: catch up the clock
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && UI.game && UI.screen === 'game' && !UI.timer) pump(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && UI.game && UI.screen === 'game' && !UI.timer && !UI.waiting) pump(); });
   show('title');
 }
 document.addEventListener('DOMContentLoaded', init);
