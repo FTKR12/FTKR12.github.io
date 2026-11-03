@@ -84,6 +84,9 @@ p { margin: 8px 0; line-height: 1.6; }
 .seg button { flex: 1; min-height: 42px; border: 0; border-radius: 9px; background: transparent; font-weight: 800; color: var(--sub); }
 .seg button.on { background: var(--paper); color: var(--ink); box-shadow: 0 2px 6px rgba(0,0,0,.12); }
 .seg button:disabled { opacity: .3; cursor: default; }
+.seg-years { gap: 4px; }
+.seg-years button { padding: 0 2px; white-space: nowrap; min-width: 0; font-size: min(16px, 4.2vw); letter-spacing: -.02em; }
+.years-note { margin: 6px 2px 0; }
 .slots { display: grid; gap: 8px; margin-top: 8px; }
 .slot { display: grid; grid-template-columns: 14px 1fr auto; gap: 10px; align-items: center; background: #fff; border: 2px solid var(--line); border-radius: 12px; padding: 8px 10px; }
 .slot .dot { width: 14px; height: 14px; border-radius: 50%; }
@@ -119,7 +122,8 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
   border-bottom: 2px solid var(--line); z-index: 3; box-shadow: 0 2px 8px rgba(0,0,0,.08);
 }
 .top-date { background: var(--ink); color: #fff; border-radius: 10px; padding: 4px 10px; text-align: center; line-height: 1.15; min-width: 58px; }
-.top-date b { font-size: 13px; display: block; }
+.top-date b { font-size: 13px; display: block; white-space: nowrap; }
+.top-date b small { font-size: 10px; font-weight: 700; opacity: .7; margin-left: 1px; }
 .top-date span { font-size: 15px; }
 .top-dest { min-width: 0; line-height: 1.2; }
 .top-dest small { display: block; font-size: 11px; color: var(--sub); }
@@ -459,7 +463,8 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
         <div class="slots" id="slots"></div>
         <p class="note hc-note" id="hc-note"></p>
         <h3 class="o-label">なん年あそぶ？（1年＝12ターン）</h3>
-        <div class="seg" id="seg-y"><button type="button" data-y="1">1年</button><button type="button" data-y="3" class="on">3年</button><button type="button" data-y="5">5年</button><button type="button" data-y="10">10年</button></div>
+        <div class="seg seg-years" id="seg-y"><button type="button" data-y="1">1年</button><button type="button" data-y="3" class="on">3年</button><button type="button" data-y="5">5年</button><button type="button" data-y="7">7年</button><button type="button" data-y="10">10年</button><button type="button" data-y="20">20年</button></div>
+        <p class="note years-note" id="years-note" hidden></p>
         <h3 class="o-label">コンピューターの強さ</h3>
         <div class="seg" id="seg-cpulv"><button type="button" data-l="easy">よわい</button><button type="button" data-l="normal" class="on">ふつう</button><button type="button" data-l="hard">つよい</button></div>
         <div class="actions-row">
@@ -499,7 +504,8 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
             <h3 class="o-label">マップ</h3>
             <div class="seg" id="seg-map2"><button type="button" data-m="japan" class="on">🗾 日本編</button><button type="button" data-m="world">🌏 世界編</button></div>
             <h3 class="o-label">なん年あそぶ？（1年＝12ターン）</h3>
-            <div class="seg" id="seg-y2"><button type="button" data-y="1">1年</button><button type="button" data-y="3" class="on">3年</button><button type="button" data-y="5">5年</button><button type="button" data-y="10">10年</button></div>
+            <div class="seg seg-years" id="seg-y2"><button type="button" data-y="1">1年</button><button type="button" data-y="3" class="on">3年</button><button type="button" data-y="5">5年</button><button type="button" data-y="7">7年</button><button type="button" data-y="10">10年</button><button type="button" data-y="20">20年</button></div>
+            <p class="note years-note" id="years-note2" hidden></p>
             <h3 class="o-label">コンピューターを足す</h3>
             <div class="seg" id="seg-cpu"><button type="button" data-c="0" class="on">なし</button><button type="button" data-c="1">1人</button><button type="button" data-c="2">2人</button><button type="button" data-c="3">3人</button></div>
             <h3 class="o-label">初心者ハンデ（★ほど有利）</h3>
@@ -624,7 +630,7 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
         <p>1ターンに1枚使えます。急行などの<b>移動するカード</b>はサイコロのかわりに、スリや福袋などの<b>移動しないカード</b>は使ったあとにサイコロをふれます。<b>急行・特急・新幹線・のぞみ</b>はサイコロの数がふえ、<b>急行周遊・特急周遊</b>は3回使えます。<b>ちょうど</b>は1〜6の好きな数だけ進めるので、ぴったり到着のきりふだ。<b>まぢか・最寄り駅（目的地の手前の駅へ）・ぶっとび・場所がえ・集合</b>で位置を変え、<b>牛歩・いたずら・ふういん・北へ！・ぶんどり・刀狩り・スリ</b>でライバルをじゃま。<b>おまもり</b>は持っているだけで、いじわるカードを1回はねかえします。<b>おはらい</b>でタヌキを追いはらい、<b>たからくじ・福袋・徳政令</b>は困ったときに。千葉の先の<b>房総半島</b>、金沢の先の<b>能登半島</b>、北海道の<b>知床</b>はカードマスだらけ！</p>
         <h3>🦝 びんぼうタヌキ</h3>
         <p>誰かが目的地に着くと、そのとき目的地から<b>いちばん遠かった人</b>にくっつきます。ターンの終わりに毎回、所持金の15%を持ち逃げ・カードを捨てる・カードを倍の値段で買ってくる・物件を勝手に半額で売る・お金をほかの人に配る・あなたの名前で借金してくる……と大暴れ。お金がなくても借金にされます。タヌキがついた人と<b>すれ違う（同じマスを通る・止まる）</b>と、タヌキは相手に乗りかえるので、わざと突っこんで なすりつけましょう。</p>
-        <p>長くくっついているほど<b>変身しやすく</b>なります：<b>大タヌキ</b>（3ターン、物件をただで売り飛ばす・所持金の30%）、<b>ハリケーンタヌキ</b>（3ターン、毎回どこかへ吹き飛ばす）、<b>ミニタヌキ</b>（3ターン、ほぼ無害）、そして<b>キングタヌキ</b>（3ターン、毎回物件2件を海に捨てて所持金の40%を奪い、カードも燃やす）。おはらいカードや2月の節分で追いはらえます。</p>
+        <p>長くくっついているほど<b>変身しやすく</b>なります：<b>大タヌキ</b>（3ターン、物件をただで売り飛ばす・所持金の30%）、<b>ハリケーンタヌキ</b>（3ターン、毎回どこかへ吹き飛ばす）、<b>ミニタヌキ</b>（3ターン、ほぼ無害）、そして<b>キングタヌキ</b>（3ターン、毎回物件2件を海に捨てて所持金の40%を奪い、カードも燃やす）。変身したタヌキは、すれ違いや目的地への到着で<b>ほかの人に乗りかえても変身したまま</b>です（残りのターンも引きつぎ）。おはらいカードや2月の節分で追いはらえば、次はふつうのタヌキになってもどってきます。</p>
         <h3>🌏 世界編</h3>
         <p>日本を真ん中にした世界地図で、121の都市をめぐります。シベリアや北極圏、中央アジア、サハラ、カナダ北部、アマゾン、パタゴニア、オーストラリアの内陸まで線路がのびていて、<b>分かれ道がいっぱい</b>。太平洋はグアム・タヒチ・イースター島・ガラパゴス、インド洋はコロンボ・モーリシャスを結ぶ航路が走り、ベーリング海峡でアジアとアメリカがつながります。大西洋の路線は<b>地図の端から反対側へ</b>。サハラ砂漠・ゴビ砂漠・アマゾン・パタゴニア・ナラボー平原はカードマスだらけ、北極圏とコンゴのジャングルは？マスだらけ。</p>
         <p>世界編は日本編より<b>ダイナミック</b>です。目的地は遠く、援助金もマスのお金も大きく、スリの銀次は多めで、タヌキはよく変身します。そして<b>毎月、世界イベント</b>が起きます：🏅オリンピック（開催地に止まると祝儀）、🌋火山噴火で<b>空路が閉鎖</b>、🏴‍☠️海賊（航路のマスに止まるとお金をうばわれる）、🏆ワールドカップで<b>目的地が変更</b>、🗺宝の地図（💰のマスに最初に止まった人が大金）、📉株安・📈好景気・💱為替・🛢原油高騰、🏛世界遺産登録で物件が値上がり、✈格安航空券で全員サイコロ＋1、🤝サミットで全員集合。地図の上に、いま起きていることが表示されます。</p>
@@ -671,8 +677,10 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
 //  real shape of Japan. Okinawa is moved up into an inset box.
 // ===================================================================
 
-const GAME_VER = '7.1';
-const NET_V = 9;
+const GAME_VER = '7.2';
+// saves made by these versions still fit this board and rules, so they can be resumed
+const SAVE_VERS = ['7.1', '7.2'];
+const NET_V = 10;
 
 // ---------- projection (日本編) ----------
 function projJapan(lat, lon) {
@@ -1712,7 +1720,8 @@ class Game {
       const a = this.assets(p), prev = S.lastAssets[i] === undefined ? a : S.lastAssets[i], d = a - prev;
       if (Math.abs(d) >= Math.max(1500, 0.12 * Math.max(Math.abs(prev), 3000))) {
         S.swings.push({ y: S.year, m: S.month, pid: p.id, delta: d, cause: cause.replace(/^[^\p{L}\p{N}]+/u, '').slice(0, 40) });
-        if (S.swings.length > 120) S.swings.splice(0, S.swings.length - 120);
+        // over the cap, the smallest jump goes (in a long game the old big ones still count)
+        if (S.swings.length > 120) { let mi = 0; S.swings.forEach((s, i) => { if (Math.abs(s.delta) < Math.abs(S.swings[mi].delta)) mi = i; }); S.swings.splice(mi, 1); }
       }
       S.lastAssets[i] = a;
     });
@@ -2066,12 +2075,17 @@ class Game {
   bonusSquare(p) {
     const S = this.s;
     const [text, effect, k] = BONUS_EVENTS[Math.floor(this.rng() * BONUS_EVENTS.length)];
-    let extra = '', next = 'turnend', kind = 'card';
+    let extra = '', next = 'turnend', kind = 'card', form = 0;
     if (effect === 'ginji') return this.ginji(p, '？マスの先で、スリの銀次が待ちかまえていた！');
     if (effect === 'tanuki') {
       const T = S.tanuki;
       if (T.at === p.id) extra = '（もうくっついていた……）';
-      else { T.at = p.id; T.form = 0; T.left = 0; extra = ''; kind = 'tanuki'; }
+      else {
+        // someone else's tanuki hops over just as it is (a changed form stays changed)
+        if (T.at >= 0) extra = `（${S.players[T.at].name} の${TANUKI_FORMS[T.form].name}が、そのまま乗りかえてきた！` + (T.form !== 0 && T.left > 0 ? ` あと${T.left}ターン` : '') + '）';
+        else { T.form = 0; T.left = 0; }
+        T.at = p.id; kind = 'tanuki'; form = T.form;
+      }
     } else if (effect === 'freeprop') {
       const c = nearestCity(p.pos, -1);
       const free = c >= 0 ? S.own[c].map((o, i) => o < 0 ? i : -1).filter(i => i >= 0) : [];
@@ -2085,7 +2099,7 @@ class Game {
       extra = `（${WORLD.nodes[to].name} へ）`; kind = 'warp'; next = to === S.dest ? 'arriving' : 'landing';
     } else { extra = this.applyEffect(p, effect, k); kind = effect === 'money' ? 'plus' : effect === 'pay' || effect === 'skip' ? 'minus' : 'card'; }
     this.log(`${p.name}（？マス）：${text}${extra}`);
-    return this.setEvent({ kind, title: '？マス', text: text + (extra ? '\n' + extra : ''), next, form: 0 }, 2600);
+    return this.setEvent({ kind, title: '？マス', text: text + (extra ? '\n' + extra : ''), next, form }, 2600);
   }
   // スリの銀次 helps himself to a share of your money
   ginji(p, lead) {
@@ -2115,10 +2129,16 @@ class Game {
     this.newDest(p.pos);
     let text = `援助金 ${yen(bonus)} を受け取った！` + (fx ? `（がんばれ補正で${fx.arrive}倍）` : '') + gekoku + `\n次の目的地は「${WORLD.nodes[S.dest].name}」（${this.distTo(p.pos, S.dest)}マス先）。`;
     if (far) {
-      T.at = far.id; T.form = 0; T.left = 0;
-      text += `\n目的地からいちばん遠かった ${far.name}（${this.distTo(far.pos, old)}マス）に、びんぼうタヌキがくっついた！`;
+      // the tanuki moves on as it is: a changed form keeps its form and the turns it has left
+      const was = T.at, dist = this.distTo(far.pos, old);
+      if (was < 0) { T.form = 0; T.left = 0; }   // nobody had it: a plain one turns up
+      const fname = TANUKI_FORMS[T.form].name, still = T.form !== 0 && T.left > 0 ? `（${fname}のまま。あと${T.left}ターン）` : '';
+      T.at = far.id;
+      if (was === far.id) text += `\n${fname}は、目的地からいちばん遠い ${far.name}（${dist}マス）に くっついたまま……` + (still ? `（あと${T.left}ターン）` : '');
+      else if (was >= 0) text += `\n${S.players[was].name} の${fname}が、目的地からいちばん遠かった ${far.name}（${dist}マス）に乗りかえた！` + still;
+      else text += `\n目的地からいちばん遠かった ${far.name}（${dist}マス）に、びんぼうタヌキがくっついた！`;
     }
-    this.log(`${p.name} が ${city.name} にぴったり到着！ 援助金 ${yen(bonus)}。次の目的地は ${WORLD.nodes[S.dest].name}` + (far ? `。びんぼうタヌキは ${far.name} へ` : ''));
+    this.log(`${p.name} が ${city.name} にぴったり到着！ 援助金 ${yen(bonus)}。次の目的地は ${WORLD.nodes[S.dest].name}` + (far ? `。${TANUKI_FORMS[T.form].name}は ${far.name} へ` : ''));
     return this.setEvent({ kind: 'arrive', title: `${city.name} にぴったり到着！`, text, next: 'landing2', city: old }, 3600);
   }
   eventOk() {
@@ -3755,7 +3775,7 @@ function loadLocal() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) ||
 function renderTitle() {
   const sv = loadLocal();
   const b = $('#b-resume');
-  b.hidden = !(sv && sv.s && sv.s.v === GAME_VER && sv.s.phase !== 'gameover');
+  b.hidden = !(sv && sv.s && SAVE_VERS.includes(sv.s.v) && sv.s.phase !== 'gameover');
   if (!b.hidden) $('#resume-info').textContent = `${(MAP_DEFS[sv.s.map] || MAP_DEFS.japan).name} ${sv.s.year}年目 ${MONTHS[sv.s.month]}・${sv.s.players.map(p => p.name).join('、')}` + (sv.mode === 'host' ? '（合言葉で再接続）' : '');
 }
 
@@ -3818,6 +3838,7 @@ function resumeGame(sv) {
   clearTimeout(UI.timer);
   UI.mode = sv.mode; UI.prev = null; UI.followTurn = -1; closeSheet();
   UI.game = new Game({ players: sv.s.players.map(p => ({ name: p.name, ctrl: p.ctrl })), years: sv.s.years, cpu: sv.s.cpu, map: sv.s.map });
+  sv.s.v = GAME_VER;   // an older save that still fits carries on as this version (friends' phones check it)
   UI.game.s = sv.s;
   UI.state = sv.s;
   Game.restoreProps(sv.s);
@@ -3851,7 +3872,7 @@ function render(force) {
   const prev = UI.prev;
   const cur = S.players[S.turn];
   // top bar
-  $('#t-year').textContent = `${S.year}年目`;
+  $('#t-year').innerHTML = `${+S.year}年目<small>/${+S.years}年</small>`;
   $('#t-month').textContent = MONTHS[S.month] + SEASON_ICON[SEASON_OF[S.month]];
   const season = SEASON_OF[S.month];
   if ($('#scr-game').dataset.season !== season) { $('#scr-game').dataset.season = season; renderWeather(season); }
@@ -4344,7 +4365,7 @@ function openGlossarySheet(S, focus) {
   } else {
     sec('季節のイベント（月のはじめ）', Object.keys(MONTH_EVENTS).map(m => [`${MONTHS[m]} ${MONTH_EVENTS[m].title}`, MONTH_EVENTS[m].text || ({ typhoon: 'どこかの地方に台風。その地方の物件を持つ人は値段の5%の修理代。', otoshidama: '全員にお年玉（300万円×年）。', setsubun: 'びんぼうタヌキがついている人は、半分の確率でタヌキが逃げ出します。' })[MONTH_EVENTS[m].kind] || '']));
   }
-  sec('びんぼうタヌキ', [['びんぼうタヌキ', '目的地に誰かが着くと、いちばん遠かった人にくっつきます。ターンの終わりに毎回：所持金の15%を持ち逃げ／カードを1〜2枚捨てる／カードを倍の値段で買ってくる／物件を勝手に半額で売る／お金をほかの人に配る／あなたの名前で借金してくる。すれ違うと相手に乗りかえます。長くくっついているほど変身しやすい。'], ['大タヌキ（3ターン）', '物件をただで売り飛ばす、所持金の30%を持ち逃げ、カードをやぶる。'], ['キングタヌキ（3ターン）', '毎ターン物件を2件海に投げすて、所持金の40%を奪い、カードを全部燃やすことも。長くくっついているほど出やすい。'], ['ミニタヌキ（3ターン）', 'ほぼ無害。どんぐりをくれることも。'], ['ハリケーンタヌキ（3ターン）', '毎ターン、どこかの駅へ吹き飛ばし、修理代も取る。'], ['追いはらう', WORLD.def.worldEvents ? 'おはらいカード。' : 'おはらいカード、2月の節分。']]);
+  sec('びんぼうタヌキ', [['びんぼうタヌキ', '目的地に誰かが着くと、いちばん遠かった人にくっつきます。ターンの終わりに毎回：所持金の15%を持ち逃げ／カードを1〜2枚捨てる／カードを倍の値段で買ってくる／物件を勝手に半額で売る／お金をほかの人に配る／あなたの名前で借金してくる。すれ違うと相手に乗りかえます。長くくっついているほど変身しやすい。'], ['大タヌキ（3ターン）', '物件をただで売り飛ばす、所持金の30%を持ち逃げ、カードをやぶる。'], ['キングタヌキ（3ターン）', '毎ターン物件を2件海に投げすて、所持金の40%を奪い、カードを全部燃やすことも。長くくっついているほど出やすい。'], ['ミニタヌキ（3ターン）', 'ほぼ無害。どんぐりをくれることも。'], ['ハリケーンタヌキ（3ターン）', '毎ターン、どこかの駅へ吹き飛ばし、修理代も取る。'], ['乗りかえても変身したまま', 'すれ違い・同じマス・目的地への到着・？マスでほかの人に移っても、変身したタヌキは変身したまま（残りのターンも引きつぐ）。追いはらうと、次はふつうのタヌキでもどってくる。'], ['追いはらう', WORLD.def.worldEvents ? 'おはらいカード。' : 'おはらいカード、2月の節分。']]);
   sec('マスの種類', [['＋ / −', 'お金がもらえる / はらう（年がすすむと額が大きくなる）。'], ['C カード', 'カードを1枚（8枚まで）。'], ['N ナイスカード', '強いカード（新幹線・ちょうど・まぢか・おまもり…）。'], ['✦ ワープ', 'どこかの駅へ飛ばされる。目的地に当たればゴール。'], ['? はてな', '宝箱・落とし穴・銀次・タヌキ・タダの物件・ワープ…何が起きるかわからない。'], ['店 カード売り場', 'お金でカードを買える。'], ['駅', '物件を買える。全部買うと独占で収益2倍。']]);
   sec('ほかの出来事', [['スリの銀次', 'ターンの終わりにときどき現れて所持金の15〜30%をすっていきます。トップの人は2倍狙われやすく、がんばれ補正の人は見逃してもらえます。'], ['地域のできごと', '駅に止まると13%の確率で、その地方ならではの出来事。'], ['がんばれ補正🔥', 'ビリの総資産がトップの半分以下で発動し、差が開くほど強くなる（レベル1〜3）。' + [1, 2, 3].map(l => `レベル${l}：${behindText(l)}`).join('／') + '。'], ['決算', '毎年3月。物件の収益率ぶんのお金、借金には10%の利息。売り切れた駅に新しい物件がオープン。'], ['初心者ハンデ★', 'はじめる前にプレイヤーごとにつけられる。' + [1, 2, 3].map(l => `${HANDICAP[l].label}：${hcText(l)}`).join('／') + '。']]);
   sec('カード', CARD_IDS.map(id => [CARD_DEFS[id].name + (CARD_DEFS[id].price ? `（売り場 ${yen(CARD_DEFS[id].price)}）` : ''), cardDesc(id) + (MOVE_CARDS.includes(id) ? '' : '　※使ったあとにサイコロをふれる')]));
@@ -4365,8 +4386,9 @@ function assetChartSVG(S, w, h) {
   const steps = 4;
   for (let k = 0; k <= steps; k++) { const v = lo + (hi - lo) * k / steps, y = Y(v); svg += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w - padR}" y2="${y.toFixed(1)}" class="ac-grid"/><text x="${padL - 6}" y="${(y + 4).toFixed(1)}" class="ac-lbl" text-anchor="end">${esc(shortYen(Math.round(v / 100) * 100))}</text>`; }
   if (lo < 0) svg += `<line x1="${padL}" y1="${Y(0)}" x2="${w - padR}" y2="${Y(0)}" class="ac-zero"/>`;
-  // years along the bottom (12 points a year)
-  for (let yr = 0; yr * 12 < n - 1 && yr < (S.years || 99); yr++) { const x = X(yr * 12); svg += `<line x1="${x.toFixed(1)}" y1="${padT}" x2="${x.toFixed(1)}" y2="${h - padB}" class="ac-grid"/><text x="${(x + 3).toFixed(1)}" y="${h - 8}" class="ac-lbl">${yr + 1}年目</text>`; }
+  // years along the bottom (12 points a year); in a long game only every few years gets a label
+  const perYear = (w - padL - padR) * 12 / (n - 1), every = [1, 2, 4, 5, 10].find(s => s * perYear >= 34) || 20;
+  for (let yr = 0; yr * 12 < n - 1 && yr < (S.years || 99); yr++) { const x = X(yr * 12); svg += `<line x1="${x.toFixed(1)}" y1="${padT}" x2="${x.toFixed(1)}" y2="${h - padB}" class="ac-grid"/>` + (yr % every === 0 ? `<text x="${(x + 3).toFixed(1)}" y="${h - 8}" class="ac-lbl">${yr + 1}年目</text>` : ''); }
   for (let p = 0; p < P; p++) {
     const pts = ser.map((row, i) => `${X(i).toFixed(1)},${Y(row[p]).toFixed(1)}`).join(' ');
     svg += `<polyline points="${pts}" fill="none" stroke="${S.players[p].color}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
@@ -4467,10 +4489,17 @@ function openSetup(mode) {
   renderSetup();
   show('setup');
 }
+// a word about the long games
+function yearsNote(box, years) {
+  if (!box) return;
+  box.hidden = !(years >= 10);
+  box.textContent = years >= 20 ? '20年はとても長い旅です。とちゅうでタイトルにもどっても、「つづきから」で続きを遊べます。' : years >= 10 ? '長めの旅です。とちゅうでタイトルにもどっても、「つづきから」で続きを遊べます。' : '';
+}
 function renderSetup() {
   const st = UI.setup;
   $$('#seg-n button').forEach(b => b.classList.toggle('on', +b.dataset.n === st.n));
   $$('#seg-y button').forEach(b => b.classList.toggle('on', +b.dataset.y === st.years));
+  yearsNote($('#years-note'), st.years);
   $$('#seg-cpulv button').forEach(b => b.classList.toggle('on', b.dataset.l === (st.cpuLv || 'normal')));
   $$('#seg-map button').forEach(b => b.classList.toggle('on', b.dataset.m === (st.map || 'japan')));
   const box = $('#slots'); box.innerHTML = '';
@@ -4785,6 +4814,7 @@ function renderP2P() {
       msg = `${ready.length + 1}人でつながっています。${full ? '' : '「もう1人さそう」で4人まで増やせます。'}年数とコンピューターをえらんで「ゲーム開始」を押してください。`; state = 'ok';
     }
     $$('#seg-y2 button').forEach(b => b.classList.toggle('on', +b.dataset.y === Net.years));
+    yearsNote($('#years-note2'), Net.years);
     $$('#seg-cpulv2 button').forEach(b => b.classList.toggle('on', b.dataset.l === Net.cpuLv));
     $$('#seg-map2 button').forEach(b => b.classList.toggle('on', b.dataset.m === Net.map));
     const hl = $('#pp-hc'); hl.innerHTML = '';
