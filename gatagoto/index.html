@@ -540,6 +540,7 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
           <ol>
             <li>2台とも、LINE などのアプリの中ではなく、Safari か Chrome でこのページを開きます。</li>
             <li>合言葉は、届いた文をまるごとコピーして貼ります（前後に文字がついていても大丈夫です）。</li>
+            <li>2台目は返事を送ったら、このページにもどって開いたまま待ちます（1台目が貼ったとき2台目が LINE の画面のままでも、2分以内にもどれば つながります）。</li>
             <li>「つながりませんでした」と出たら、2台を同じ Wi‑Fi につないで、1台目の合言葉から作り直します。</li>
             <li>職場や学校の Wi‑Fi では、つながらないことがあります。スマホの回線（4G/5G）でも試してください。</li>
           </ol>
@@ -677,10 +678,10 @@ details.help ol { padding-left: 18px; line-height: 1.6; }
 //  real shape of Japan. Okinawa is moved up into an inset box.
 // ===================================================================
 
-const GAME_VER = '7.2';
+const GAME_VER = '7.3';
 // saves made by these versions still fit this board and rules, so they can be resumed
-const SAVE_VERS = ['7.1', '7.2'];
-const NET_V = 10;
+const SAVE_VERS = ['7.1', '7.2', '7.3'];
+const NET_V = 11;
 
 // ---------- projection (日本編) ----------
 function projJapan(lat, lon) {
@@ -3023,6 +3024,11 @@ async function p2pDecode(text) {
     return o;
   } catch (e) { return null; }
 }
+// the code itself, picked out of whatever was pasted (to tell the same code from a new one)
+function p2pCodeKey(text) {
+  const m = String(text || '').replace(/\s+/g, '').match(new RegExp(CODE_TAG + '[zr][A-Za-z0-9_-]{20,}'));
+  return m ? m[0] : '';
+}
 // the whole offer goes in one code, so wait until the addresses are known (or a few seconds)
 function p2pGathered(pc, ms) {
   return new Promise(res => {
@@ -3034,17 +3040,36 @@ function p2pGathered(pc, ms) {
   });
 }
 
+// the other phone's addresses, as candidates that can be handed to addIceCandidate again
+function sdpCandidates(desc) {
+  const out = [];
+  if (!desc || !desc.sdp) return out;
+  const lines = desc.sdp.split(/\r?\n/), mids = [];
+  let idx = -1;
+  for (const ln of lines) { if (ln.startsWith('m=')) idx++; else if (ln.startsWith('a=mid:') && idx >= 0) mids[idx] = ln.slice(6).trim(); }
+  idx = -1;
+  for (const ln of lines) {
+    if (ln.startsWith('m=')) idx++;
+    else if (ln.startsWith('a=candidate:') && idx >= 0) out.push({ candidate: ln.slice(2).trim(), sdpMid: mids[idx] === undefined ? null : mids[idx], sdpMLineIndex: idx });
+  }
+  return out;
+}
+
 // ---------- one link = one friend ----------
 const CHUNK = 12000;            // data-channel messages are split so every browser pair accepts them
 const QUIET_MS = 45000;         // silence while the page is visible before the link is given up
 const DISCONNECT_GRACE = 40000; // ICE "disconnected" usually heals; wait this long before giving up
+const LINK_WAIT_MS = 120000;    // after the host pastes the reply: how long both phones keep trying
+const ANSWER_WAIT_MS = 900000;  // the friend's reply stays good this long, waiting for the host to paste it
+const KNOCK_MS = 5000;          // until linked, the other phone's addresses are tried again this often
 class Link {
   constructor(handlers) {
     this.h = handlers || {};
     this.pc = null; this.dc = null; this.state = 'idle'; this.code = ''; this.nocand = false;
     this.open = false; this.ended = false; this.lastRx = 0; this.beat = 0; this.timer = 0; this.id = '';
-    this.parts = {}; this.seq = 0;
+    this.parts = {}; this.seq = 0; this.knockT = 0;
     this.onVis = () => { if (!document.hidden) this.lastRx = performance.now(); };
+    this.onVisKnock = () => { if (!document.hidden) this.knockNow(); };
   }
   set(state, err) { this.state = state; this.err = err || ''; if (this.h.change) this.h.change(this); }
   newPc() {
@@ -3052,12 +3077,40 @@ class Link {
     pc.onconnectionstatechange = () => {
       if (this.pc !== pc) return;
       const s = pc.connectionState;
+      // Before the link is up, "failed" only means the other phone has not answered yet: the reply
+      // may still be on its way through LINE, the host has not pasted it, or a phone is on another
+      // app. The line is kept open and both sides keep knocking; the waiting has its own time limit.
+      if (!this.open) return;
       if (s === 'failed') this.end('failed');
-      else if (s === 'closed' && this.open) this.end('closed');
+      else if (s === 'closed') this.end('closed');
       else if (s === 'disconnected') setTimeout(() => { if (this.pc === pc && pc.connectionState === 'disconnected') this.end('lost'); }, DISCONNECT_GRACE);
     };
     return pc;
   }
+  // Until the link is up, try the other phone's addresses again and again. A try that gets no
+  // answer is dropped by the browser after a few seconds, so without this a phone that comes back
+  // from LINE (or sits behind a home router that only opens once both sides have called) would
+  // never be called again.
+  knock() {
+    clearInterval(this.knockT);
+    document.removeEventListener('visibilitychange', this.onVisKnock);
+    this.knockCands = this.pc ? sdpCandidates(this.pc.remoteDescription) : [];
+    this.knocks = 0;
+    this.knockT = setInterval(() => this.knockNow(), KNOCK_MS);
+    document.addEventListener('visibilitychange', this.onVisKnock);
+  }
+  knockNow() {
+    const pc = this.pc;
+    if (!pc || this.open || this.ended) { this.stopKnock(); return; }
+    // the same address under a new name: a candidate the browser has already seen is ignored,
+    // a renamed one makes it call that address again
+    const n = ++this.knocks;
+    for (const c of this.knockCands || []) {
+      const cand = c.candidate.replace(/^candidate:(\S+)/, (m, f) => `candidate:${f.slice(0, 20)}k${n}`);
+      try { pc.addIceCandidate({ candidate: cand, sdpMid: c.sdpMid, sdpMLineIndex: c.sdpMLineIndex }).catch(() => {}); } catch (e) {}
+    }
+  }
+  stopKnock() { clearInterval(this.knockT); this.knockT = 0; document.removeEventListener('visibilitychange', this.onVisKnock); }
   wire(dc) {
     this.dc = dc;
     dc.onopen = () => { if (this.dc !== dc) return; clearTimeout(this.timer); this.setOpen(true); };
@@ -3081,6 +3134,7 @@ class Link {
     if (this.ended || this.open === v) return;
     this.open = v;
     if (v) {
+      this.stopKnock(); clearTimeout(this.timer);
       this.lastRx = performance.now();
       this.set('open');
       document.addEventListener('visibilitychange', this.onVis);
@@ -3135,7 +3189,8 @@ class Link {
       if (this.pc !== pc) return;
       if (this.state !== 'open') this.set('linking');
       clearTimeout(this.timer);
-      this.timer = setTimeout(() => { if (this.pc === pc && this.state === 'linking') this.end('failed'); }, 40000);
+      this.timer = setTimeout(() => { if (this.pc === pc && this.state === 'linking') this.end('failed'); }, LINK_WAIT_MS);
+      this.knock();
     } catch (e) { if (this.pc === pc) this.set('offer', 'stale'); }
   }
   // friend: paste the host's code, make the reply
@@ -3145,6 +3200,7 @@ class Link {
     if (!d) { this.set('idle', 'badcode'); return; }
     if (d.bad) { this.set('idle', 'oldbrowser'); return; }
     if (d.t !== 'o') { this.set('idle', 'notoffer'); return; }
+    this.offerKey = p2pCodeKey(text);
     this.set('making');
     try {
       const pc = this.newPc();
@@ -3158,15 +3214,16 @@ class Link {
       this.code = await p2pEncode({ t: 'a', s: sdp });
       if (this.pc !== pc) return;
       if (this.state !== 'open') this.set('answer');
-      // the host has a while to paste it
-      this.timer = setTimeout(() => { if (this.pc === pc && this.state === 'answer') this.end('failed'); }, 600000);
+      // the host has a while to paste it; meanwhile keep calling the host's addresses
+      this.timer = setTimeout(() => { if (this.pc === pc && this.state === 'answer') this.end('failed'); }, ANSWER_WAIT_MS);
+      if (this.state !== 'open') this.knock();
     } catch (e) { console.error(e); this.set('idle', 'badcode'); }
   }
   end(why) {
     if (this.ended) return;
     const wasOpen = this.open;
     this.ended = true;
-    clearTimeout(this.timer); clearInterval(this.beat);
+    clearTimeout(this.timer); clearInterval(this.beat); this.stopKnock();
     document.removeEventListener('visibilitychange', this.onVis);
     this.open = false;
     try { if (this.dc) this.dc.close(); } catch (e) {}
@@ -3194,10 +3251,10 @@ const P2P_ERR = {
 const P2P_MSG = {
   making: '合言葉を作っています…（数秒かかります）',
   offer: '①の合言葉をコピーして、LINE などで相手に送ってください。相手から返事の合言葉が届いたら、②に貼って「つなぐ」を押します。',
-  linking: 'つないでいます…',
-  answer: '②の返事をコピーして、1台目に送ってください。1台目が貼ると、自動でつながります。',
+  linking: 'つないでいます…（相手のスマホで、このゲームのページを開いてもらってください。LINE の画面のままだと つながりません）',
+  answer: '②の返事をコピーして、1台目に送ってください。送ったら、このページにもどって開いたまま待っていてください。1台目が貼ると、自動でつながります。',
   open: 'つながりました！',
-  failed: 'つながりませんでした。2台を同じ Wi‑Fi につないでから、「やり直す」を押して、1台目の合言葉から作り直してください。',
+  failed: 'つながりませんでした。合言葉を作り直して、相手に送り直してください。相手には、返事を送ったあと このゲームのページを開いたまま待ってもらいます（同じ Wi‑Fi だと つながりやすくなります）。',
   closed: '接続が切れました。',
 };
 
@@ -4660,9 +4717,14 @@ const Net = {
     this.peers = []; this.invite = null; this.role = ''; this.seats = [];
   },
   // ----- guest -----
-  guestBegin() { this.role = 'guest'; this.link = null; this.members = []; this.verErr = false; renderP2P(); },
+  guestBegin() { this.role = 'guest'; this.link = null; this.members = []; this.verErr = false; this.guestFail = ''; this.sameHint = false; renderP2P(); },
   guestReply(text) {
-    this.verErr = false;
+    // the same code pasted again while its reply waits: that reply (②) is still the one to send.
+    // A new code from the host starts a new reply.
+    const cur = this.link, key = p2pCodeKey(text);
+    // (nothing readable pasted: keep the reply that is waiting, and say the paste was not a code)
+    if (cur && !cur.ended && !cur.open && cur.offerKey && (!key || cur.offerKey === key)) { this.sameHint = key ? 'same' : 'bad'; renderP2P(); renderReconnectSheet(); return; }
+    this.verErr = false; this.guestFail = ''; this.sameHint = false;
     if (this.link) { this.link.h = {}; this.link.end(''); }
     const link = this.link = new Link({
       change: () => { renderP2P(); renderReconnectSheet(); },
@@ -4687,6 +4749,8 @@ const Net = {
   guestOnClose(link, why, wasOpen) {
     if (link && link !== this.link) return;   // an old link closing after a newer one took over
     this.link = null;
+    // a reply that never got through: say so, rather than quietly going back to the first step
+    this.guestFail = !wasOpen && why && why !== 'end' && why !== 'full' ? why : '';
     if (UI.mode === 'guest' && UI.screen === 'game' && why !== 'end' && why !== 'full') {
       // the game goes on; this phone waits for a fresh code from the host
       this.reconnecting = true;
@@ -4705,6 +4769,9 @@ const Net = {
   },
   guestLeave() { if (this.link) { this.link.h = {}; this.link.end(''); } this.link = null; this.role = ''; this.members = []; this.reconnecting = false; },
 };
+
+const SAME_CODE_MSG = 'この合言葉への返事は、②にもうできています。それを1台目に送って、このページを開いたまま待ってください。1台目から新しい合言葉が届いたときは、①に貼りかえてから押してください。';
+const GUEST_FAIL_MSG ='1台目とつながりませんでした。1台目で合言葉を作り直してもらい、新しい合言葉を①に貼って、もう一度「返事の合言葉を作る」を押してください。返事を送ったら、このページを開いたまま待ってください。';
 
 // ---------- the game-screen notice when someone's phone is away ----------
 function renderNetBar(S) {
@@ -4746,12 +4813,14 @@ function renderReconnectSheet() {
     const l = Net.link, st = l ? l.state : 'idle';
     html += `<p class="note">ゲームは1台目で続いています。1台目に「再接続の合言葉」を作ってもらい、ここに貼って返事を送り返すと、同じ席にもどれます。</p>
       <h3 class="o-label">① 1台目から届いた合言葉を貼る</h3><textarea class="pp-code pp-in" id="rc-offer-in" rows="3" placeholder="ここに貼る"></textarea>
-      <div class="pp-row"><button class="btn btn-main" id="rc-reply" type="button" ${st === 'making' || st === 'answer' || st === 'open' ? 'disabled' : ''}>返事の合言葉を作る</button></div>`;
+      <div class="pp-row"><button class="btn btn-main" id="rc-reply" type="button" ${st === 'making' || st === 'open' ? 'disabled' : ''}>返事の合言葉を作る</button></div>`;
     if (l && l.code && st !== 'open') html += `<h3 class="o-label">② この返事を1台目に送る</h3><textarea class="pp-code" id="rc-answer" readonly rows="4">${esc(l.code)}</textarea>
       <div class="pp-row"><button class="btn btn-sub" id="rc-copy2" type="button">コピー</button>${canShare ? '<button class="btn btn-sub" id="rc-share2" type="button">LINE などで送る</button>' : ''}</div>`;
     let msg = l && l.err && l.err !== 'nortc' ? (P2P_ERR[l.err] || P2P_ERR.badcode) : (P2P_MSG[st] || '');
+    if (!l && Net.guestFail) msg = GUEST_FAIL_MSG;
+    if (Net.sameHint && st === 'answer') msg = Net.sameHint === 'bad' ? P2P_ERR.badcode : SAME_CODE_MSG;
     if (l && l.open) msg = 'つながりました！ 席にもどります…';
-    if (msg) html += `<p class="status" data-state="${l && (l.err || st === 'failed' || st === 'closed') ? 'bad' : l && l.open ? 'ok' : ''}">${esc(msg)}</p>`;
+    if (msg) html += `<p class="status" data-state="${(l && (l.err || st === 'failed' || st === 'closed')) || (!l && Net.guestFail) ? 'bad' : l && l.open ? 'ok' : ''}">${esc(msg)}</p>`;
   }
   // keep what the person typed in the paste box while re-rendering
   const keep = {}; for (const id of ['rc-answer-in', 'rc-offer-in']) { const e = $('#' + id); if (e) keep[id] = e.value; }
@@ -4772,7 +4841,7 @@ function renderReconnectSheet() {
 }
 
 function openP2P() {
-  Net.role = ''; Net.peers = []; Net.invite = null; Net.link = null; Net.members = [];
+  Net.role = ''; Net.peers = []; Net.invite = null; Net.link = null; Net.members = []; Net.guestFail = '';
   $('#my-name').value = pref.name || '';
   $('#pp-offer-in').value = ''; $('#pp-answer-in').value = '';
   renderP2P();
@@ -4803,7 +4872,8 @@ function renderP2P() {
       $('#pp-offer-copy').disabled = !inv.code;
       $('#pp-offer-share').hidden = !canShare || !inv.code;
       $('#pp-link').disabled = !(inv.state === 'offer' || (inv.state === 'error' && inv.pc));
-      $('#pp-newcode').hidden = !(inv.state === 'failed' || inv.state === 'closed' || inv.state === 'error');
+      // also while the phones are still trying each other, so a reply sent to the wrong code can be redone
+      $('#pp-newcode').hidden = !(inv.state === 'failed' || inv.state === 'closed' || inv.state === 'error' || inv.state === 'linking');
       msg = inv.err && inv.err !== 'nortc' ? (P2P_ERR[inv.err] || P2P_ERR.badcode) : (P2P_MSG[inv.state] || '');
       if (inv.state === 'offer' && Net.peers.length) msg = `${Net.peers.length + 1}人目をさそいます。` + msg;
       if (inv.nocand && inv.state === 'offer') msg += '（この画面では通信の通り道が見つかりませんでした。つながらないかもしれません）';
@@ -4839,7 +4909,7 @@ function renderP2P() {
     const l = Net.link, st = l ? l.state : 'idle';
     const ans = $('#pp-answer');
     if (l && ans.value !== l.code) ans.value = l.code;
-    $('#pp-reply').disabled = st === 'making' || st === 'answer' || st === 'open';
+    $('#pp-reply').disabled = st === 'making' || st === 'open';
     $('#pp-reply-box').hidden = !(l && l.code && st !== 'open');
     $('#pp-answer-share').hidden = !canShare || !(l && l.code);
     $('#pp-guest-lobby').hidden = !(l && l.open);
@@ -4852,8 +4922,10 @@ function renderP2P() {
     msg = l && l.err && l.err !== 'nortc' ? (P2P_ERR[l.err] || P2P_ERR.badcode) : (P2P_MSG[st] || '');
     if (!msg && st === 'idle') msg = '1台目から届いた合言葉を①に貼って、「返事の合言葉を作る」を押してください。';
     if (l && l.nocand && st === 'answer') msg += '（この画面では通信の通り道が見つかりませんでした。つながらないかもしれません）';
+    if (Net.sameHint && st === 'answer') msg = Net.sameHint === 'bad' ? P2P_ERR.badcode : SAME_CODE_MSG;
     if (l && l.open) msg = 'つながりました！ 1台目がゲームを始めると、自動でゲーム画面になります。';
     state = l && (l.err || st === 'failed' || st === 'closed') ? 'bad' : (l && l.open ? 'ok' : '');
+    if (!l && Net.guestFail) { msg = GUEST_FAIL_MSG; state = 'bad'; }
     if (!l && Net.verErr) { msg = '1台目とページの版がちがいました。このページを再読み込み（更新）してから、もう一度つないでください。'; state = 'bad'; }
   }
   if (nortc) { msg = P2P_ERR['nortc_' + p2pWhere()] || P2P_ERR.nortc; state = 'bad'; }
